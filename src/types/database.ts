@@ -465,6 +465,7 @@ export type Database = {
           nome: string;
           nome_usuario: string | null;
           papel: Database['public']['Enums']['papel_usuario'];
+          publico: boolean;
           push_token: string | null;
           silenciado_ate: string | null;
           turma_id: string | null;
@@ -479,6 +480,7 @@ export type Database = {
           nome: string;
           nome_usuario?: string | null;
           papel?: Database['public']['Enums']['papel_usuario'];
+          publico?: boolean;
           push_token?: string | null;
           silenciado_ate?: string | null;
           turma_id?: string | null;
@@ -493,6 +495,7 @@ export type Database = {
           nome?: string;
           nome_usuario?: string | null;
           papel?: Database['public']['Enums']['papel_usuario'];
+          publico?: boolean;
           push_token?: string | null;
           silenciado_ate?: string | null;
           turma_id?: string | null;

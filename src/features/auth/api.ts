@@ -30,6 +30,19 @@ export async function signOut() {
   if (error) throw error;
 }
 
+/** Troca de e-mail passa por confirmação (o Supabase manda um link pro
+ * endereço novo) — o e-mail só muda de verdade depois de clicar nele,
+ * então isso aqui só dispara o pedido. */
+export async function atualizarEmail(novoEmail: string) {
+  const { error } = await supabase.auth.updateUser({ email: novoEmail });
+  if (error) throw error;
+}
+
+export async function atualizarSenha(novaSenha: string) {
+  const { error } = await supabase.auth.updateUser({ password: novaSenha });
+  if (error) throw error;
+}
+
 /**
  * Garante que existe uma linha em `profiles` pro usuário logado, criando
  * uma se for a primeira vez. Não dá pra criar isso no momento do signUp

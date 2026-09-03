@@ -5,11 +5,13 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from 'nativewind';
+import { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AuthProvider, useAuth } from '@/features/auth/AuthProvider';
+import { carregarTemaPreferido } from '@/features/configuracoes/tema';
 import { queryClient } from '@/lib/queryClient';
 
 /**
@@ -28,9 +30,16 @@ import { queryClient } from '@/lib/queryClient';
  * hook aciona a classe corretamente, que é o caminho documentado.
  */
 function RootNavigator() {
-  const { colorScheme } = useColorScheme();
+  const { colorScheme, setColorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
   const { session, profile, isLoadingSession, isLoadingProfile } = useAuth();
+
+  useEffect(() => {
+    // Aplica a preferência salva em Configurações → Tema assim que o app
+    // abre. Sem isso, `setColorScheme` de uma sessão anterior não
+    // sobreviveria a um restart — o NativeWind não persiste isso sozinho.
+    carregarTemaPreferido().then((tema) => setColorScheme(tema));
+  }, [setColorScheme]);
 
   if (isLoadingSession || (!!session && isLoadingProfile)) {
     return (

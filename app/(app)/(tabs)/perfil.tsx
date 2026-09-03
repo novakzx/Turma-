@@ -123,6 +123,13 @@ export default function Perfil() {
       />
 
       <Button
+        label="Configurações"
+        icon="settings-outline"
+        variant="secondary"
+        onPress={() => router.push('/configuracoes')}
+      />
+
+      <Button
         label="Sair da conta"
         icon="log-out-outline"
         variant="secondary"

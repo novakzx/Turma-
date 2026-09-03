@@ -29,6 +29,7 @@ export default function AppLayout() {
         options={{ presentation: 'modal', title: 'Editar perfil' }}
       />
       <Stack.Screen name="minhas-publicacoes" options={{ title: 'Minhas publicações' }} />
+      <Stack.Screen name="configuracoes" options={{ title: 'Configurações' }} />
     </Stack>
   );
 }

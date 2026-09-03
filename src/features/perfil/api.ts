@@ -58,6 +58,15 @@ export async function fazerUploadFotoPerfil(userId: string, uriLocal: string): P
   return caminho;
 }
 
+/** Configurações: público (padrão) = perfil vê quem quiser; privado
+ * restringe pra quem já enxergaria pelas regras de sempre (turma/escola,
+ * staff). Fase 10/13 aplicam a restrição de verdade na busca global de
+ * usuário — aqui só grava a preferência. */
+export async function atualizarPrivacidade(id: string, publico: boolean) {
+  const { error } = await supabase.from('profiles').update({ publico }).eq('id', id);
+  if (error) throw error;
+}
+
 export async function obterUrlAssinadaFoto(caminho: string): Promise<string> {
   const { data, error } = await supabase.storage
     .from(BUCKET_FOTOS)

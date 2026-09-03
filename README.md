@@ -191,7 +191,22 @@ O público é majoritariamente menor de idade — isto é requisito de MVP, não
 - [x] **Fase 5 — Chat comunitário**: salas em tempo real, moderação.
 - [~] **Fase 6 — Acabamento**: linguagem visual (ícones, animações, cantos arredondados), auditoria de acessibilidade e config de build EAS/ícones/splash já feitas; falta só o que exige conta Expo/loja de verdade (`eas init`, build, submit — ver seção "Build via EAS e preparação pra loja").
 
+### Pedido extra do usuário (fora da numeração original, em andamento)
+
+Lista grande de funcionalidades estilo Instagram (perfil com seguidores, stories, mensagens diretas, busca global de usuário, feed em scroll contínuo, matérias editáveis, cadastro com busca de escola, filtro de palavrões) — organizada em sub-fases próprias:
+
+- [x] **Fase 7 — Configurações**: tema (claro/escuro/sistema, persistido), privacidade da conta (público/privado — coluna gravada, aplicação de verdade na visibilidade entra junto da busca global na Fase 13), alterar e-mail (fluxo de confirmação do Supabase Auth) e alterar senha.
+- [ ] **Fase 8 — Matérias editáveis** pelo admin da turma.
+- [ ] **Fase 9 — Cadastro**: busca de escola com autocomplete, verificação de estudante.
+- [ ] **Fase 10 — Perfil estilo Instagram**: bio, grid de posts, seguidores, stories.
+- [ ] **Fase 11 — Feed redesenhado** (scroll contínuo estilo Instagram/Twitter).
+- [ ] **Fase 12 — Mensagens diretas**: pedidos, grupos/tópicos — **com bloqueio e denúncia desde o primeiro commit**, não como "depois". Decisão explícita do usuário foi abrir DM entre qualquer usuário do app (não só mesma escola) — dado que o público é majoritariamente menor de idade, isso só entra com as mesmas salvaguardas que Instagram/TikTok usam pra conta de menor: denunciar (reaproveita `denuncias`), bloquear, e staff/coordenação com visibilidade de conteúdo denunciado. Turma/grupo: só quem cria (dono) ou admins que ele nomear adicionam gente — sem entrada livre por busca.
+- [ ] **Fase 13 — Busca de usuários** (global, todas as escolas — decisão explícita do usuário).
+- [ ] **Fase 14 — Filtro de palavrões** (censura automática em post/comentário/mensagem — já estava no brief original seção 7, nunca implementado).
+
 ## Status atual
+
+Fase 7 (Configurações) completa e testada no browser: troca de tema grava e aplica (`nativewind`'s `setColorScheme` + persistência em `AsyncStorage`, aplicado de novo no boot do app), toggle de privacidade grava no banco, formulário de troca de senha valida (senhas diferentes barradas antes de qualquer chamada à API) sem arriscar a senha da conta de teste.
 
 Perfil editável (pedido extra do usuário, fora da numeração de fases original): nome, nome de usuário (`@handle`, único, formato validado), bio (280 caracteres) e foto (upload real pro Storage privado `perfil-fotos`, com URL assinada) — tela `editar-perfil.tsx`, acessível pelo botão "Editar perfil" no perfil. "Minhas publicações" (`minhas-publicacoes.tsx`) reusa o card do feed (`CartaoPost`, extraído pra `src/features/feed/CartaoPost.tsx`) filtrado pelo próprio autor. Testado de ponta a ponta contra o Supabase real: upload de foto, edição de nome/bio, e o caso de erro de nome de usuário duplicado (mensagem amigável em vez do erro cru do Postgres).
 
