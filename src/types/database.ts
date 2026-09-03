@@ -908,6 +908,10 @@ export type Database = {
         Args: { p_nome: string; p_participantes_ids: string[] };
         Returns: string;
       };
+      email_por_nome_usuario: {
+        Args: { p_nome_usuario: string };
+        Returns: string;
+      };
       nome_usuario_disponivel: {
         Args: { p_nome_usuario: string };
         Returns: boolean;

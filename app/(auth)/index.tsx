@@ -9,10 +9,10 @@ import { TextField } from '@/components/ui/TextField';
 import { signIn } from '@/features/auth/api';
 import { mensagemDeErro } from '@/features/auth/errors';
 
-type Erros = { email?: string; senha?: string; geral?: string };
+type Erros = { nomeUsuario?: string; senha?: string; geral?: string };
 
 export default function LoginScreen() {
-  const [email, setEmail] = useState('');
+  const [nomeUsuario, setNomeUsuario] = useState('');
   const [senha, setSenha] = useState('');
   const [erros, setErros] = useState<Erros>({});
 
@@ -23,14 +23,14 @@ export default function LoginScreen() {
 
   function handleSubmit() {
     const novosErros: Erros = {};
-    if (!email.trim()) novosErros.email = 'Informe seu e-mail.';
+    if (!nomeUsuario.trim()) novosErros.nomeUsuario = 'Informe seu nome de usuário.';
     if (!senha) novosErros.senha = 'Informe sua senha.';
     setErros(novosErros);
     if (Object.keys(novosErros).length > 0) return;
 
     // Sucesso: o AuthProvider detecta a sessão nova (onAuthStateChange) e o
     // Stack.Protected troca de tela sozinho — não precisa navegar aqui.
-    mutation.mutate({ email: email.trim(), senha });
+    mutation.mutate({ nomeUsuario: nomeUsuario.trim().replace(/^@/, '').toLowerCase(), senha });
   }
 
   return (
@@ -49,21 +49,21 @@ export default function LoginScreen() {
           <View className="items-center gap-1">
             <Text className="text-3xl font-bold text-primary dark:text-primary-dark">Turma+</Text>
             <Text className="text-base text-slate-600 dark:text-slate-400">
-              Entra com seu e-mail e senha.
+              Entra com seu usuário e senha.
             </Text>
           </View>
         </View>
 
         <TextField
-          label="E-mail"
-          icon="mail-outline"
-          value={email}
-          onChangeText={setEmail}
-          error={erros.email}
-          keyboardType="email-address"
+          label="Nome de usuário"
+          icon="at-outline"
+          value={nomeUsuario}
+          onChangeText={setNomeUsuario}
+          error={erros.nomeUsuario}
+          placeholder="ex.: mariateste"
           autoCapitalize="none"
-          autoComplete="email"
-          textContentType="emailAddress"
+          autoCorrect={false}
+          textContentType="username"
         />
         <TextField
           label="Senha"

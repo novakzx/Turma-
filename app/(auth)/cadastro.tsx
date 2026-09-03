@@ -17,7 +17,6 @@ type Erros = {
   nome?: string;
   nomeUsuario?: string;
   idade?: string;
-  email?: string;
   senha?: string;
   confirmarSenha?: string;
   termos?: string;
@@ -29,22 +28,17 @@ export default function CadastroScreen() {
   const [nome, setNome] = useState('');
   const [nomeUsuario, setNomeUsuario] = useState('');
   const [idade, setIdade] = useState('');
-  const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
   const [aceitouTermos, setAceitouTermos] = useState(false);
   const [consentimentoResponsavel, setConsentimentoResponsavel] = useState(false);
   const [erros, setErros] = useState<Erros>({});
-  const [aguardandoConfirmacao, setAguardandoConfirmacao] = useState(false);
 
   const mutation = useMutation({
     mutationFn: signUp,
-    onSuccess: (data) => {
-      // Sem sessão de volta = o projeto exige confirmar o e-mail antes de
-      // liberar login. Com sessão, o AuthProvider já detecta sozinho e o
-      // Stack.Protected troca de tela — não precisa navegar aqui.
-      if (!data.session) setAguardandoConfirmacao(true);
-    },
+    // Sem e-mail nenhum no cadastro (pedido do usuário), então não existe
+    // mais confirmação por e-mail — signUp sempre volta com sessão e o
+    // AuthProvider troca de tela sozinho (Stack.Protected).
     onError: (error) => setErros({ geral: mensagemDeErro(error) }),
   });
 
@@ -66,7 +60,6 @@ export default function CadastroScreen() {
       novosErros.idade = 'Informe uma idade válida.';
     }
 
-    if (!email.trim()) novosErros.email = 'Informe seu e-mail.';
     if (senha.length < 6) novosErros.senha = 'A senha precisa ter pelo menos 6 caracteres.';
     if (confirmarSenha !== senha) novosErros.confirmarSenha = 'As senhas não coincidem.';
     if (!aceitouTermos) novosErros.termos = 'Precisa aceitar os Termos de Uso pra continuar.';
@@ -95,29 +88,10 @@ export default function CadastroScreen() {
       nome: nome.trim(),
       nomeUsuario: usuarioLimpo,
       idade: idadeNumero,
-      email: email.trim(),
       senha,
       aceitouTermos,
       consentimentoResponsavel,
     });
-  }
-
-  if (aguardandoConfirmacao) {
-    return (
-      <View className="flex-1 items-center justify-center gap-3 bg-background px-6 dark:bg-background-dark">
-        <View className="mb-2 h-20 w-20 items-center justify-center rounded-full bg-success/10 dark:bg-success-dark/10">
-          <Ionicons name="mail-unread-outline" size={36} color="#16A34A" />
-        </View>
-        <Text className="text-center text-xl font-bold text-primary dark:text-primary-dark">
-          Confirme seu e-mail
-        </Text>
-        <Text className="text-center text-base text-slate-600 dark:text-slate-400">
-          Enviamos um link de confirmação pra {email}. Depois de confirmar, volte aqui e entre com
-          sua senha.
-        </Text>
-        <Button label="Ir para o login" icon="log-in-outline" onPress={() => router.replace('/')} />
-      </View>
-    );
   }
 
   return (
@@ -162,17 +136,6 @@ export default function CadastroScreen() {
           error={erros.idade}
           keyboardType="number-pad"
           placeholder="ex.: 15"
-        />
-        <TextField
-          label="E-mail"
-          icon="mail-outline"
-          value={email}
-          onChangeText={setEmail}
-          error={erros.email}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoComplete="email"
-          textContentType="emailAddress"
         />
         <TextField
           label="Senha"

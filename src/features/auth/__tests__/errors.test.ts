@@ -3,7 +3,7 @@ import { mensagemDeErro } from '../errors';
 describe('mensagemDeErro', () => {
   it('traduz uma mensagem conhecida do Supabase Auth', () => {
     expect(mensagemDeErro(new Error('Invalid login credentials'))).toBe(
-      'E-mail ou senha incorretos.',
+      'Usuário ou senha incorretos.',
     );
   });
 

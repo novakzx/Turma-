@@ -17,7 +17,7 @@ Você garante que as informações que preencheu (nome, idade, escola/turma) sã
 Nada de linguagem ofensiva, assédio, discurso de ódio ou compartilhamento de conteúdo que não seja seu. O app tem filtro automático de linguagem ofensiva e fila de denúncia revisada por professor/coordenação — contas que abusarem podem ser suspensas.
 
 4. Seus dados
-Coletamos só o necessário pra o app funcionar (nome, e-mail, escola, turma, conteúdo que você publica). Você pode excluir sua conta a qualquer momento, o que apaga seu histórico de mensagens.
+Coletamos só o necessário pra o app funcionar (nome, nome de usuário, idade, escola, turma, conteúdo que você publica). Não pedimos e-mail no cadastro. Você pode excluir sua conta a qualquer momento, o que apaga seu histórico de mensagens.
 
 5. Menores de idade
 Se você é menor de idade, o uso do app deve ser feito com ciência dos seus pais ou responsáveis (ver o consentimento específico abaixo).

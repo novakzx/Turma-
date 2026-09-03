@@ -12,17 +12,28 @@ import type { MetadadosCadastro, Profile } from './types';
  * (`termos_aceitos_em`) e o estado do consentimento dos responsáveis
  * (`consentimento_responsavel`), ver `fetchOrCreateProfile`.
  */
+/** O Supabase Auth não tem cadastro "só usuário", exige algum e-mail
+ * internamente — pedido do usuário foi tirar e-mail de vez do cadastro,
+ * então geramos um aqui, nunca mostrado a ninguém (só existe pra
+ * satisfazer o `auth.users.email`). Some com o próprio nome de usuário
+ * (já verificado disponível antes de chegar aqui) + timestamp, então não
+ * tem risco real de colisão. Ver migration `login_sem_email_por_usuario`
+ * — é o mesmo valor que a RPC `email_por_nome_usuario` devolve pro login
+ * resolver depois. */
+function gerarEmailInterno(nomeUsuario: string): string {
+  return `${nomeUsuario}.${Date.now()}@turmamais.internal`;
+}
+
 export async function signUp(params: {
   nome: string;
   nomeUsuario: string;
   idade: number;
-  email: string;
   senha: string;
   aceitouTermos: boolean;
   consentimentoResponsavel: boolean;
 }) {
   const { data, error } = await supabase.auth.signUp({
-    email: params.email,
+    email: gerarEmailInterno(params.nomeUsuario),
     password: params.senha,
     // Guardado em user_metadata pra fetchOrCreateProfile usar no primeiro
     // login (signUp pode não devolver sessão se a confirmação de e-mail
@@ -54,9 +65,22 @@ export async function nomeUsuarioDisponivel(nomeUsuario: string): Promise<boolea
   return data;
 }
 
-export async function signIn(params: { email: string; senha: string }) {
+/** Login do Supabase só aceita e-mail, não usuário — resolve nome de
+ * usuário pro e-mail interno (RPC `security definer`, mesma razão da
+ * `nome_usuario_disponivel`: quem ainda não tem sessão não pode
+ * consultar `profiles` direto pela RLS normal) antes de chamar
+ * `signInWithPassword`. Usuário inexistente cai no mesmo erro genérico
+ * de "credenciais inválidas" do próprio Supabase — não dá pista de qual
+ * dos dois (usuário ou senha) está errado. */
+export async function signIn(params: { nomeUsuario: string; senha: string }) {
+  const { data: email, error: erroResolvendo } = await supabase.rpc('email_por_nome_usuario', {
+    p_nome_usuario: params.nomeUsuario,
+  });
+  if (erroResolvendo) throw erroResolvendo;
+  if (!email) throw new Error('Invalid login credentials');
+
   const { data, error } = await supabase.auth.signInWithPassword({
-    email: params.email,
+    email,
     password: params.senha,
   });
   if (error) throw error;
@@ -65,14 +89,6 @@ export async function signIn(params: { email: string; senha: string }) {
 
 export async function signOut() {
   const { error } = await supabase.auth.signOut();
-  if (error) throw error;
-}
-
-/** Troca de e-mail passa por confirmação (o Supabase manda um link pro
- * endereço novo) — o e-mail só muda de verdade depois de clicar nele,
- * então isso aqui só dispara o pedido. */
-export async function atualizarEmail(novoEmail: string) {
-  const { error } = await supabase.auth.updateUser({ email: novoEmail });
   if (error) throw error;
 }
 

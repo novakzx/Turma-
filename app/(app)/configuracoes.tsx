@@ -6,7 +6,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
 import { TextField } from '@/components/ui/TextField';
-import { atualizarEmail, atualizarSenha } from '@/features/auth/api';
+import { atualizarSenha } from '@/features/auth/api';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { mensagemDeErro } from '@/features/auth/errors';
 import { salvarTemaPreferido, type TemaPreferido } from '@/features/configuracoes/tema';
@@ -78,8 +78,7 @@ export default function Configuracoes() {
   const queryClient = useQueryClient();
   const { colorScheme, setColorScheme } = useColorScheme();
 
-  const [secaoAberta, setSecaoAberta] = useState<'email' | 'senha' | null>(null);
-  const [novoEmail, setNovoEmail] = useState('');
+  const [secaoAberta, setSecaoAberta] = useState<'senha' | null>(null);
   const [novaSenha, setNovaSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
   const [erro, setErro] = useState<string | null>(null);
@@ -88,18 +87,6 @@ export default function Configuracoes() {
   const privacidadeMutation = useMutation({
     mutationFn: (publico: boolean) => atualizarPrivacidade(profile!.id, publico),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['profile', profile?.id] }),
-  });
-
-  const emailMutation = useMutation({
-    mutationFn: () => atualizarEmail(novoEmail.trim()),
-    onSuccess: () => {
-      setSucesso(
-        'Enviamos um link de confirmação pro e-mail novo — o e-mail só muda depois de você clicar nele.',
-      );
-      setNovoEmail('');
-      setSecaoAberta(null);
-    },
-    onError: (error) => setErro(mensagemDeErro(error)),
   });
 
   const senhaMutation = useMutation({
@@ -116,16 +103,6 @@ export default function Configuracoes() {
   function handleTrocarTema(tema: TemaPreferido) {
     setColorScheme(tema);
     void salvarTemaPreferido(tema);
-  }
-
-  function handleSalvarEmail() {
-    setErro(null);
-    setSucesso(null);
-    if (!novoEmail.trim() || !novoEmail.includes('@')) {
-      setErro('Informe um e-mail válido.');
-      return;
-    }
-    emailMutation.mutate();
   }
 
   function handleSalvarSenha() {
@@ -204,33 +181,6 @@ export default function Configuracoes() {
       </Secao>
 
       <Secao titulo="Conta">
-        <CartaoAcaoExpansivel
-          icone="mail-outline"
-          rotulo="Alterar e-mail"
-          aberto={secaoAberta === 'email'}
-          onAbrir={() => {
-            setSecaoAberta('email');
-            setErro(null);
-          }}
-          onFechar={() => setSecaoAberta(null)}
-        >
-          <TextField
-            label="Novo e-mail"
-            icon="mail-outline"
-            value={novoEmail}
-            onChangeText={setNovoEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            error={secaoAberta === 'email' ? (erro ?? undefined) : undefined}
-          />
-          <Button
-            label="Enviar confirmação"
-            icon="paper-plane-outline"
-            onPress={handleSalvarEmail}
-            loading={emailMutation.isPending}
-          />
-        </CartaoAcaoExpansivel>
-
         <CartaoAcaoExpansivel
           icone="lock-closed-outline"
           rotulo="Alterar senha"
