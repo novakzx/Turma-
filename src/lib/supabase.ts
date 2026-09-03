@@ -28,7 +28,7 @@ const supabaseAnonKey =
  * segura de expor no bundle porque toda a autorização real vem das
  * políticas de Row Level Security no Postgres, não desta chave.
  *
- * Nenhum segredo (chave da Anthropic, service role key, etc.) deve
+ * Nenhum segredo (chave da Gemini, service role key, etc.) deve
  * jamais aparecer aqui: essas chamadas passam por Edge Functions.
  */
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {

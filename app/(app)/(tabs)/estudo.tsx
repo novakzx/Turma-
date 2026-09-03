@@ -203,7 +203,15 @@ export default function Estudo() {
       )}
 
       {materiaId ? (
-        <View className="gap-2 border-t border-slate-100 p-3 pb-6 dark:border-slate-800">
+        // `pb-24` (96px) em vez do `pb-6` que o resto do app usa: a barra
+        // de abas é flutuante (`position: absolute`, 64px de altura + 16px
+        // de margem do fundo — ver `(tabs)/_layout.tsx`), então qualquer
+        // conteúdo colado na base da tela (como esta linha de envio, a
+        // única entre as 6 abas que fica presa embaixo via flex) precisa
+        // reservar esse espaço, senão a barra fica visualmente por cima e
+        // o toque no botão "Enviar" nem chega a ele — achado testando de
+        // verdade o chat com a Gemini pela primeira vez com resposta real.
+        <View className="gap-2 border-t border-slate-100 p-3 pb-24 dark:border-slate-800">
           {erro ? (
             <View className="flex-row items-center gap-1.5">
               <Ionicons name="alert-circle" size={14} color="#DC2626" />

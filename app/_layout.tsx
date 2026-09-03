@@ -53,27 +53,36 @@ function RootNavigator() {
   const onboardingCompleto = !!profile?.escola_id && !!profile?.turma_id;
 
   return (
-    <>
+    // `AvisosWeb` fica de propósito FORA do `Stack` mas DENTRO desta coluna
+    // flex — como uma linha normal do layout (não `position: absolute`),
+    // ela empurra o Stack (que é `flex: 1`) pra cima em vez de cobrir por
+    // cima o que já está renderizado. Testando o cadastro de verdade: com
+    // o banner em `position: absolute` (versão anterior), ele tampava
+    // fisicamente o botão "Criar conta" no fim de um formulário longo —
+    // o clique nem chegava no botão, sem erro nenhum no console.
+    <View className="flex-1">
       <StatusBar style={isDark ? 'light' : 'dark'} />
-      <Stack
-        screenOptions={{
-          headerStyle: { backgroundColor: isDark ? '#0F172A' : '#FFFFFF' },
-          headerTintColor: isDark ? '#F1F5F9' : '#0F172A',
-          contentStyle: { backgroundColor: isDark ? '#0F172A' : '#FFFFFF' },
-        }}
-      >
-        <Stack.Protected guard={!session}>
-          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        </Stack.Protected>
-        <Stack.Protected guard={!!session && !onboardingCompleto}>
-          <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
-        </Stack.Protected>
-        <Stack.Protected guard={!!session && onboardingCompleto}>
-          <Stack.Screen name="(app)" options={{ headerShown: false }} />
-        </Stack.Protected>
-      </Stack>
+      <View className="flex-1">
+        <Stack
+          screenOptions={{
+            headerStyle: { backgroundColor: isDark ? '#0F172A' : '#FFFFFF' },
+            headerTintColor: isDark ? '#F1F5F9' : '#0F172A',
+            contentStyle: { backgroundColor: isDark ? '#0F172A' : '#FFFFFF' },
+          }}
+        >
+          <Stack.Protected guard={!session}>
+            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          </Stack.Protected>
+          <Stack.Protected guard={!!session && !onboardingCompleto}>
+            <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
+          </Stack.Protected>
+          <Stack.Protected guard={!!session && onboardingCompleto}>
+            <Stack.Screen name="(app)" options={{ headerShown: false }} />
+          </Stack.Protected>
+        </Stack>
+      </View>
       <AvisosWeb />
-    </>
+    </View>
   );
 }
 

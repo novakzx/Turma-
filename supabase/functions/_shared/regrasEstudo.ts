@@ -11,16 +11,19 @@ export const ROTULO_MODO: Record<ModoChatEstudo, string> = {
 };
 
 /**
- * "Comece com claude-haiku-4-5-20251001 pelo custo por mensagem; se o
- * aluno pedir algo mais elaborado (redação, resolução de problema
- * complexo), suba pra claude-sonnet-5" (brief 6.2). Explicar/dúvida
- * pontual são consultas curtas — ficam no modelo mais barato. Resumo (de
- * um texto colado) e plano de estudo pedem mais raciocínio em várias
- * etapas — usam o modelo mais capaz.
+ * Trocado de Claude (Anthropic) pra Gemini (Google) a pedido do usuário —
+ * mesma ideia de escalar modelo por complexidade que o brief 6.2 original
+ * pedia pro Claude, só que `gemini-flash-latest` é o único id de modelo
+ * confirmado de verdade (testado pelo usuário com a própria chave, ver
+ * `README.md` > "Edge Functions e automações"); a lista de modelos da
+ * Gemini muda com frequência e um id "pro" chutado sem confirmar quebraria
+ * silenciosamente os modos resumo/plano (a API responde 404 pra modelo
+ * inexistente). Por enquanto todos os modos usam o mesmo modelo — trocar
+ * resumo/plano pra um tier mais caro é seguro reativar depois que alguém
+ * confirmar o id certo (ver https://ai.google.dev/gemini-api/docs/models).
  */
-export function escolherModelo(modo: ModoChatEstudo): string {
-  if (modo === 'resumo' || modo === 'plano') return 'claude-sonnet-5';
-  return 'claude-haiku-4-5-20251001';
+export function escolherModelo(_modo: ModoChatEstudo): string {
+  return 'gemini-flash-latest';
 }
 
 /**

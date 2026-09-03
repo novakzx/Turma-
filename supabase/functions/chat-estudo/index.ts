@@ -1,7 +1,8 @@
 // Edge Function: chat com IA por matéria (brief 6.2, arquitetura seção 4
-// — "chamada só pela Edge Function, nunca direto do app"). O app nunca
-// vê a ANTHROPIC_API_KEY; ela só existe como secret desta função
-// (`supabase secrets set ANTHROPIC_API_KEY=...`).
+// — "chamada só pela Edge Function, nunca direto do app"). Trocado de
+// Anthropic (Claude) pra Gemini (Google) a pedido do usuário — o app
+// nunca vê a GEMINI_API_KEY; ela só existe como secret desta função
+// (`supabase secrets set GEMINI_API_KEY=...`).
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
 import {
@@ -13,7 +14,7 @@ import {
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
+const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
 
 const HISTORICO_MAXIMO = 20;
 
@@ -41,11 +42,11 @@ Deno.serve(async (req) => {
   }
 
   try {
-    if (!ANTHROPIC_API_KEY) {
-      // Não é um erro de código — é a Fase 3 esperando o secret ser
-      // configurado (ver README > "Edge Functions e automações").
+    if (!GEMINI_API_KEY) {
+      // Não é um erro de código — é a chave ainda não ter sido
+      // configurada (ver README > "Edge Functions e automações").
       return respostaJson(
-        { error: 'Chat com IA ainda não foi configurado (falta ANTHROPIC_API_KEY).' },
+        { error: 'Chat com IA ainda não foi configurado (falta GEMINI_API_KEY).' },
         503,
       );
     }
@@ -95,41 +96,52 @@ Deno.serve(async (req) => {
       .limit(HISTORICO_MAXIMO);
     if (historicoError) throw historicoError;
 
-    const mensagensAnthropic = (historico ?? []).reverse().map((m) => ({
-      role: m.papel === 'usuario' ? ('user' as const) : ('assistant' as const),
-      content: m.conteudo,
+    // Gemini usa `role: 'user' | 'model'` (não 'assistant') e agrupa o
+    // texto dentro de `parts` — formato bem diferente do Claude, que a
+    // troca de provedor obrigou a adaptar aqui.
+    const historicoGemini = (historico ?? []).reverse().map((m) => ({
+      role: m.papel === 'usuario' ? ('user' as const) : ('model' as const),
+      parts: [{ text: m.conteudo as string }],
     }));
-    mensagensAnthropic.push({ role: 'user', content: mensagem });
+    historicoGemini.push({ role: 'user', parts: [{ text: mensagem }] });
 
     const modelo = escolherModelo(modo);
     const systemPrompt = montarPromptSistema({ nomeMateria: materia.nome, modo });
 
-    const respostaAnthropic = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
+    const respostaGemini = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-goog-api-key': GEMINI_API_KEY,
+        },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: systemPrompt }] },
+          contents: historicoGemini,
+        }),
       },
-      body: JSON.stringify({
-        model: modelo,
-        max_tokens: 1024,
-        system: systemPrompt,
-        messages: mensagensAnthropic,
-      }),
-    });
+    );
 
-    if (!respostaAnthropic.ok) {
-      const corpo = await respostaAnthropic.text();
-      console.error('chat-estudo: Anthropic recusou', respostaAnthropic.status, corpo);
+    if (!respostaGemini.ok) {
+      const corpo = await respostaGemini.text();
+      console.error('chat-estudo: Gemini recusou', respostaGemini.status, corpo);
       return respostaJson({ error: 'Não deu pra falar com a IA agora.' }, 502);
     }
 
-    const dadosResposta = await respostaAnthropic.json();
-    const textoResposta = (dadosResposta.content ?? [])
-      .filter((bloco: { type: string }) => bloco.type === 'text')
-      .map((bloco: { text: string }) => bloco.text)
-      .join('\n');
+    const dadosResposta = await respostaGemini.json();
+    // `candidates` pode vir vazio se a resposta foi bloqueada por
+    // segurança (`promptFeedback.blockReason`) — trata como "sem texto"
+    // em vez de deixar `.join('')` esconder o problema como resposta vazia.
+    const textoResposta: string =
+      dadosResposta.candidates?.[0]?.content?.parts
+        ?.map((bloco: { text?: string }) => bloco.text ?? '')
+        .join('\n') ?? '';
+
+    if (!textoResposta) {
+      console.error('chat-estudo: Gemini sem texto na resposta', JSON.stringify(dadosResposta));
+      return respostaJson({ error: 'A IA não conseguiu responder dessa vez.' }, 502);
+    }
 
     // Persiste os dois lados com a service role — não existe policy de
     // INSERT pra `authenticated` nessa tabela de propósito (evita um

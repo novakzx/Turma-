@@ -113,7 +113,7 @@ export function AvisosWeb() {
 
   if (carregouCookies && consentimentoCookies === null) {
     return (
-      <View className="absolute inset-x-0 bottom-0 gap-3 border-t border-slate-200 bg-surface p-4 pb-6 shadow-lg shadow-slate-900/10 dark:border-slate-700 dark:bg-surface-dark">
+      <View className="gap-3 border-t border-slate-200 bg-surface p-4 pb-6 shadow-lg shadow-slate-900/10 dark:border-slate-700 dark:bg-surface-dark">
         <Text className="text-sm text-slate-600 dark:text-slate-400">
           Usamos armazenamento local só pra manter você conectado e lembrar suas preferências (como
           o tema claro/escuro). Não usamos cookie de rastreamento nem de publicidade.
@@ -132,7 +132,7 @@ export function AvisosWeb() {
 
   if (podeMostrarInstalar || mostrarInstrucaoIOS) {
     return (
-      <View className="absolute inset-x-0 bottom-0 gap-3 border-t border-slate-200 bg-surface p-4 pb-6 shadow-lg shadow-slate-900/10 dark:border-slate-700 dark:bg-surface-dark">
+      <View className="gap-3 border-t border-slate-200 bg-surface p-4 pb-6 shadow-lg shadow-slate-900/10 dark:border-slate-700 dark:bg-surface-dark">
         <Text className="text-sm font-semibold text-slate-900 dark:text-slate-100">
           Adicione o Turma+ à tela inicial
         </Text>

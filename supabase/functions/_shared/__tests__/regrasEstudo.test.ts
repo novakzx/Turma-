@@ -1,20 +1,20 @@
 import { escolherModelo, montarPromptSistema } from '../regrasEstudo';
 
-describe('escolherModelo (brief 6.2: haiku por padrão, sonnet pro elaborado)', () => {
-  it('usa haiku pra explicar conceito', () => {
-    expect(escolherModelo('explicar')).toBe('claude-haiku-4-5-20251001');
+describe('escolherModelo (Gemini — só gemini-flash-latest confirmado, ver comentário na fonte)', () => {
+  it('usa gemini-flash-latest pra explicar conceito', () => {
+    expect(escolherModelo('explicar')).toBe('gemini-flash-latest');
   });
 
-  it('usa haiku pra tirar dúvida pontual', () => {
-    expect(escolherModelo('duvida')).toBe('claude-haiku-4-5-20251001');
+  it('usa gemini-flash-latest pra tirar dúvida pontual', () => {
+    expect(escolherModelo('duvida')).toBe('gemini-flash-latest');
   });
 
-  it('usa sonnet pra gerar resumo (mais elaborado)', () => {
-    expect(escolherModelo('resumo')).toBe('claude-sonnet-5');
+  it('usa gemini-flash-latest pra gerar resumo', () => {
+    expect(escolherModelo('resumo')).toBe('gemini-flash-latest');
   });
 
-  it('usa sonnet pra montar plano de estudo (mais elaborado)', () => {
-    expect(escolherModelo('plano')).toBe('claude-sonnet-5');
+  it('usa gemini-flash-latest pra montar plano de estudo', () => {
+    expect(escolherModelo('plano')).toBe('gemini-flash-latest');
   });
 });
 

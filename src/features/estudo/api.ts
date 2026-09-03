@@ -13,8 +13,8 @@ export async function listarHistoricoChat(materiaId: string): Promise<MensagemCh
 }
 
 /**
- * A Edge Function é quem fala com a Anthropic e grava as duas mensagens
- * (usuário + assistente) — o app nunca chama a API da Anthropic direto
+ * A Edge Function é quem fala com a Gemini e grava as duas mensagens
+ * (usuário + assistente) — o app nunca chama a API da Gemini direto
  * (regra de ouro do brief, seção 4).
  */
 export async function enviarMensagemChat(params: {
