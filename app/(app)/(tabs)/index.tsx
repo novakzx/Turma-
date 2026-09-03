@@ -1,28 +1,36 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { router } from 'expo-router';
-import { useEffect } from 'react';
-import { FlatList, Pressable, Text, View } from 'react-native';
+import { FlatList, Text, View } from 'react-native';
 
-import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
 import { EntradaAnimada } from '@/components/ui/EntradaAnimada';
-import { useAuth } from '@/features/auth/AuthProvider';
-import { listarAvisos } from '@/features/avisos/api';
-import { ICONE_TIPO_AVISO, ROTULO_TIPO_AVISO, type Aviso } from '@/features/avisos/types';
-import { supabase } from '@/lib/supabase';
+import {
+  ANO_LETIVO,
+  diasAte,
+  listarOrdenados,
+  proximoEvento,
+  type FeriadoOuInterrupcao,
+} from '@/features/calendario/feriados';
 
-function formatarData(iso: string) {
-  return new Intl.DateTimeFormat('pt-PT', {
-    day: '2-digit',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(iso));
+const FORMATO_DATA = new Intl.DateTimeFormat('pt-PT', {
+  day: '2-digit',
+  month: 'long',
+  year: 'numeric',
+});
+
+function formatarPeriodo(item: FeriadoOuInterrupcao): string {
+  if (item.data) return FORMATO_DATA.format(new Date(item.data));
+  if (item.inicio && item.fim) {
+    return `${FORMATO_DATA.format(new Date(item.inicio))} – ${FORMATO_DATA.format(new Date(item.fim))}`;
+  }
+  return '';
 }
 
-function CartaoAviso({ aviso, index }: { aviso: Aviso; index: number }) {
-  const isAutomatico = aviso.origem === 'automatico';
-  const corAcento = isAutomatico ? '#F59E0B' : '#4F46E5';
+function ROTULO_TIPO(tipo: FeriadoOuInterrupcao['tipo']): string {
+  return tipo === 'nacional' ? 'Feriado nacional' : 'Interrupção letiva';
+}
+
+function CartaoFeriado({ item, index }: { item: FeriadoOuInterrupcao; index: number }) {
+  const nacional = item.tipo === 'nacional';
+  const corAcento = nacional ? '#4F46E5' : '#F59E0B';
   return (
     <EntradaAnimada
       index={index}
@@ -33,92 +41,78 @@ function CartaoAviso({ aviso, index }: { aviso: Aviso; index: number }) {
           className="h-10 w-10 items-center justify-center rounded-full"
           style={{ backgroundColor: `${corAcento}1A` }}
         >
-          <Ionicons name={ICONE_TIPO_AVISO[aviso.tipo]} size={20} color={corAcento} />
+          <Ionicons name={nacional ? 'flag' : 'school'} size={20} color={corAcento} />
         </View>
         <View className="flex-1">
           <Text
             className={`text-xs font-semibold uppercase tracking-wide ${
-              isAutomatico
-                ? 'text-accent dark:text-accent-dark'
-                : 'text-primary dark:text-primary-dark'
+              nacional ? 'text-primary dark:text-primary-dark' : 'text-accent dark:text-accent-dark'
             }`}
           >
-            {ROTULO_TIPO_AVISO[aviso.tipo]}
-            {aviso.turma_id ? ' · turma' : ' · escola toda'}
+            {ROTULO_TIPO(item.tipo)}
           </Text>
           <Text className="text-base font-semibold text-slate-900 dark:text-slate-100">
-            {aviso.titulo}
+            {item.nome}
           </Text>
         </View>
-        <Text className="text-xs text-slate-500 dark:text-slate-400">
-          {formatarData(aviso.criado_em)}
-        </Text>
       </View>
-      {aviso.descricao ? (
-        <Text className="text-sm text-slate-600 dark:text-slate-400">{aviso.descricao}</Text>
+      <Text className="text-sm text-slate-600 dark:text-slate-400">{formatarPeriodo(item)}</Text>
+      {item.regresso ? (
+        <Text className="text-xs text-slate-500 dark:text-slate-500">
+          Regresso às aulas: {FORMATO_DATA.format(new Date(item.regresso))}
+        </Text>
+      ) : null}
+      {item.descricao ? (
+        <Text className="text-sm text-slate-600 dark:text-slate-400">{item.descricao}</Text>
       ) : null}
     </EntradaAnimada>
   );
 }
 
-export default function MuralDeAvisos() {
-  const { profile } = useAuth();
-  const queryClient = useQueryClient();
-  const ehStaff = profile?.papel === 'professor' || profile?.papel === 'coordenacao';
+function CabecalhoDestaque() {
+  const proximo = proximoEvento();
+  if (!proximo) return null;
 
-  const avisosQuery = useQuery({ queryKey: ['avisos'], queryFn: listarAvisos });
-
-  useEffect(() => {
-    // Mural em tempo real (brief 6.1): em vez de reconstruir a lista à
-    // mão a partir do payload do evento, só invalida a query — a RLS já
-    // faz o filtro de escopo de qualquer forma, então um refetch é a
-    // fonte de verdade mais simples e correta.
-    const channel = supabase
-      .channel('avisos-realtime')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'avisos' }, () =>
-        queryClient.invalidateQueries({ queryKey: ['avisos'] }),
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [queryClient]);
+  const dataAlvo = proximo.data ?? proximo.inicio ?? '';
+  const dias = diasAte(dataAlvo);
+  const quando = dias === 0 ? 'É hoje' : dias === 1 ? 'É amanhã' : `Faltam ${dias} dias`;
 
   return (
-    <View className="flex-1 bg-background dark:bg-background-dark">
-      {avisosQuery.isLoading ? (
-        <LoadingState />
-      ) : avisosQuery.isError ? (
-        <EmptyState
-          titulo="Não deu pra carregar os avisos"
-          descricao="Verifica sua conexão e tenta de novo."
-          onTentarNovo={() => avisosQuery.refetch()}
-        />
-      ) : (avisosQuery.data?.length ?? 0) === 0 ? (
-        <EmptyState
-          titulo="Nenhum aviso por aqui ainda"
-          descricao="Quando a coordenação ou um professor publicar algo, aparece nessa lista."
-        />
-      ) : (
-        <FlatList
-          data={avisosQuery.data}
-          keyExtractor={(item) => item.id}
-          contentContainerClassName="gap-3 p-4 pb-28"
-          renderItem={({ item, index }) => <CartaoAviso aviso={item} index={index} />}
-        />
-      )}
+    <View className="mb-1 gap-1 rounded-3xl bg-primary p-5 shadow-md shadow-primary/30 dark:bg-primary-dark">
+      <Text className="text-xs font-semibold uppercase tracking-wide text-white/80">
+        Próximo — {quando}
+      </Text>
+      <Text className="text-lg font-bold text-white">{proximo.nome}</Text>
+      <Text className="text-sm text-white/90">{formatarPeriodo(proximo)}</Text>
+    </View>
+  );
+}
 
-      {ehStaff ? (
-        <Pressable
-          onPress={() => router.push('/novo-aviso')}
-          accessibilityRole="button"
-          accessibilityLabel="Publicar aviso"
-          className="absolute bottom-24 right-6 h-14 w-14 items-center justify-center rounded-full bg-primary shadow-lg shadow-primary/40 dark:bg-primary-dark"
-        >
-          <Ionicons name="add" size={28} color="#FFFFFF" />
-        </Pressable>
-      ) : null}
+/**
+ * Calendário de feriados escolares (ano letivo 2026/2027) — substitui o
+ * mural de avisos nesta aba, a pedido explícito do usuário. O mural, o
+ * botão de publicar aviso e o back-end (tabela, push, aviso automático
+ * de clima) continuam existindo no projeto — só não têm mais tela
+ * nenhuma no app (ver README > "Status atual" pro racional completo e
+ * pro que foi desligado no banco como consequência).
+ */
+export default function CalendarioFeriados() {
+  return (
+    <View className="flex-1 bg-background dark:bg-background-dark">
+      <FlatList
+        data={listarOrdenados()}
+        keyExtractor={(item) => item.id}
+        contentContainerClassName="gap-3 p-4 pb-10"
+        ListHeaderComponent={
+          <View className="mb-1 gap-3">
+            <Text className="text-sm text-slate-500 dark:text-slate-400">
+              Ano letivo {ANO_LETIVO}
+            </Text>
+            <CabecalhoDestaque />
+          </View>
+        }
+        renderItem={({ item, index }) => <CartaoFeriado item={item} index={index} />}
+      />
     </View>
   );
 }

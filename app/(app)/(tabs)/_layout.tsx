@@ -6,7 +6,7 @@ import { Pressable } from 'react-native';
 import { ALTURA_BARRA_ABAS, useDistanciaFundoBarraAbas } from '@/lib/barraAbas';
 
 const ICONE_POR_ROTA: Record<string, keyof typeof Ionicons.glyphMap> = {
-  index: 'megaphone',
+  index: 'calendar',
   feed: 'newspaper',
   chat: 'chatbubbles',
   estudo: 'sparkles',
@@ -61,7 +61,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Avisos',
+          title: 'Feriados',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name={ICONE_POR_ROTA.index} size={size} color={color} />
           ),

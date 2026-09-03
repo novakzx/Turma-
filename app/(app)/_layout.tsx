@@ -29,7 +29,6 @@ export default function AppLayout() {
       }}
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="novo-aviso" options={{ presentation: 'modal', title: 'Novo aviso' }} />
       <Stack.Screen name="novo-post" options={{ presentation: 'modal', title: 'Novo post' }} />
       <Stack.Screen name="post/[id]" options={{ title: 'Post' }} />
       <Stack.Screen name="sala/[id]" options={{ title: 'Sala de chat' }} />
