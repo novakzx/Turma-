@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Image, Text, View } from 'react-native';
+import { Image, ScrollView, Text, View } from 'react-native';
 import { useVideoPlayer, VideoView } from 'expo-video';
 
 import { Button } from '@/components/ui/Button';
@@ -18,7 +18,7 @@ function PreviaVideo({ uri }: { uri: string }) {
   return (
     <VideoView
       player={player}
-      style={{ aspectRatio: 9 / 16, width: '100%', borderRadius: 16 }}
+      style={{ aspectRatio: 9 / 16, width: '100%', maxHeight: 420, borderRadius: 16 }}
       contentFit="cover"
       nativeControls={false}
     />
@@ -74,7 +74,19 @@ export default function NovaStory() {
   }
 
   return (
-    <View className="flex-1 gap-4 bg-background px-6 pb-10 pt-6 dark:bg-background-dark">
+    // ScrollView (não só `flex-1`) é o que falta pra funcionar em qualquer
+    // altura de tela: a prévia em `aspect-[9/16] w-full` sozinha já é mais
+    // alta que a maioria dos celulares (largura inteira × 16/9), então sem
+    // rolagem o botão "Publicar" ficava fisicamente fora da viewport — só
+    // dava pra alcançar diminuindo o zoom do navegador. `max-h-[420px]`
+    // limita a prévia a não dominar a tela sozinha (unidade em px, não
+    // `vh` — RN não entende unidade de viewport, só `px`/número/`%`); o
+    // ScrollView por si só já garante alcançar o botão de qualquer forma,
+    // mesmo sem esse limite.
+    <ScrollView
+      className="flex-1 bg-background dark:bg-background-dark"
+      contentContainerClassName="gap-4 px-6 pb-10 pt-6"
+    >
       <Text className="text-2xl font-bold text-primary dark:text-primary-dark">Nova story</Text>
       <Text className="text-sm text-slate-600 dark:text-slate-400">
         Fica visível por 24h pra quem te segue e pra sua turma.
@@ -85,11 +97,11 @@ export default function NovaStory() {
       ) : uriLocal ? (
         <Image
           source={{ uri: uriLocal }}
-          className="aspect-[9/16] w-full rounded-2xl"
+          className="aspect-[9/16] max-h-[420px] w-full rounded-2xl"
           resizeMode="cover"
         />
       ) : (
-        <View className="aspect-[9/16] w-full items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800" />
+        <View className="aspect-[9/16] max-h-[420px] w-full items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800" />
       )}
 
       <Button
@@ -107,6 +119,6 @@ export default function NovaStory() {
         onPress={handlePublicar}
         loading={mutation.isPending}
       />
-    </View>
+    </ScrollView>
   );
 }

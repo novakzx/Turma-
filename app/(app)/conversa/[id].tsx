@@ -13,6 +13,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/Button';
 import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
@@ -231,6 +232,12 @@ export default function DetalheConversa() {
   const queryClient = useQueryClient();
   const [texto, setTexto] = useState('');
   const [erro, setErro] = useState<string | null>(null);
+  // Tela empilhada (sem a barra de abas flutuante) — a caixa de mensagem
+  // cola direto no fundo real da tela, então precisa somar o inset de
+  // segurança do sistema (home indicator no iPhone) à mão, senão fica
+  // colada/quase encoberta nele — mesma causa do bug já corrigido na
+  // barra de abas (ver src/lib/barraAbas.ts), tela diferente.
+  const insets = useSafeAreaInsets();
 
   const conversaQuery = useQuery({
     queryKey: ['conversa', id],
@@ -389,7 +396,10 @@ export default function DetalheConversa() {
       />
 
       {ehPedidoPendente ? (
-        <View className="gap-2 border-t border-slate-100 p-4 dark:border-slate-800">
+        <View
+          className="gap-2 border-t border-slate-100 p-4 dark:border-slate-800"
+          style={{ paddingBottom: insets.bottom + 16 }}
+        >
           <Text className="text-sm text-slate-600 dark:text-slate-400">
             Essa pessoa ainda não te segue — é um pedido de mensagem.
           </Text>
@@ -413,7 +423,10 @@ export default function DetalheConversa() {
           </View>
         </View>
       ) : (
-        <View className="gap-1.5 border-t border-slate-100 px-3 py-2 dark:border-slate-800">
+        <View
+          className="gap-1.5 border-t border-slate-100 px-3 py-2 dark:border-slate-800"
+          style={{ paddingBottom: insets.bottom + 8 }}
+        >
           {erro ? (
             <Text className="px-2 text-sm text-danger dark:text-danger-dark">{erro}</Text>
           ) : null}

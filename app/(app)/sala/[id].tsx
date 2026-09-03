@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { FlatList, KeyboardAvoidingView, Platform, Pressable, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/Button';
 import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
@@ -100,6 +101,13 @@ export default function SalaChat() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { profile } = useAuth();
   const queryClient = useQueryClient();
+  // Sem barra de abas flutuante aqui (é uma tela empilhada, não uma aba),
+  // então a caixa de mensagem cola direto no fundo real da tela — sem
+  // somar `insets.bottom`, num iPhone de verdade ela fica colada/quase
+  // encoberta pela barra de gestos (home indicator), igual o bug já
+  // corrigido na barra de abas (ver src/lib/barraAbas.ts) — mesma causa,
+  // tela diferente.
+  const insets = useSafeAreaInsets();
   const listRef = useRef<FlatList<MensagemComAutor>>(null);
   const [texto, setTexto] = useState('');
   const [erro, setErro] = useState<string | null>(null);
@@ -221,7 +229,10 @@ export default function SalaChat() {
         }
       />
 
-      <View className="gap-1 border-t border-slate-100 p-3 dark:border-slate-800">
+      <View
+        className="gap-1 border-t border-slate-100 p-3 dark:border-slate-800"
+        style={{ paddingBottom: insets.bottom + 12 }}
+      >
         {!podeEnviar ? (
           <View className="flex-row items-center gap-1.5 px-1">
             <Ionicons name="information-circle-outline" size={14} color="#94A3B8" />

@@ -31,8 +31,16 @@ import { queryClient } from '@/lib/queryClient';
  * header nativo abaixo, que é estilizado por esse valor), mas a classe
  * "dark" que as classes `dark:` do NativeWind dependem não chega a ser
  * aplicada no <html> — é uma limitação do target web desta versão da
- * lib, não do app. No target real (iOS/Android via Expo Go/EAS) o mesmo
- * hook aciona a classe corretamente, que é o caminho documentado.
+ * lib, não do app. Tentativa de corrigir à mão (aplicar a classe no
+ * `document.documentElement` manualmente) testada e **não funcionou**:
+ * mesmo com a classe presente de verdade no `<html>` (confirmado via
+ * DevTools), nada mudou visualmente — o NativeWind pro alvo web resolve
+ * qual variante de estilo usar internamente (via um store próprio de
+ * color scheme), não por cascata de CSS batendo com `.dark` no DOM, então
+ * forçar a classe no DOM não tem efeito nenhum nesse mecanismo. Precisaria
+ * de correção na própria lib (fora do escopo de um ajuste de UI pontual).
+ * No target real (iOS/Android via Expo Go/EAS) o mesmo hook aciona a
+ * classe corretamente, que é o caminho documentado.
  */
 function RootNavigator() {
   const { colorScheme, setColorScheme } = useColorScheme();
