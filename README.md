@@ -70,6 +70,19 @@ O schema inicial (todas as tabelas do modelo de dados + RLS) está versionado em
 4. `supabase db push` — aplica as migrations no projeto remoto.
 5. Preencha pelo menos uma linha em `escolas` e `turmas` pelo Supabase Studio (gerenciar escola/turma direto pelo Studio é a decisão do MVP — ver seção "Fora do escopo" do brief original).
 
+### Build via EAS e preparação pra loja
+
+O projeto já está configurado pra build gerenciado (`eas.json`, ícones e splash screen prontos em `assets/`) — falta só a parte que exige uma conta Expo de verdade, que ninguém além de quem tem acesso a ela consegue fazer:
+
+1. `npm install -g eas-cli` (ou use `npx eas-cli` direto).
+2. `eas login` — entra com (ou cria) uma conta em [expo.dev](https://expo.dev).
+3. `eas init` — cria o projeto no EAS e escreve `extra.eas.projectId` no `app.json` sozinho. **Esse passo também resolve** a limitação de push notification listada abaixo (`getExpoPushTokenAsync` precisa desse `projectId`).
+4. `eas build --profile preview --platform android` (ou `ios`) — gera um build instalável sem precisar publicar em loja ainda; `--profile production` é o perfil final.
+5. Antes de submeter de verdade: troque `ios.bundleIdentifier` e `android.package` em `app.json` (hoje `com.turmamais.app`, um placeholder) pelo identificador real da conta/organização que vai publicar, e revise `expo.version`/`android.versionCode`/`ios.buildNumber` (o `eas.json` já tem `"autoIncrement": true` no perfil `production`, então o EAS incrementa sozinho a cada build).
+6. `eas submit` — envia o build pra App Store Connect / Google Play Console (exige conta de desenvolvedor paga nas duas lojas, fora do controle deste repo).
+
+Ícones e splash já estão prontos (`assets/icon.png`, `android-icon-*.png`, `favicon.png`, `splash-icon*.png` — gerados programaticamente a partir da identidade visual do app, ver seção abaixo) — não precisa desenhar nada antes do primeiro build.
+
 ### Scripts
 
 | Comando                           | O que faz                                                |
@@ -98,6 +111,8 @@ Nome do app: **Turma+**. Paleta pensada pra público adolescente sem parecer inf
 Modo escuro segue a preferência do sistema por padrão (`nativewind`'s `useColorScheme`, `darkMode: 'class'` no Tailwind) — dá pra evoluir pra um toggle manual na Fase 6 sem mudar a estratégia.
 
 **Linguagem visual** (redesenho pedido junto com a Fase 6): pílulas arredondadas em vez de cantos retos (`rounded-full`/`rounded-2xl`/`rounded-3xl` em quase tudo — botão, campo, card, chip), ícone (`@expo/vector-icons`/Ionicons) em praticamente toda ação e badge de tipo, cards com sombra leve (`shadow-sm`/`shadow-slate-900/5`) e barra de abas flutuante arredondada com ícone por aba. Toque num botão encolhe levemente (`react-native-reanimated`) e um card de lista entra com um fade+slide em cascata (`src/components/ui/EntradaAnimada.tsx`) — ambos desligados quando o sistema pede "reduzir movimento" (`useReducedMotion`). `Animated.View`/`AnimatedPressable` do Reanimated não entendem `className` sozinhos — `src/lib/nativewindAnimated.ts` registra esse suporte uma vez, importado no `app/_layout.tsx` raiz.
+
+**Ícone e splash**: marca "T+" (T branco + badge circular âmbar com "+") sobre fundo índigo — mesma paleta do app, gerada como PNG a partir de SVG (não é desenho à mão, é código: ver `git log` desta fase se quiser regenerar/ajustar). `assets/icon.png` é o ícone principal (bleed total, sem cantos arredondados — o próprio iOS aplica a máscara); `android-icon-{foreground,background,monochrome}.png` seguem o formato de ícone adaptativo do Android (camada de frente com a marca, camada de fundo sólida, e uma versão monocromática pro tema "themed icon" do Android 13+); `splash-icon.png`/`splash-icon-dark.png` são a marca sozinha, sobre fundo transparente, pro splash screen claro/escuro (`expo-splash-screen`, configurado em `app.json`).
 
 ## Estrutura de pastas
 
@@ -148,7 +163,7 @@ O público é majoritariamente menor de idade — isto é requisito de MVP, não
 - **Modo escuro no preview web**: `useColorScheme()` (NativeWind) já lê a preferência do sistema corretamente — dá pra confirmar pelo header nativo, que muda de cor — mas, especificamente no target **web** desta versão do NativeWind/Expo, a classe `dark` não chega a ser aplicada no `<html>`, então as classes `dark:` do Tailwind ficam sem efeito visual só nesse target. iOS e Android (Expo Go/EAS, o target real do app) seguem o caminho documentado pela lib e não têm esse problema — vale reconfirmar num device/simulador real quando a Fase 1 tiver telas de verdade pra testar. Ver comentário em `app/_layout.tsx`.
 - **Só 2 das 222 escolas do seed têm `latitude`/`longitude`** (Escola Secundária Pedro Nunes, Lisboa e Escola Secundária Dom Manuel Martins, Setúbal — geocodificadas à mão só pra validar o pipeline de clima de ponta a ponta). `aviso-clima` pula sozinha qualquer escola sem coordenada, então isso não quebra nada — só significa que o aviso automático de trajeto só funciona pra essas duas por enquanto. Geocodificar as outras 220 é trabalho futuro (dá pra automatizar com Nominatim/OSM, respeitando o limite de 1 req/s do serviço gratuito).
 - **Push notification não dá pra testar no preview web**: `expo-notifications` não tem suporte completo no target web (o SDK avisa isso sozinho no console) e `Alert.alert` do React Native também não tem UI no web — o fluxo de logout e o pipeline de push foram verificados via chamada direta à API/Edge Function em vez de clique na tela. Ambos usam APIs padrão do React Native/Expo, então funcionam normalmente em iOS/Android — só não dá pra ver rodando neste preview.
-- **`getExpoPushTokenAsync` precisa de `projectId`** (extra.eas.projectId no app config), que só existe depois de `eas init` — isso é trabalho da Fase 6 (build via EAS). Até lá, `registrarPushToken` roda sem erro mas não salva token nenhum (device sem projectId configurado).
+- **`getExpoPushTokenAsync` precisa de `projectId`** (`extra.eas.projectId` no app config), que só existe depois de `eas init` — esse passo precisa de uma conta Expo de verdade (ver "Build via EAS e preparação pra loja" acima), então não dá pra rodar por aqui. Até lá, `registrarPushToken` roda sem erro mas não salva token nenhum (device sem projectId configurado).
 - **`chat-estudo` sem `ANTHROPIC_API_KEY` configurada** — responde 503 com uma mensagem clara ("Chat com IA ainda não foi configurado") em vez de dar resposta de IA de verdade. Configure o secret (ver seção "Edge Functions e automações") pra testar a conversa de ponta a ponta.
 
 ## Roadmap
@@ -159,13 +174,15 @@ O público é majoritariamente menor de idade — isto é requisito de MVP, não
 - [x] **Fase 3 — Estudo**: chat com IA por matéria (aguardando secret `ANTHROPIC_API_KEY`), calculadora de notas.
 - [x] **Fase 4 — Feed da turma**: post, curtida, comentário, upload de imagem.
 - [x] **Fase 5 — Chat comunitário**: salas em tempo real, moderação.
-- [~] **Fase 6 — Acabamento**: linguagem visual (ícones, animações, cantos arredondados) já aplicada em todo o app; acessibilidade, estados vazio/erro (já cobertos desde a Fase 0), build EAS e preparação pra loja seguem pendentes.
+- [~] **Fase 6 — Acabamento**: linguagem visual (ícones, animações, cantos arredondados), auditoria de acessibilidade e config de build EAS/ícones/splash já feitas; falta só o que exige conta Expo/loja de verdade (`eas init`, build, submit — ver seção "Build via EAS e preparação pra loja").
 
 ## Status atual
 
+Fase 6 em andamento: `eas.json` configurado (perfis `development`/`preview`/`production`), ícone e splash screen próprios gerados (`assets/icon.png` e afins — ver "Identidade visual"), `expo-splash-screen`/`expo-font` instalados e configurados, dependências alinhadas com o SDK (`npx expo-doctor` de 18/21 pra 20/21 checks — o 1 restante é um falso positivo conhecido do schema do `expo-doctor` com `newArchEnabled`, não bloqueia build). Auditoria de acessibilidade: campos de formulário (`TextField`) agora repetem o label (+ erro, se houver) em `accessibilityLabel` — sem isso um leitor de tela não tinha como saber o propósito do campo, já que React Native não associa `<Text>` a `<TextInput>` sozinho; todo `Pressable` do app já tinha `accessibilityRole`/`accessibilityLabel` desde as fases anteriores. Falta o que só dá pra fazer com uma conta Expo/loja de verdade: `eas init` (gera o `projectId`, resolve também a limitação de push notification abaixo), primeiro build via `eas build`, e submissão nas lojas.
+
 Redesign visual aplicado em todo o app (todas as telas de `(auth)`, `(onboarding)` e `(app)`, mais os componentes base em `src/components/ui/`): botões-pílula com ícone e leve encolher no toque, campos com ícone, cards com sombra suave e cantos bem arredondados, barra de abas flutuante com ícone por aba, e listas com entrada em cascata (fade+slide) — tudo desligado quando o sistema pede "reduzir movimento". Paleta de cores mantida (decisão do usuário). Verificado visualmente no browser contra o app rodando de verdade (login, feed, chat com duas contas, notas, perfil), sem erro novo no console.
 
-Fase 5 completa e testada de ponta a ponta contra o projeto Supabase real, com duas contas simultâneas (aluno + professor): sala de turma e de matéria nascem sozinhas (trigger), sala de assunto criada pelo aluno, mensagem em tempo real via Supabase Realtime (inserida por um usuário aparece no outro sem refresh), apagar mensagem (soft delete, só staff), silenciar usuário (1h/24h, prazo calculado no servidor) e trancar/destrancar sala (só staff) — RLS testada diretamente (insert de mensagem silenciada/em sala trancada é rejeitado pelo banco, não só escondido na UI). Fase 4 (feed) e Fase 3 (notas/chat IA) seguem como antes. O que falta da Fase 6 — auditoria de acessibilidade, build via EAS, preparação pra loja — é o próximo passo.
+Fase 5 completa e testada de ponta a ponta contra o projeto Supabase real, com duas contas simultâneas (aluno + professor): sala de turma e de matéria nascem sozinhas (trigger), sala de assunto criada pelo aluno, mensagem em tempo real via Supabase Realtime (inserida por um usuário aparece no outro sem refresh), apagar mensagem (soft delete, só staff), silenciar usuário (1h/24h, prazo calculado no servidor) e trancar/destrancar sala (só staff) — RLS testada diretamente (insert de mensagem silenciada/em sala trancada é rejeitado pelo banco, não só escondido na UI). Fase 4 (feed) e Fase 3 (notas/chat IA) seguem como antes.
 
 ### Dados de exemplo
 

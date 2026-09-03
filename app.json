@@ -7,14 +7,19 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
+    "backgroundColor": "#FFFFFF",
+    "primaryColor": "#4F46E5",
+    "description": "Mural de avisos, ferramentas de estudo (chat com IA, calculadora de notas) e comunidade da turma (feed + chat) num só app.",
     "newArchEnabled": true,
     "experiments": {
       "typedRoutes": true
     },
     "ios": {
+      "bundleIdentifier": "com.turmamais.app",
       "supportsTablet": true
     },
     "android": {
+      "package": "com.turmamais.app",
       "adaptiveIcon": {
         "backgroundColor": "#4F46E5",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -35,7 +40,21 @@
         {
           "color": "#4F46E5"
         }
-      ]
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 160,
+          "resizeMode": "contain",
+          "backgroundColor": "#FFFFFF",
+          "dark": {
+            "image": "./assets/splash-icon-dark.png",
+            "backgroundColor": "#0F172A"
+          }
+        }
+      ],
+      "expo-font"
     ]
   }
 }

@@ -13,9 +13,14 @@ type TextFieldProps = TextInputProps & {
  * Campo de formulário padrão do app: label + input + erro inline (brief
  * seção 8 — "Erro de validação aparece ao lado do campo"). Altura mínima
  * de 44px também é a área de toque mínima pedida no brief.
+ *
+ * O `<Text>` do label é só visual — leitor de tela não associa ele ao
+ * `TextInput` sozinho (não existe `<label for>` em React Native), então
+ * o campo repete o label (+ o erro, se houver) em `accessibilityLabel`
+ * pra quem usa VoiceOver/TalkBack ouvir o propósito do campo.
  */
 export const TextField = forwardRef<TextInput, TextFieldProps>(function TextField(
-  { label, error, icon, ...inputProps },
+  { label, error, icon, accessibilityLabel, ...inputProps },
   ref,
 ) {
   return (
@@ -29,6 +34,7 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(function TextFiel
         {icon ? <Ionicons name={icon} size={18} color="#94A3B8" /> : null}
         <TextInput
           ref={ref}
+          accessibilityLabel={accessibilityLabel ?? (error ? `${label}. Erro: ${error}` : label)}
           className="min-h-11 flex-1 text-base text-slate-900 dark:text-slate-100"
           placeholderTextColor="#94A3B8"
           {...inputProps}
