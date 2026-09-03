@@ -1,7 +1,10 @@
 import { supabase } from '@/lib/supabase';
 
 export async function listarEscolas() {
-  const { data, error } = await supabase.from('escolas').select('id, nome').order('nome');
+  const { data, error } = await supabase
+    .from('escolas')
+    .select('id, nome, dominio_email')
+    .order('nome');
   if (error) throw error;
   return data;
 }
@@ -24,10 +27,15 @@ export async function concluirOnboarding(params: {
   userId: string;
   escolaId: string;
   turmaId: string;
+  numeroCartao: string;
 }) {
   const { error } = await supabase
     .from('profiles')
-    .update({ escola_id: params.escolaId, turma_id: params.turmaId })
+    .update({
+      escola_id: params.escolaId,
+      turma_id: params.turmaId,
+      numero_cartao_estudante: params.numeroCartao,
+    })
     .eq('id', params.userId);
   if (error) throw error;
 }
@@ -61,7 +69,21 @@ export async function criarTurma(params: {
  * dela (ou staff da escola) aprova, via RPC `responder_pedido_entrada_turma`
  * (nunca update direto: profiles.turma_id de outra pessoa não é
  * grantável pro cliente comum). */
-export async function pedirEntradaNaTurma(turmaId: string, profileId: string) {
+export async function pedirEntradaNaTurma(
+  turmaId: string,
+  profileId: string,
+  numeroCartao: string,
+) {
+  // Grava o cartão já aqui (não só em `concluirOnboarding`) — quem pede
+  // entrada ainda não tem `turma_id`/`escola_id` (só ganha depois de
+  // aprovado), mas a verificação de estudante não deveria esperar por
+  // isso.
+  const { error: erroPerfil } = await supabase
+    .from('profiles')
+    .update({ numero_cartao_estudante: numeroCartao })
+    .eq('id', profileId);
+  if (erroPerfil) throw erroPerfil;
+
   const { error } = await supabase
     .from('turma_pedidos_entrada')
     .insert({ turma_id: turmaId, profile_id: profileId });

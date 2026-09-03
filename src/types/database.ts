@@ -1,10 +1,3 @@
-// Gerado por `mcp__supabase__generate_typescript_types` a partir do schema
-// real do projeto (supabase/migrations). Pra regenerar depois de uma nova
-// migration, use o MCP do Supabase ou:
-//
-//   npx supabase gen types typescript --project-id <id> > src/types/database.ts
-//
-// Não edite à mão — mudanças de schema entram por migration, não aqui.
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
@@ -217,6 +210,7 @@ export type Database = {
       escolas: {
         Row: {
           criado_em: string;
+          dominio_email: string | null;
           endereco: string | null;
           id: string;
           latitude: number | null;
@@ -228,6 +222,7 @@ export type Database = {
         };
         Insert: {
           criado_em?: string;
+          dominio_email?: string | null;
           endereco?: string | null;
           id?: string;
           latitude?: number | null;
@@ -239,6 +234,7 @@ export type Database = {
         };
         Update: {
           criado_em?: string;
+          dominio_email?: string | null;
           endereco?: string | null;
           id?: string;
           latitude?: number | null;
@@ -464,6 +460,7 @@ export type Database = {
           id: string;
           nome: string;
           nome_usuario: string | null;
+          numero_cartao_estudante: string | null;
           papel: Database['public']['Enums']['papel_usuario'];
           publico: boolean;
           push_token: string | null;
@@ -479,6 +476,7 @@ export type Database = {
           id: string;
           nome: string;
           nome_usuario?: string | null;
+          numero_cartao_estudante?: string | null;
           papel?: Database['public']['Enums']['papel_usuario'];
           publico?: boolean;
           push_token?: string | null;
@@ -494,6 +492,7 @@ export type Database = {
           id?: string;
           nome?: string;
           nome_usuario?: string | null;
+          numero_cartao_estudante?: string | null;
           papel?: Database['public']['Enums']['papel_usuario'];
           publico?: boolean;
           push_token?: string | null;

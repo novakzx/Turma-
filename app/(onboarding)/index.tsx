@@ -56,6 +56,7 @@ export default function OnboardingScreen() {
   const [criandoTurma, setCriandoTurma] = useState(false);
   const [novoNomeTurma, setNovoNomeTurma] = useState('');
   const [novoAnoTurma, setNovoAnoTurma] = useState('');
+  const [numeroCartao, setNumeroCartao] = useState('');
   const [erro, setErro] = useState<string | null>(null);
 
   const escolasQuery = useQuery({ queryKey: ['escolas'], queryFn: listarEscolas });
@@ -74,6 +75,17 @@ export default function OnboardingScreen() {
   const turmaSelecionada = (turmasQuery.data ?? []).find((t) => t.id === turmaId) ?? null;
   const turmaEhDeOutraPessoa =
     !!turmaSelecionada?.criado_por && turmaSelecionada.criado_por !== session?.user.id;
+
+  const escolaSelecionada = (escolasQuery.data ?? []).find((e) => e.id === escolaId) ?? null;
+  // Verificação de estudante (brief original, seção 3): e-mail
+  // institucional + número do cartão. `dominio_email` fica null até
+  // alguém preencher manualmente pra essa escola — sem isso, não dá
+  // pra checar (documentado na migration `verificacao_estudante`), então
+  // a checagem só bloqueia quando a escola tem domínio configurado.
+  const emailDoUsuario = session?.user.email ?? '';
+  const dominioNaoBate =
+    !!escolaSelecionada?.dominio_email &&
+    !emailDoUsuario.toLowerCase().endsWith(`@${escolaSelecionada.dominio_email.toLowerCase()}`);
 
   const pedidoQuery = useQuery({
     queryKey: ['meu-pedido-turma', turmaId, session?.user.id],
@@ -110,7 +122,7 @@ export default function OnboardingScreen() {
   });
 
   const pedirEntradaMutation = useMutation({
-    mutationFn: () => pedirEntradaNaTurma(turmaId as string, session!.user.id),
+    mutationFn: () => pedirEntradaNaTurma(turmaId as string, session!.user.id, numeroCartao.trim()),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ['meu-pedido-turma', turmaId, session?.user.id] }),
     onError: (error) => setErro(mensagemDeErro(error)),
@@ -122,21 +134,55 @@ export default function OnboardingScreen() {
       setErro('Escolha uma escola.');
       return;
     }
+    if (dominioNaoBate) {
+      setErro('Esse não parece ser seu e-mail institucional dessa escola.');
+      return;
+    }
+    if (!numeroCartao.trim()) {
+      setErro('Informe o número do seu cartão de estudante.');
+      return;
+    }
     if (!turmaId) {
       setErro('Escolha uma turma.');
       return;
     }
     setErro(null);
-    mutation.mutate({ userId: session.user.id, escolaId, turmaId });
+    mutation.mutate({
+      userId: session.user.id,
+      escolaId,
+      turmaId,
+      numeroCartao: numeroCartao.trim(),
+    });
   }
 
   function handleCriarTurma() {
+    if (dominioNaoBate) {
+      setErro('Esse não parece ser seu e-mail institucional dessa escola.');
+      return;
+    }
+    if (!numeroCartao.trim()) {
+      setErro('Informe o número do seu cartão de estudante.');
+      return;
+    }
     if (!novoNomeTurma.trim() || !novoAnoTurma.trim()) {
       setErro('Informe o nome e o ano/série da turma nova.');
       return;
     }
     setErro(null);
     criarTurmaMutation.mutate();
+  }
+
+  function handlePedirEntrada() {
+    if (dominioNaoBate) {
+      setErro('Esse não parece ser seu e-mail institucional dessa escola.');
+      return;
+    }
+    if (!numeroCartao.trim()) {
+      setErro('Informe o número do seu cartão de estudante.');
+      return;
+    }
+    setErro(null);
+    pedirEntradaMutation.mutate();
   }
 
   return (
@@ -208,7 +254,36 @@ export default function OnboardingScreen() {
         )}
       </View>
 
-      {escolaId ? (
+      {escolaId && dominioNaoBate ? (
+        <View className="flex-row items-start gap-2 rounded-2xl bg-danger/10 p-3 dark:bg-danger-dark/10">
+          <Ionicons name="shield-outline" size={18} color="#DC2626" />
+          <Text className="flex-1 text-sm text-danger dark:text-danger-dark">
+            Essa escola exige e-mail institucional (@{escolaSelecionada?.dominio_email}). O seu
+            e-mail cadastrado ({emailDoUsuario}) não é desse domínio — refaça o cadastro com o
+            e-mail da escola, ou fale com a coordenação.
+          </Text>
+        </View>
+      ) : null}
+
+      {escolaId && !dominioNaoBate ? (
+        <View className="gap-2">
+          <View className="flex-row items-center gap-1.5">
+            <Ionicons name="card-outline" size={16} color="#64748B" />
+            <Text className="text-sm font-medium text-slate-700 dark:text-slate-300">
+              Verificação de estudante
+            </Text>
+          </View>
+          <TextField
+            label="Número do cartão de estudante"
+            icon="card-outline"
+            value={numeroCartao}
+            onChangeText={setNumeroCartao}
+            placeholder="ex.: 12345"
+          />
+        </View>
+      ) : null}
+
+      {escolaId && !dominioNaoBate ? (
         <View className="gap-2">
           <View className="flex-row items-center gap-1.5">
             <Ionicons name="people-outline" size={16} color="#64748B" />
@@ -316,7 +391,7 @@ export default function OnboardingScreen() {
             <Button
               label="Pedir entrada"
               icon="paper-plane-outline"
-              onPress={() => pedirEntradaMutation.mutate()}
+              onPress={handlePedirEntrada}
               loading={pedirEntradaMutation.isPending}
             />
           </View>
