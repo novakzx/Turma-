@@ -167,9 +167,21 @@ export async function obterUrlAssinada(caminho: string): Promise<string> {
   return data.signedUrl;
 }
 
+/** Sem permissão negada não dá pra distinguir de "usuário cancelou" só
+ * olhando pro retorno — as duas viravam `null` antes, e o botão
+ * "Escolher foto" parecia simplesmente não fazer nada quando a
+ * permissão tinha sido negada (achado testando de verdade: pedido do
+ * usuário "não dá pra adicionar fotos" nas stories era exatamente
+ * isso). Agora permissão negada lança erro de verdade — cancelar
+ * continua silencioso, é a única distinção que interessa pro
+ * usuário. */
 export async function escolherImagem(): Promise<string | null> {
   const permissao = await ImagePicker.requestMediaLibraryPermissionsAsync();
-  if (!permissao.granted) return null;
+  if (!permissao.granted) {
+    throw new Error(
+      'Sem permissão pra acessar suas fotos. Ative o acesso nas configurações do dispositivo/navegador e tente de novo.',
+    );
+  }
 
   const resultado = await ImagePicker.launchImageLibraryAsync({
     mediaTypes: ['images'],
@@ -177,6 +189,32 @@ export async function escolherImagem(): Promise<string | null> {
   });
   if (resultado.canceled || resultado.assets.length === 0) return null;
   return resultado.assets[0].uri;
+}
+
+export type MidiaEscolhida = { uri: string; tipoMidia: 'foto' | 'video' };
+
+/** Igual `escolherImagem`, mas libera vídeo também — usado nas
+ * stories (pedido do usuário: "story não dá pra adicionar fotos nem
+ * vídeos"; foto já funcionava, vídeo nunca tinha sido implementado
+ * mesmo). `tipoMidia` vem do `resultado.assets[0].type` do próprio
+ * picker, que já distingue foto de vídeo — não precisa adivinhar pela
+ * extensão do arquivo. */
+export async function escolherFotoOuVideo(): Promise<MidiaEscolhida | null> {
+  const permissao = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  if (!permissao.granted) {
+    throw new Error(
+      'Sem permissão pra acessar suas fotos/vídeos. Ative o acesso nas configurações do dispositivo/navegador e tente de novo.',
+    );
+  }
+
+  const resultado = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ['images', 'videos'],
+    quality: 0.7,
+    videoMaxDuration: 60,
+  });
+  if (resultado.canceled || resultado.assets.length === 0) return null;
+  const asset = resultado.assets[0];
+  return { uri: asset.uri, tipoMidia: asset.type === 'video' ? 'video' : 'foto' };
 }
 
 export async function denunciar(params: {

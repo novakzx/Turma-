@@ -58,8 +58,13 @@ export default function NovoPost() {
   });
 
   async function handleEscolherImagem() {
-    const uri = await escolherImagem();
-    if (uri) setImagemUri(uri);
+    try {
+      setErro(null);
+      const uri = await escolherImagem();
+      if (uri) setImagemUri(uri);
+    } catch (error) {
+      setErro(mensagemDeErro(error));
+    }
   }
 
   function handlePublicar() {

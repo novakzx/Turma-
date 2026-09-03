@@ -601,12 +601,15 @@ export type Database = {
       };
       profiles: {
         Row: {
+          anos_reprovados: number[];
           bio: string | null;
+          consentimento_responsavel: boolean;
           criado_em: string;
           email: string;
           escola_id: string | null;
           foto_url: string | null;
           id: string;
+          idade: number | null;
           nome: string;
           nome_usuario: string | null;
           numero_cartao_estudante: string | null;
@@ -614,15 +617,19 @@ export type Database = {
           publico: boolean;
           push_token: string | null;
           silenciado_ate: string | null;
+          termos_aceitos_em: string | null;
           turma_id: string | null;
         };
         Insert: {
+          anos_reprovados?: number[];
           bio?: string | null;
+          consentimento_responsavel?: boolean;
           criado_em?: string;
           email: string;
           escola_id?: string | null;
           foto_url?: string | null;
           id: string;
+          idade?: number | null;
           nome: string;
           nome_usuario?: string | null;
           numero_cartao_estudante?: string | null;
@@ -630,15 +637,19 @@ export type Database = {
           publico?: boolean;
           push_token?: string | null;
           silenciado_ate?: string | null;
+          termos_aceitos_em?: string | null;
           turma_id?: string | null;
         };
         Update: {
+          anos_reprovados?: number[];
           bio?: string | null;
+          consentimento_responsavel?: boolean;
           criado_em?: string;
           email?: string;
           escola_id?: string | null;
           foto_url?: string | null;
           id?: string;
+          idade?: number | null;
           nome?: string;
           nome_usuario?: string | null;
           numero_cartao_estudante?: string | null;
@@ -646,6 +657,7 @@ export type Database = {
           publico?: boolean;
           push_token?: string | null;
           silenciado_ate?: string | null;
+          termos_aceitos_em?: string | null;
           turma_id?: string | null;
         };
         Relationships: [
@@ -895,6 +907,10 @@ export type Database = {
       criar_conversa_grupo: {
         Args: { p_nome: string; p_participantes_ids: string[] };
         Returns: string;
+      };
+      nome_usuario_disponivel: {
+        Args: { p_nome_usuario: string };
+        Returns: boolean;
       };
       responder_pedido_entrada_turma: {
         Args: { p_aprovar: boolean; p_pedido_id: string };

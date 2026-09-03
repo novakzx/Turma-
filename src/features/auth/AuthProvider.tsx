@@ -5,7 +5,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import { supabase } from '@/lib/supabase';
 
 import { fetchOrCreateProfile } from './api';
-import type { Profile } from './types';
+import type { MetadadosCadastro, Profile } from './types';
 
 type AuthContextValue = {
   session: Session | null;
@@ -46,12 +46,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const userId = session?.user.id;
   const email = session?.user.email;
-  const nomeMetadata = (session?.user.user_metadata as { nome?: string } | undefined)?.nome;
+  const metadata = session?.user.user_metadata as MetadadosCadastro | undefined;
 
   const profileQuery = useQuery({
     queryKey: ['profile', userId],
     queryFn: () =>
-      fetchOrCreateProfile(userId as string, { email: email ?? '', nome: nomeMetadata }),
+      fetchOrCreateProfile(userId as string, {
+        email: email ?? '',
+        nome: metadata?.nome,
+        nomeUsuario: metadata?.nomeUsuario,
+        idade: metadata?.idade,
+        aceitouTermos: metadata?.aceitouTermos,
+        consentimentoResponsavel: metadata?.consentimentoResponsavel,
+      }),
     enabled: !!userId,
   });
 

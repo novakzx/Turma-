@@ -27,6 +27,8 @@ export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
+        headerStyle: { backgroundColor: escuro ? '#0F172A' : '#FFFFFF' },
+        headerTintColor: escuro ? '#F1F5F9' : '#0F172A',
         tabBarActiveTintColor: escuro ? '#818CF8' : '#4F46E5',
         tabBarInactiveTintColor: escuro ? '#64748B' : '#94A3B8',
         tabBarShowLabel: true,

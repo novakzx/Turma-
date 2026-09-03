@@ -8,6 +8,7 @@ import { TextField } from '@/components/ui/TextField';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { mensagemDeErro } from '@/features/auth/errors';
 import {
+  atualizarAnosReprovados,
   buscarMeuPedidoPendente,
   concluirOnboarding,
   criarTurma,
@@ -15,6 +16,7 @@ import {
   listarTurmasPorEscola,
   pedirEntradaNaTurma,
 } from '@/features/onboarding/api';
+import { idadeBateComSerie } from '@/features/onboarding/idadeEscolar';
 
 function ItemSelecionavel({
   label,
@@ -67,7 +69,7 @@ export function EscolaTurmaForm({
   labelBotaoConfirmar?: string;
   onConcluido: () => void;
 }) {
-  const { session } = useAuth();
+  const { session, profile } = useAuth();
   const queryClient = useQueryClient();
   const [buscaEscola, setBuscaEscola] = useState('');
   const [escolaId, setEscolaId] = useState<string | null>(escolaIdInicial);
@@ -76,6 +78,8 @@ export function EscolaTurmaForm({
   const [novoNomeTurma, setNovoNomeTurma] = useState('');
   const [novoAnoTurma, setNovoAnoTurma] = useState('');
   const [numeroCartao, setNumeroCartao] = useState('');
+  const [reprovou, setReprovou] = useState<boolean | null>(null);
+  const [anosReprovados, setAnosReprovados] = useState<Set<number>>(new Set());
   const [erro, setErro] = useState<string | null>(null);
 
   const escolasQuery = useQuery({ queryKey: ['escolas'], queryFn: listarEscolas });
@@ -94,6 +98,17 @@ export function EscolaTurmaForm({
   const turmaSelecionada = (turmasQuery.data ?? []).find((t) => t.id === turmaId) ?? null;
   const turmaEhDeOutraPessoa =
     !!turmaSelecionada?.criado_por && turmaSelecionada.criado_por !== session?.user.id;
+
+  // Pedido do usuário: se a idade do cadastro não bater com o ano
+  // letivo escolhido, perguntar se o aluno repetiu de ano (e quais
+  // anos) antes de deixar continuar. Vale tanto pra turma já existente
+  // quanto pro ano/série digitado ao criar uma turma nova.
+  const serieAnoParaChecar =
+    turmaSelecionada?.serie_ano ?? (criandoTurma ? novoAnoTurma.trim() : '');
+  const precisaPerguntarRepeticao =
+    !!profile?.idade &&
+    !!serieAnoParaChecar &&
+    !idadeBateComSerie(profile.idade, serieAnoParaChecar);
 
   const escolaSelecionada = (escolasQuery.data ?? []).find((e) => e.id === escolaId) ?? null;
   // Verificação de estudante (brief original, seção 3): e-mail
@@ -146,25 +161,50 @@ export function EscolaTurmaForm({
     onError: (error) => setErro(mensagemDeErro(error)),
   });
 
+  const anosReprovadosMutation = useMutation({
+    mutationFn: (anos: number[]) => atualizarAnosReprovados(session!.user.id, anos),
+    onError: (error) => setErro(mensagemDeErro(error)),
+  });
+
+  /** Validações comuns aos três fluxos (turma existente, criar turma,
+   * pedir entrada) — devolve `false` (com `setErro` já chamado) quando
+   * falta algo, incluindo a pergunta de repetência quando a idade não
+   * bate com a série. */
+  function validarERegistrarRepeticao(): boolean {
+    if (dominioNaoBate) {
+      setErro('Esse não parece ser seu e-mail institucional dessa escola.');
+      return false;
+    }
+    if (!numeroCartao.trim()) {
+      setErro('Informe o número do seu cartão de estudante.');
+      return false;
+    }
+    if (precisaPerguntarRepeticao) {
+      if (reprovou === null) {
+        setErro('Sua idade não bate com esse ano letivo — responda se você repetiu de ano.');
+        return false;
+      }
+      if (reprovou && anosReprovados.size === 0) {
+        setErro('Selecione pelo menos um ano que você reprovou.');
+        return false;
+      }
+      anosReprovadosMutation.mutate(reprovou ? Array.from(anosReprovados) : []);
+    }
+    setErro(null);
+    return true;
+  }
+
   function handleConfirmar() {
     if (!session) return;
     if (!escolaId) {
       setErro('Escolha uma escola.');
       return;
     }
-    if (dominioNaoBate) {
-      setErro('Esse não parece ser seu e-mail institucional dessa escola.');
-      return;
-    }
-    if (!numeroCartao.trim()) {
-      setErro('Informe o número do seu cartão de estudante.');
-      return;
-    }
     if (!turmaId) {
       setErro('Escolha uma turma.');
       return;
     }
-    setErro(null);
+    if (!validarERegistrarRepeticao()) return;
     mutation.mutate({
       userId: session.user.id,
       escolaId,
@@ -174,32 +214,16 @@ export function EscolaTurmaForm({
   }
 
   function handleCriarTurma() {
-    if (dominioNaoBate) {
-      setErro('Esse não parece ser seu e-mail institucional dessa escola.');
-      return;
-    }
-    if (!numeroCartao.trim()) {
-      setErro('Informe o número do seu cartão de estudante.');
-      return;
-    }
     if (!novoNomeTurma.trim() || !novoAnoTurma.trim()) {
       setErro('Informe o nome e o ano/série da turma nova.');
       return;
     }
-    setErro(null);
+    if (!validarERegistrarRepeticao()) return;
     criarTurmaMutation.mutate();
   }
 
   function handlePedirEntrada() {
-    if (dominioNaoBate) {
-      setErro('Esse não parece ser seu e-mail institucional dessa escola.');
-      return;
-    }
-    if (!numeroCartao.trim()) {
-      setErro('Informe o número do seu cartão de estudante.');
-      return;
-    }
-    setErro(null);
+    if (!validarERegistrarRepeticao()) return;
     pedirEntradaMutation.mutate();
   }
 
@@ -359,6 +383,77 @@ export function EscolaTurmaForm({
               )}
             </View>
           )}
+        </View>
+      ) : null}
+
+      {precisaPerguntarRepeticao ? (
+        <View className="gap-3 rounded-2xl border border-accent/30 bg-accent/10 p-3 dark:border-accent-dark/30 dark:bg-accent-dark/10">
+          <View className="flex-row items-start gap-2">
+            <Ionicons name="help-circle-outline" size={18} color="#F59E0B" />
+            <Text className="flex-1 text-sm text-slate-700 dark:text-slate-300">
+              A idade que você informou no cadastro não bate com o {serieAnoParaChecar} — você
+              repetiu de ano?
+            </Text>
+          </View>
+          <View className="flex-row gap-2">
+            <View className="flex-1">
+              <Button
+                label="Não repeti"
+                variant={reprovou === false ? 'primary' : 'secondary'}
+                onPress={() => {
+                  setReprovou(false);
+                  setAnosReprovados(new Set());
+                  setErro(null);
+                }}
+              />
+            </View>
+            <View className="flex-1">
+              <Button
+                label="Sim, repeti"
+                variant={reprovou === true ? 'primary' : 'secondary'}
+                onPress={() => {
+                  setReprovou(true);
+                  setErro(null);
+                }}
+              />
+            </View>
+          </View>
+
+          {reprovou ? (
+            <View className="gap-2">
+              <Text className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                Quais anos você reprovou?
+              </Text>
+              <View className="flex-row flex-wrap gap-2">
+                {Array.from({ length: 12 }, (_, i) => i + 1).map((ano) => {
+                  const selecionado = anosReprovados.has(ano);
+                  return (
+                    <Pressable
+                      key={ano}
+                      onPress={() => {
+                        setAnosReprovados((atual) => {
+                          const novo = new Set(atual);
+                          if (novo.has(ano)) novo.delete(ano);
+                          else novo.add(ano);
+                          return novo;
+                        });
+                        setErro(null);
+                      }}
+                      accessibilityRole="checkbox"
+                      accessibilityState={{ checked: selecionado }}
+                      className={`min-h-11 min-w-11 items-center justify-center rounded-full border px-3 py-2 ${
+                        selecionado
+                          ? 'border-primary bg-primary/10 dark:border-primary-dark'
+                          : 'border-slate-200 dark:border-slate-700'
+                      }`}
+                    >
+                      <Text className="text-sm text-slate-800 dark:text-slate-200">{ano}º</Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+          ) : null}
         </View>
       ) : null}
 

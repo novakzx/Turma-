@@ -23,6 +23,17 @@ export async function listarTurmasPorEscola(escolaId: string) {
   return data;
 }
 
+/** Só grava quando a idade não bate com a série escolhida (pedido do
+ * usuário) — o resto do tempo `anos_reprovados` fica vazio, que é o
+ * padrão da coluna. */
+export async function atualizarAnosReprovados(userId: string, anos: number[]) {
+  const { error } = await supabase
+    .from('profiles')
+    .update({ anos_reprovados: anos })
+    .eq('id', userId);
+  if (error) throw error;
+}
+
 export async function concluirOnboarding(params: {
   userId: string;
   escolaId: string;

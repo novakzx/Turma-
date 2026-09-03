@@ -131,6 +131,10 @@ export async function apagarStory(id: string) {
  * content-type da resposta (não da URI — no web o image picker devolve
  * `blob:http://...` sem ponto nenhum). Path começa com o autor_id, não
  * com turma (story é visível também pra quem segue de fora da turma). */
+/** Nome mantido por compatibilidade, mas funciona pra foto OU vídeo —
+ * o `content-type`/extensão vêm do próprio blob buscado, não é
+ * assumido nada aqui (mesma função serve pros dois desde que o
+ * usuário possa escolher vídeo na story, ver `escolherFotoOuVideo`). */
 export async function fazerUploadImagemStory(autorId: string, uriLocal: string): Promise<string> {
   const resposta = await fetch(uriLocal);
   const arrayBuffer = await resposta.arrayBuffer();

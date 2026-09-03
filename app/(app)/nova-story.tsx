@@ -2,27 +2,45 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Image, Text, View } from 'react-native';
+import { useVideoPlayer, VideoView } from 'expo-video';
 
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { mensagemDeErro } from '@/features/auth/errors';
-import { escolherImagem } from '@/features/feed/api';
+import { escolherFotoOuVideo } from '@/features/feed/api';
 import { criarStory, fazerUploadImagemStory } from '@/features/social/api';
 
+function PreviaVideo({ uri }: { uri: string }) {
+  const player = useVideoPlayer(uri, (p) => {
+    p.loop = true;
+    p.play();
+  });
+  return (
+    <VideoView
+      player={player}
+      style={{ aspectRatio: 9 / 16, width: '100%', borderRadius: 16 }}
+      contentFit="cover"
+      nativeControls={false}
+    />
+  );
+}
+
 /** Story dura 24h (`expira_em`, gravado pelo banco — ver migration
- * `seguidores_stories_perfil_publico`). Só imagem por enquanto, sem
- * texto por cima nem vídeo — MVP simples, documentado como limitação
- * conhecida, dá pra evoluir depois. */
+ * `seguidores_stories_perfil_publico`). Foto ou vídeo (até 60s) — sem
+ * texto por cima, MVP simples, documentado como limitação conhecida.
+ * Story não tem coluna de tipo: o vídeo é identificado depois pela
+ * extensão do arquivo (`ehVideo`, ver `features/social/types.ts`). */
 export default function NovaStory() {
   const { profile } = useAuth();
   const queryClient = useQueryClient();
   const [uriLocal, setUriLocal] = useState<string | null>(null);
+  const [tipoMidia, setTipoMidia] = useState<'foto' | 'video' | null>(null);
   const [erro, setErro] = useState<string | null>(null);
 
   const mutation = useMutation({
     mutationFn: async () => {
       if (!profile) throw new Error('Sem perfil carregado.');
-      if (!uriLocal) throw new Error('Escolha uma imagem primeiro.');
+      if (!uriLocal) throw new Error('Escolha uma foto ou vídeo primeiro.');
       const caminho = await fazerUploadImagemStory(profile.id, uriLocal);
       await criarStory(profile.id, caminho);
     },
@@ -34,13 +52,21 @@ export default function NovaStory() {
   });
 
   async function handleEscolher() {
-    const uri = await escolherImagem();
-    if (uri) setUriLocal(uri);
+    try {
+      setErro(null);
+      const escolhida = await escolherFotoOuVideo();
+      if (escolhida) {
+        setUriLocal(escolhida.uri);
+        setTipoMidia(escolhida.tipoMidia);
+      }
+    } catch (error) {
+      setErro(mensagemDeErro(error));
+    }
   }
 
   function handlePublicar() {
     if (!uriLocal) {
-      setErro('Escolha uma imagem primeiro.');
+      setErro('Escolha uma foto ou vídeo primeiro.');
       return;
     }
     setErro(null);
@@ -54,7 +80,9 @@ export default function NovaStory() {
         Fica visível por 24h pra quem te segue e pra sua turma.
       </Text>
 
-      {uriLocal ? (
+      {uriLocal && tipoMidia === 'video' ? (
+        <PreviaVideo uri={uriLocal} />
+      ) : uriLocal ? (
         <Image
           source={{ uri: uriLocal }}
           className="aspect-[9/16] w-full rounded-2xl"
@@ -65,7 +93,7 @@ export default function NovaStory() {
       )}
 
       <Button
-        label={uriLocal ? 'Trocar imagem' : 'Escolher imagem'}
+        label={uriLocal ? 'Trocar foto/vídeo' : 'Escolher foto ou vídeo'}
         icon="image-outline"
         variant="secondary"
         onPress={handleEscolher}

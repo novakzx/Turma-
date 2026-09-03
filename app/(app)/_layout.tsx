@@ -1,4 +1,5 @@
 import { Stack } from 'expo-router';
+import { useColorScheme } from 'nativewind';
 import { useEffect } from 'react';
 
 import { useAuth } from '@/features/auth/AuthProvider';
@@ -6,6 +7,8 @@ import { registrarPushToken } from '@/features/notificacoes/pushToken';
 
 export default function AppLayout() {
   const { session } = useAuth();
+  const { colorScheme } = useColorScheme();
+  const escuro = colorScheme === 'dark';
 
   useEffect(() => {
     if (!session) return;
@@ -18,7 +21,13 @@ export default function AppLayout() {
   }, [session]);
 
   return (
-    <Stack>
+    <Stack
+      screenOptions={{
+        headerStyle: { backgroundColor: escuro ? '#0F172A' : '#FFFFFF' },
+        headerTintColor: escuro ? '#F1F5F9' : '#0F172A',
+        contentStyle: { backgroundColor: escuro ? '#0F172A' : '#FFFFFF' },
+      }}
+    >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="novo-aviso" options={{ presentation: 'modal', title: 'Novo aviso' }} />
       <Stack.Screen name="novo-post" options={{ presentation: 'modal', title: 'Novo post' }} />

@@ -4,9 +4,18 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Image, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useVideoPlayer, VideoView } from 'expo-video';
 
 import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
 import { listarStoriesDoAutor, obterUrlAssinadaStory } from '@/features/social/api';
+import { ehVideo } from '@/features/social/types';
+
+function StoryVideo({ uri }: { uri: string }) {
+  const player = useVideoPlayer(uri, (p) => p.play());
+  return (
+    <VideoView player={player} style={{ flex: 1 }} contentFit="contain" nativeControls={false} />
+  );
+}
 
 /** Visualizador de story — id da rota é o AUTOR (não o story
  * individual), já que uma pessoa pode ter várias ativas ao mesmo
@@ -72,6 +81,8 @@ export default function StoryViewer() {
             <View className="flex-1 items-center justify-center">
               <ActivityIndicator color="#FFFFFF" />
             </View>
+          ) : ehVideo(storyAtual.midia_url) ? (
+            <StoryVideo uri={urlQuery.data} />
           ) : (
             <Image source={{ uri: urlQuery.data }} className="flex-1" resizeMode="contain" />
           )}

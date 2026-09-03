@@ -47,8 +47,12 @@ export default function EditarPerfil() {
   });
 
   async function handleEscolherFoto() {
-    const uri = await escolherImagem();
-    if (uri) setFotoUriLocal(uri);
+    try {
+      const uri = await escolherImagem();
+      if (uri) setFotoUriLocal(uri);
+    } catch (error) {
+      setErros((atual) => ({ ...atual, geral: mensagemDeErro(error) }));
+    }
   }
 
   function handleSalvar() {

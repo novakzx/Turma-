@@ -18,3 +18,13 @@ export type PerfilPublico = PerfilResumo & {
 };
 
 export type StoryComAutor = Story & { profiles: PerfilResumo | null };
+
+const EXTENSOES_VIDEO = ['mp4', 'mov', 'webm', 'm4v', 'avi', '3gp'];
+
+/** Story não tem coluna de tipo — dá pra saber se é vídeo ou foto só
+ * pela extensão do arquivo (gravada por `fazerUploadImagemStory` a
+ * partir do content-type real do blob, então é confiável). */
+export function ehVideo(caminho: string): boolean {
+  const extensao = caminho.split('.').pop()?.toLowerCase();
+  return !!extensao && EXTENSOES_VIDEO.includes(extensao);
+}
