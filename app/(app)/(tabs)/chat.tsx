@@ -85,6 +85,18 @@ function BotaoAba({
   );
 }
 
+/** Instagram mostra a hora da última mensagem na lista de conversas, não
+ * um chevron — mesma ideia de "hoje = só a hora, senão a data curta" do
+ * divisor de horário dentro da conversa (conversa/[id].tsx). */
+function formatarHoraLista(iso: string): string {
+  const data = new Date(iso);
+  const hoje = new Date();
+  if (data.toDateString() === hoje.toDateString()) {
+    return new Intl.DateTimeFormat('pt-PT', { hour: '2-digit', minute: '2-digit' }).format(data);
+  }
+  return new Intl.DateTimeFormat('pt-PT', { day: '2-digit', month: '2-digit' }).format(data);
+}
+
 function LinhaConversa({ conversa, index }: { conversa: ConversaComResumo; index: number }) {
   const nome =
     conversa.tipo === 'grupo'
@@ -98,24 +110,30 @@ function LinhaConversa({ conversa, index }: { conversa: ConversaComResumo; index
         onPress={() => router.push(`/conversa/${conversa.id}`)}
         accessibilityRole="button"
         accessibilityLabel={`Abrir conversa com ${nome}`}
-        className="min-h-11 flex-row items-center gap-3 rounded-3xl border border-slate-100 bg-surface p-3 shadow-sm shadow-slate-900/5 active:opacity-80 dark:border-slate-800 dark:bg-surface-dark"
+        className="min-h-11 flex-row items-center gap-3 px-1 py-2.5 active:opacity-70"
       >
         {conversa.tipo === 'grupo' ? (
-          <View className="h-10 w-10 items-center justify-center rounded-full bg-accent/10 dark:bg-accent-dark/10">
-            <Ionicons name="people" size={20} color="#F59E0B" />
+          <View className="h-14 w-14 items-center justify-center rounded-full bg-accent/10 dark:bg-accent-dark/10">
+            <Ionicons name="people" size={26} color="#F59E0B" />
           </View>
         ) : (
-          <FotoPerfil caminho={foto} nome={nome} tamanho={40} />
+          <FotoPerfil caminho={foto} nome={nome} tamanho={56} />
         )}
         <View className="flex-1">
-          <Text className="text-base font-medium text-slate-900 dark:text-slate-100">{nome}</Text>
+          <Text className="text-base font-semibold text-slate-900 dark:text-slate-100">{nome}</Text>
           {conversa.ultimaMensagem ? (
-            <Text numberOfLines={1} className="text-xs text-slate-500 dark:text-slate-400">
+            <Text numberOfLines={1} className="text-sm text-slate-500 dark:text-slate-400">
               {conversa.ultimaMensagem.conteudo}
             </Text>
-          ) : null}
+          ) : (
+            <Text className="text-sm text-slate-400 dark:text-slate-500">Sem mensagens ainda</Text>
+          )}
         </View>
-        <Ionicons name="chevron-forward" size={18} color="#CBD5E1" />
+        {conversa.ultimaMensagem ? (
+          <Text className="text-xs text-slate-400 dark:text-slate-500">
+            {formatarHoraLista(conversa.ultimaMensagem.criado_em)}
+          </Text>
+        ) : null}
       </Pressable>
     </EntradaAnimada>
   );
