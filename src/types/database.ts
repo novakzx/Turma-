@@ -610,7 +610,10 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      silenciar_usuario: {
+        Args: { p_horas: number; p_perfil_id: string };
+        Returns: undefined;
+      };
     };
     Enums: {
       origem_aviso: 'manual' | 'automatico';

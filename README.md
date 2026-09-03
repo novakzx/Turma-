@@ -105,12 +105,13 @@ app/
   (auth)/             # Login (index) e cadastro — grupo ativo sem sessão
   (onboarding)/       # Escolha de escola/turma — grupo ativo com sessão incompleta
   (app)/              # Área logada — grupo ativo com onboarding completo
-    (tabs)/           # Avisos, Feed, Estudo, Notas, Perfil
+    (tabs)/           # Avisos, Feed, Chat, Estudo, Notas, Perfil
     novo-aviso.tsx    # Modal — só professor/coordenacao chega aqui de verdade (RLS + UI)
     novo-post.tsx     # Modal — criar post (texto/foto/evento/lembrete) na turma
     post/[id].tsx     # Detalhe do post: comentários, denúncia, apagar (autor/staff)
+    sala/[id].tsx     # Sala de chat: mensagens em tempo real, moderação (staff)
 src/
-  features/           # Uma pasta por domínio: auth, onboarding, perfil, avisos, notificacoes, notas, estudo, feed (chat comunitário vem na próxima fase)
+  features/           # Uma pasta por domínio: auth, onboarding, perfil, avisos, notificacoes, notas, estudo, feed, chat
   components/ui/      # Componentes visuais reutilizáveis, sem regra de negócio
   lib/                # Supabase client, TanStack Query client, global.css
   stores/             # Zustand — só estado client-side (filtros, rascunhos)
@@ -131,9 +132,9 @@ O público é majoritariamente menor de idade — isto é requisito de MVP, não
 
 - Toda tabela sensível tem Row Level Security habilitada desde a primeira migration, com policies por papel (`aluno` / `professor` / `coordenacao`) e por escopo (escola/turma) — não é um filtro só no app.
 - `papel` do próprio perfil nunca é editável pelo usuário — só por quem administra o banco (Studio/SQL) — o que evita autopromoção pra professor/coordenacao. No cadastro, todo mundo entra como `aluno`; `escola_id`/`turma_id` **são** editáveis pelo próprio usuário (é o que o onboarding da Fase 1 grava).
-- Silenciar um usuário (`profiles.silenciado_ate`) só pode ser feito por professor/coordenacao — reforçado por um trigger no banco, não só pela regra do app.
-- Mensagem apagada por moderação é soft-delete (`mensagens_chat.apagada`); excluir a própria conta (Fase 1) deve apagar de fato o histórico de mensagens do usuário via `ON DELETE CASCADE`.
-- Não existe sala de chat 1-a-1 aluno-aluno — toda sala é de turma, matéria ou assunto, sempre supervisionável por professor/coordenacao.
+- Silenciar um usuário (`profiles.silenciado_ate`) só pode ser feito por professor/coordenacao — reforçado por um trigger no banco, não só pela regra do app. O prazo (1h/24h) é calculado no banco (`silenciar_usuario`, `now() + interval`), não no cliente — um relógio de dispositivo errado não pode gravar um prazo que já nasce expirado.
+- Mensagem apagada por moderação é soft-delete (`mensagens_chat.apagada`) e some da lista de quem não é staff já na policy de `SELECT` (não é só escondida na UI); excluir a própria conta (Fase 1) deve apagar de fato o histórico de mensagens do usuário via `ON DELETE CASCADE`.
+- Não existe sala de chat 1-a-1 aluno-aluno — toda sala é de turma, matéria ou assunto, sempre supervisionável por professor/coordenacao. Sala de turma/matéria nasce sozinha (trigger) quando a turma/matéria é criada; só sala de assunto é criada pelo aluno, e trancar/destrancar é ação exclusiva de staff.
 - Nenhuma chave de API sensível (Anthropic, service role) chega ao bundle do app — variável sem prefixo `EXPO_PUBLIC_` não é visível no cliente e vive só como secret de Edge Function.
 - Funções auxiliares de RLS (`current_papel`, `is_staff`, etc.) moram no schema `private`, fora do que o PostgREST expõe como API pública — evita que virem endpoint (`/rest/v1/rpc/...`) chamável por qualquer um.
 - **Pendente de configuração manual** (não tem endpoint de API pra isso): ligar "Leaked Password Protection" em Studio → Authentication → Policies, pra bloquear senha de cadastro conhecida em vazamento (checagem via HaveIBeenPwned).
@@ -155,12 +156,12 @@ O público é majoritariamente menor de idade — isto é requisito de MVP, não
 - [x] **Fase 2 — Avisos e clima**: mural em tempo real, push via Edge Function, integração Open-Meteo, aviso automático de trajeto.
 - [x] **Fase 3 — Estudo**: chat com IA por matéria (aguardando secret `ANTHROPIC_API_KEY`), calculadora de notas.
 - [x] **Fase 4 — Feed da turma**: post, curtida, comentário, upload de imagem.
-- [ ] **Fase 5 — Chat comunitário**: salas em tempo real, moderação.
+- [x] **Fase 5 — Chat comunitário**: salas em tempo real, moderação.
 - [ ] **Fase 6 — Acabamento**: acessibilidade, estados vazio/erro, build EAS, preparação pra loja.
 
 ## Status atual
 
-Fase 4 completa e testada de ponta a ponta contra o projeto Supabase real: criar post (texto, foto, evento com data, lembrete), curtir/descurtir, comentar, apagar post/comentário (autor ou staff) e denunciar post/comentário — tudo com os três estados de lista (carregando/vazio/com dado) e escopado à turma do aluno via RLS. Upload de foto testado de ponta a ponta contra o bucket privado `posts-midia` (upload real + URL assinada renderizando). Fase 3 segue como antes: calculadora de notas e chat com IA (aguardando `ANTHROPIC_API_KEY`). Fase 5 (chat comunitário) é o próximo passo.
+Fase 5 completa e testada de ponta a ponta contra o projeto Supabase real, com duas contas simultâneas (aluno + professor): sala de turma e de matéria nascem sozinhas (trigger), sala de assunto criada pelo aluno, mensagem em tempo real via Supabase Realtime (inserida por um usuário aparece no outro sem refresh), apagar mensagem (soft delete, só staff), silenciar usuário (1h/24h, prazo calculado no servidor) e trancar/destrancar sala (só staff) — RLS testada diretamente (insert de mensagem silenciada/em sala trancada é rejeitado pelo banco, não só escondido na UI). Fase 4 (feed) e Fase 3 (notas/chat IA) seguem como antes. Fase 6 (acabamento) é o próximo passo.
 
 ### Dados de exemplo
 
