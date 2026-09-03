@@ -10,6 +10,9 @@ module.exports = defineConfig([
     },
   },
   {
-    ignores: ['dist/*', '.expo/*', 'node_modules/*', 'coverage/*'],
+    // Entrypoints de Edge Function rodam em Deno (global `Deno`, imports
+    // jsr:/npm:) — fora do que eslint-config-expo entende. _shared/ é TS
+    // puro e continua linted normalmente.
+    ignores: ['dist/*', '.expo/*', 'node_modules/*', 'coverage/*', 'supabase/functions/*/index.ts'],
   },
 ]);

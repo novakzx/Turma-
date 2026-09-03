@@ -6,7 +6,13 @@ import { signOut } from '@/features/auth/api';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { buscarTurmaComEscola } from '@/features/perfil/api';
 
-export default function Home() {
+const ROTULO_PAPEL = {
+  aluno: 'Aluno',
+  professor: 'Professor',
+  coordenacao: 'Coordenação',
+} as const;
+
+export default function Perfil() {
   const { profile } = useAuth();
   const queryClient = useQueryClient();
 
@@ -36,16 +42,15 @@ export default function Home() {
         <Text className="text-2xl font-bold text-primary dark:text-primary-dark">
           Olá, {profile?.nome ?? '...'}!
         </Text>
+        <Text className="text-sm text-slate-500 dark:text-slate-400">
+          {profile ? ROTULO_PAPEL[profile.papel] : ''}
+        </Text>
         {turmaQuery.data ? (
           <Text className="text-base text-slate-600 dark:text-slate-400">
             {turmaQuery.data.escolas?.nome} · {turmaQuery.data.serie_ano} · {turmaQuery.data.nome}
           </Text>
         ) : null}
       </View>
-
-      <Text className="text-base text-slate-600 dark:text-slate-400">
-        Fase 1 completa: conta e perfil prontos. O mural de avisos chega na Fase 2.
-      </Text>
 
       <Button label="Sair" variant="secondary" onPress={handleSair} loading={mutation.isPending} />
     </View>

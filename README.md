@@ -46,6 +46,17 @@ Copie `.env.example` pra `.env` e preencha:
 
 As duas últimas linhas da tabela são secrets de Edge Function, não variáveis do app — não existe `.env` pra elas neste repo; são configuradas direto no projeto Supabase (`supabase secrets set NOME=valor`).
 
+### Edge Functions e automações (Fase 2)
+
+| Nome              | Disparo                                                               | O que faz                                                                                                                                                                                                            |
+| ----------------- | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `notificar-aviso` | Trigger `AFTER INSERT` em `avisos` (`private.notificar_aviso_criado`) | Lê `push_token` de quem tem direito ao aviso (escopo escola/turma, só `aluno` — ver `supabase/functions/_shared/regras.ts`) e manda pro Expo Push Service.                                                           |
+| `aviso-clima`     | `pg_cron`, a cada 4h (`aviso-clima-periodico`)                        | Pra cada escola com `latitude`/`longitude` cadastrada, consulta o Open-Meteo e cria um aviso `tipo='trajeto'` quando a previsão passa o limite configurável daquela escola. O INSERT aciona sozinho o trigger acima. |
+
+Ambas têm `verify_jwt` ligado (o padrão recomendado) — o trigger e o cron autenticam com a chave anon do projeto (pública, a mesma do `.env`), e a Edge Function usa a `SUPABASE_SERVICE_ROLE_KEY` que o runtime já injeta sozinho pra ler `profiles`/`escolas` ignorando RLS. Isso evitou precisar gerenciar um segredo próprio via `supabase secrets set`.
+
+Pra redeployar depois de mexer no código: `supabase functions deploy notificar-aviso` / `supabase functions deploy aviso-clima` (ou pelo MCP do Supabase, como foi feito aqui).
+
 ### Banco de dados (Supabase)
 
 O schema inicial (todas as tabelas do modelo de dados + RLS) está versionado em [`supabase/migrations/`](supabase/migrations). Pra aplicar num projeto Supabase:
@@ -92,13 +103,18 @@ app/
   (onboarding)/       # Escolha de escola/turma — grupo ativo com sessão incompleta
   (app)/              # Área logada — grupo ativo com onboarding completo
 src/
-  features/           # Uma pasta por domínio: auth, onboarding, perfil (avisos/estudo/notas/feed/chat vêm nas próximas fases)
+  features/           # Uma pasta por domínio: auth, onboarding, perfil, avisos, notificacoes (estudo/notas/feed/chat vêm nas próximas fases)
   components/ui/      # Componentes visuais reutilizáveis, sem regra de negócio
   lib/                # Supabase client, TanStack Query client, global.css
   stores/             # Zustand — só estado client-side (filtros, rascunhos)
   types/              # Tipos compartilhados (database.ts é gerado pelo Supabase CLI)
 supabase/
   migrations/         # Schema versionado, aplicado via `supabase db push`
+  seed.sql            # Dados de exemplo (escolas/turmas reais de Lisboa e Setúbal)
+  functions/
+    _shared/regras.ts # Lógica pura das Edge Functions (testada com Jest)
+    notificar-aviso/  # Dispara push quando um aviso é criado
+    aviso-clima/      # Cron: cria aviso automático de trajeto via Open-Meteo
 ```
 
 ## Segurança e privacidade
@@ -117,12 +133,15 @@ O público é majoritariamente menor de idade — isto é requisito de MVP, não
 ## Limitações conhecidas
 
 - **Modo escuro no preview web**: `useColorScheme()` (NativeWind) já lê a preferência do sistema corretamente — dá pra confirmar pelo header nativo, que muda de cor — mas, especificamente no target **web** desta versão do NativeWind/Expo, a classe `dark` não chega a ser aplicada no `<html>`, então as classes `dark:` do Tailwind ficam sem efeito visual só nesse target. iOS e Android (Expo Go/EAS, o target real do app) seguem o caminho documentado pela lib e não têm esse problema — vale reconfirmar num device/simulador real quando a Fase 1 tiver telas de verdade pra testar. Ver comentário em `app/_layout.tsx`.
+- **Só 2 das 222 escolas do seed têm `latitude`/`longitude`** (Escola Secundária Pedro Nunes, Lisboa e Escola Secundária Dom Manuel Martins, Setúbal — geocodificadas à mão só pra validar o pipeline de clima de ponta a ponta). `aviso-clima` pula sozinha qualquer escola sem coordenada, então isso não quebra nada — só significa que o aviso automático de trajeto só funciona pra essas duas por enquanto. Geocodificar as outras 220 é trabalho futuro (dá pra automatizar com Nominatim/OSM, respeitando o limite de 1 req/s do serviço gratuito).
+- **Push notification não dá pra testar no preview web**: `expo-notifications` não tem suporte completo no target web (o SDK avisa isso sozinho no console) e `Alert.alert` do React Native também não tem UI no web — o fluxo de logout e o pipeline de push foram verificados via chamada direta à API/Edge Function em vez de clique na tela. Ambos usam APIs padrão do React Native/Expo, então funcionam normalmente em iOS/Android — só não dá pra ver rodando neste preview.
+- **`getExpoPushTokenAsync` precisa de `projectId`** (extra.eas.projectId no app config), que só existe depois de `eas init` — isso é trabalho da Fase 6 (build via EAS). Até lá, `registrarPushToken` roda sem erro mas não salva token nenhum (device sem projectId configurado).
 
 ## Roadmap
 
 - [x] **Fase 0 — Fundação**: projeto Expo + TypeScript, schema Supabase com RLS, lint/test/CI.
 - [x] **Fase 1 — Conta e perfil**: cadastro/login (email+senha), onboarding de escola/turma, papel `aluno` por padrão.
-- [ ] **Fase 2 — Avisos e clima**: mural de avisos, push, integração Open-Meteo, aviso automático de trajeto.
+- [x] **Fase 2 — Avisos e clima**: mural em tempo real, push via Edge Function, integração Open-Meteo, aviso automático de trajeto.
 - [ ] **Fase 3 — Estudo**: chat com IA por matéria, calculadora de notas.
 - [ ] **Fase 4 — Feed da turma**: post, curtida, comentário, upload de imagem.
 - [ ] **Fase 5 — Chat comunitário**: salas em tempo real, moderação.
@@ -130,7 +149,7 @@ O público é majoritariamente menor de idade — isto é requisito de MVP, não
 
 ## Status atual
 
-Fase 1 completa e testada de ponta a ponta contra um projeto Supabase real (cadastro → confirmação de e-mail → login → onboarding → home → logout), com `Stack.Protected` do Expo Router decidindo a rota certa a partir de sessão + perfil. Fase 2 é o próximo passo.
+Fase 2 completa e testada de ponta a ponta contra o projeto Supabase real: cadastro → confirmação de e-mail → login → onboarding → mural de avisos (com tema `Stack.Protected` do Expo Router decidindo a rota certa a partir de sessão + perfil) → professor publica aviso pela tela de novo aviso → aviso aparece em tempo real pro aluno → Edge Function de push dispara → logout. `aviso-clima` também foi disparado manualmente e criou um aviso automático de trajeto de verdade (removido depois de confirmar). Fase 3 (chat com IA + calculadora de notas) é o próximo passo.
 
 ### Dados de exemplo
 

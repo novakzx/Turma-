@@ -8,5 +8,11 @@
     }
   },
   "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts", "nativewind-env.d.ts"],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    // Roda em Deno (Edge Functions), não no projeto RN — Deno global e
+    // imports jsr:/npm: não existem pra esse tsconfig. _shared/regras.ts
+    // é TS puro e é testado via Jest, mas não passa pelo tsc do app.
+    "supabase/functions"
+  ]
 }
