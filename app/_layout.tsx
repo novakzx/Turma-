@@ -10,6 +10,7 @@ import { ActivityIndicator, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { AvisosWeb } from '@/components/ui/AvisosWeb';
 import { AuthProvider, useAuth } from '@/features/auth/AuthProvider';
 import { carregarTemaPreferido } from '@/features/configuracoes/tema';
 import { queryClient } from '@/lib/queryClient';
@@ -71,6 +72,7 @@ function RootNavigator() {
           <Stack.Screen name="(app)" options={{ headerShown: false }} />
         </Stack.Protected>
       </Stack>
+      <AvisosWeb />
     </>
   );
 }

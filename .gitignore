@@ -41,3 +41,6 @@ coverage/
 
 # Logs
 *.log
+
+# Cache local do CLI da Supabase (criado por `npx supabase ...`)
+supabase/.temp/
