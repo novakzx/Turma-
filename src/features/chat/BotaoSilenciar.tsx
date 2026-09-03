@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
@@ -28,7 +29,12 @@ export function BotaoSilenciar({ perfilId }: { perfilId: string }) {
   });
 
   if (feito) {
-    return <Text className="text-xs text-slate-500 dark:text-slate-400">Usuário silenciado</Text>;
+    return (
+      <View className="flex-row items-center gap-1">
+        <Ionicons name="volume-mute" size={14} color="#94A3B8" />
+        <Text className="text-xs text-slate-500 dark:text-slate-400">Usuário silenciado</Text>
+      </View>
+    );
   }
 
   if (!aberto) {
@@ -37,8 +43,9 @@ export function BotaoSilenciar({ perfilId }: { perfilId: string }) {
         onPress={() => setAberto(true)}
         accessibilityRole="button"
         accessibilityLabel="Silenciar usuário"
-        className="min-h-11 min-w-11 items-center justify-center px-2"
+        className="min-h-11 min-w-11 flex-row items-center gap-1 px-2"
       >
+        <Ionicons name="volume-mute-outline" size={14} color="#94A3B8" />
         <Text className="text-xs text-slate-500 dark:text-slate-400">Silenciar</Text>
       </Pressable>
     );
@@ -46,20 +53,20 @@ export function BotaoSilenciar({ perfilId }: { perfilId: string }) {
 
   return (
     <View className="gap-1">
-      <View className="flex-row gap-2">
+      <View className="flex-row gap-2 rounded-full bg-danger/5 px-1 py-0.5 dark:bg-danger-dark/10">
         <Pressable
           onPress={() => mutation.mutate(1)}
           accessibilityRole="button"
           className="min-h-11 justify-center px-2"
         >
-          <Text className="text-xs text-danger dark:text-danger-dark">1 hora</Text>
+          <Text className="text-xs font-medium text-danger dark:text-danger-dark">1 hora</Text>
         </Pressable>
         <Pressable
           onPress={() => mutation.mutate(24)}
           accessibilityRole="button"
           className="min-h-11 justify-center px-2"
         >
-          <Text className="text-xs text-danger dark:text-danger-dark">24 horas</Text>
+          <Text className="text-xs font-medium text-danger dark:text-danger-dark">24 horas</Text>
         </Pressable>
         <Pressable
           onPress={() => setAberto(false)}

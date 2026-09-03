@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { ActivityIndicator, Text, View } from 'react-native';
 
 import { Button } from './Button';
@@ -6,6 +7,11 @@ type EmptyStateProps = {
   titulo: string;
   descricao?: string;
   onTentarNovo?: () => void;
+  /** Ícone do "cartão" ilustrativo (Ionicons). Por padrão usa uma caixa
+   * vazia; passe um ícone temático (ex.: "chatbubbles-outline") quando
+   * fizer sentido pro contexto da lista. Erro de rede já cai sozinho
+   * pra um ícone de "sem conexão" quando `onTentarNovo` existe. */
+  icon?: keyof typeof Ionicons.glyphMap;
 };
 
 /**
@@ -14,9 +20,14 @@ type EmptyStateProps = {
  * tela em branco"). `onTentarNovo` só aparece quando faz sentido tentar
  * de novo (erro de rede) — vazio de verdade não precisa de botão.
  */
-export function EmptyState({ titulo, descricao, onTentarNovo }: EmptyStateProps) {
+export function EmptyState({ titulo, descricao, onTentarNovo, icon }: EmptyStateProps) {
+  const nomeIcone = icon ?? (onTentarNovo ? 'cloud-offline-outline' : 'file-tray-outline');
+
   return (
-    <View className="flex-1 items-center justify-center gap-2 px-8 py-16">
+    <View className="flex-1 items-center justify-center gap-3 px-8 py-16">
+      <View className="h-20 w-20 items-center justify-center rounded-full bg-primary/10 dark:bg-primary-dark/10">
+        <Ionicons name={nomeIcone} size={36} color="#4F46E5" />
+      </View>
       <Text className="text-center text-base font-medium text-slate-700 dark:text-slate-300">
         {titulo}
       </Text>
@@ -25,7 +36,12 @@ export function EmptyState({ titulo, descricao, onTentarNovo }: EmptyStateProps)
       ) : null}
       {onTentarNovo ? (
         <View className="mt-3">
-          <Button label="Tentar de novo" variant="secondary" onPress={onTentarNovo} />
+          <Button
+            label="Tentar de novo"
+            icon="refresh"
+            variant="secondary"
+            onPress={onTentarNovo}
+          />
         </View>
       ) : null}
     </View>
@@ -35,7 +51,7 @@ export function EmptyState({ titulo, descricao, onTentarNovo }: EmptyStateProps)
 export function LoadingState() {
   return (
     <View className="flex-1 items-center justify-center py-16">
-      <ActivityIndicator />
+      <ActivityIndicator color="#4F46E5" />
     </View>
   );
 }

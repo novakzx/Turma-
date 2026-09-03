@@ -1,4 +1,5 @@
 import '@/lib/global.css';
+import '@/lib/nativewindAnimated';
 
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';

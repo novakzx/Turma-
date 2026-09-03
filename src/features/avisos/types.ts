@@ -1,3 +1,5 @@
+import type { Ionicons } from '@expo/vector-icons';
+
 import type { Enums, Tables } from '@/types/database';
 
 export type Aviso = Tables<'avisos'>;
@@ -12,6 +14,19 @@ export const ROTULO_TIPO_AVISO: Record<TipoAviso, string> = {
   trabalho: 'Trabalho',
   comunicado: 'Comunicado',
   trajeto: 'Trajeto (clima)',
+};
+
+/** Ícone por tipo de aviso — dá pra reconhecer o tipo num relance, sem
+ * precisar ler o rótulo (visual da Fase 6). */
+export const ICONE_TIPO_AVISO: Record<TipoAviso, keyof typeof Ionicons.glyphMap> = {
+  greve: 'flag',
+  feriado: 'sunny',
+  suspensao: 'close-circle',
+  mudanca_horario: 'time',
+  prova: 'document-text',
+  trabalho: 'briefcase',
+  comunicado: 'megaphone',
+  trajeto: 'rainy',
 };
 
 /** Tipos que professor/coordenacao escolhem ao publicar — 'trajeto' é

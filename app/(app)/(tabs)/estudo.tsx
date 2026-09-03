@@ -1,21 +1,20 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  Text,
-  View,
-} from 'react-native';
+import { FlatList, KeyboardAvoidingView, Platform, Pressable, Text, View } from 'react-native';
 
+import { Button } from '@/components/ui/Button';
 import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
 import { TextField } from '@/components/ui/TextField';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { mensagemDeErro } from '@/features/auth/errors';
 import { enviarMensagemChat, listarHistoricoChat } from '@/features/estudo/api';
-import { ROTULO_MODO, type MensagemChatIA, type ModoChatEstudo } from '@/features/estudo/types';
+import {
+  ICONE_MODO,
+  ROTULO_MODO,
+  type MensagemChatIA,
+  type ModoChatEstudo,
+} from '@/features/estudo/types';
 import { listarMateriasDaTurma } from '@/features/notas/api';
 
 const MODOS: ModoChatEstudo[] = ['duvida', 'explicar', 'resumo', 'plano'];
@@ -34,12 +33,13 @@ function ChipMateria({
       onPress={onPress}
       accessibilityRole="button"
       accessibilityState={{ selected: selecionada }}
-      className={`min-h-11 justify-center rounded-full border px-4 ${
+      className={`min-h-11 flex-row items-center justify-center gap-1.5 rounded-full border px-4 ${
         selecionada
           ? 'border-primary bg-primary/10 dark:border-primary-dark'
-          : 'border-slate-300 dark:border-slate-700'
+          : 'border-slate-200 dark:border-slate-700'
       }`}
     >
+      <Ionicons name="book-outline" size={15} color={selecionada ? '#4F46E5' : '#94A3B8'} />
       <Text className="text-sm text-slate-900 dark:text-slate-100">{nome}</Text>
     </Pressable>
   );
@@ -48,12 +48,17 @@ function ChipMateria({
 function BolhaMensagem({ mensagem }: { mensagem: MensagemChatIA }) {
   const doAluno = mensagem.papel === 'usuario';
   return (
-    <View className={`max-w-[85%] ${doAluno ? 'self-end' : 'self-start'}`}>
+    <View className={`max-w-[85%] flex-row items-end gap-2 ${doAluno ? 'self-end' : 'self-start'}`}>
+      {!doAluno ? (
+        <View className="h-7 w-7 items-center justify-center rounded-full bg-accent/10 dark:bg-accent-dark/10">
+          <Ionicons name="sparkles" size={14} color="#F59E0B" />
+        </View>
+      ) : null}
       <View
-        className={`rounded-lg px-3 py-2 ${
+        className={`rounded-2xl px-4 py-2.5 shadow-sm shadow-slate-900/5 ${
           doAluno
             ? 'bg-primary dark:bg-primary-dark'
-            : 'border border-slate-200 bg-surface dark:border-slate-700 dark:bg-surface-dark'
+            : 'border border-slate-100 bg-surface dark:border-slate-800 dark:bg-surface-dark'
         }`}
       >
         <Text className={doAluno ? 'text-white' : 'text-slate-900 dark:text-slate-100'}>
@@ -116,6 +121,7 @@ export default function Estudo() {
   if ((materiasQuery.data?.length ?? 0) === 0) {
     return (
       <EmptyState
+        icon="book-outline"
         titulo="Sua turma ainda não tem matéria cadastrada"
         descricao="Fale com a coordenação — matéria é cadastrada por ela."
       />
@@ -127,7 +133,7 @@ export default function Estudo() {
       className="flex-1 bg-background dark:bg-background-dark"
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View className="gap-2 border-b border-slate-200 p-3 dark:border-slate-700">
+      <View className="gap-2 border-b border-slate-100 p-3 dark:border-slate-800">
         <View className="flex-row flex-wrap gap-2">
           {(materiasQuery.data ?? []).map((materia) => (
             <ChipMateria
@@ -146,12 +152,17 @@ export default function Estudo() {
                 onPress={() => setModo(opcao)}
                 accessibilityRole="button"
                 accessibilityState={{ selected: modo === opcao }}
-                className={`min-h-11 justify-center rounded-full border px-3 ${
+                className={`min-h-11 flex-row items-center justify-center gap-1 rounded-full border px-3 ${
                   modo === opcao
                     ? 'border-accent bg-accent/10 dark:border-accent-dark'
-                    : 'border-slate-300 dark:border-slate-700'
+                    : 'border-slate-200 dark:border-slate-700'
                 }`}
               >
+                <Ionicons
+                  name={ICONE_MODO[opcao]}
+                  size={14}
+                  color={modo === opcao ? '#F59E0B' : '#94A3B8'}
+                />
                 <Text className="text-xs text-slate-900 dark:text-slate-100">
                   {ROTULO_MODO[opcao]}
                 </Text>
@@ -162,7 +173,11 @@ export default function Estudo() {
       </View>
 
       {!materiaId ? (
-        <EmptyState titulo="Escolha uma matéria" descricao="Toque num chip acima pra começar." />
+        <EmptyState
+          icon="hand-left-outline"
+          titulo="Escolha uma matéria"
+          descricao="Toque num chip acima pra começar."
+        />
       ) : historicoQuery.isLoading ? (
         <LoadingState />
       ) : historicoQuery.isError ? (
@@ -172,11 +187,13 @@ export default function Estudo() {
         />
       ) : (
         <FlatList
+          className="flex-1"
           data={historicoQuery.data}
           keyExtractor={(item) => item.id}
           contentContainerClassName="gap-2 p-4"
           ListEmptyComponent={
             <EmptyState
+              icon="sparkles-outline"
               titulo="Ainda não tem conversa nessa matéria"
               descricao="Escolhe o modo acima e manda sua primeira pergunta."
             />
@@ -186,33 +203,30 @@ export default function Estudo() {
       )}
 
       {materiaId ? (
-        <View className="gap-2 border-t border-slate-200 p-3 dark:border-slate-700">
-          {erro ? <Text className="text-sm text-danger dark:text-danger-dark">{erro}</Text> : null}
+        <View className="gap-2 border-t border-slate-100 p-3 pb-6 dark:border-slate-800">
+          {erro ? (
+            <View className="flex-row items-center gap-1.5">
+              <Ionicons name="alert-circle" size={14} color="#DC2626" />
+              <Text className="text-sm text-danger dark:text-danger-dark">{erro}</Text>
+            </View>
+          ) : null}
           <View className="flex-row items-end gap-2">
             <View className="flex-1">
               <TextField
-                label=""
+                label="Mensagem"
                 value={texto}
                 onChangeText={setTexto}
                 placeholder="Escreve sua pergunta..."
                 multiline
               />
             </View>
-            <Pressable
+            <Button
+              label=""
+              icon="send"
               onPress={handleEnviar}
-              disabled={enviarMutation.isPending}
-              accessibilityRole="button"
+              loading={enviarMutation.isPending}
               accessibilityLabel="Enviar"
-              className={`min-h-11 min-w-11 items-center justify-center rounded-lg bg-primary px-4 dark:bg-primary-dark ${
-                enviarMutation.isPending ? 'opacity-60' : ''
-              }`}
-            >
-              {enviarMutation.isPending ? (
-                <ActivityIndicator color="#FFFFFF" />
-              ) : (
-                <Text className="font-semibold text-white">Enviar</Text>
-              )}
-            </Pressable>
+            />
           </View>
         </View>
       ) : null}

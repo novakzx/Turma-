@@ -1,3 +1,5 @@
+import type { Ionicons } from '@expo/vector-icons';
+
 import type { Enums, Tables } from '@/types/database';
 
 export type Post = Tables<'posts'>;
@@ -10,4 +12,11 @@ export const ROTULO_TIPO_POST: Record<TipoPost, string> = {
   foto: 'Foto',
   evento: 'Evento',
   lembrete: 'Lembrete',
+};
+
+export const ICONE_TIPO_POST: Record<TipoPost, keyof typeof Ionicons.glyphMap> = {
+  texto: 'chatbox-outline',
+  foto: 'image',
+  evento: 'calendar',
+  lembrete: 'alarm',
 };

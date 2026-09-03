@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useMutation } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useState } from 'react';
@@ -41,15 +42,21 @@ export default function LoginScreen() {
         contentContainerClassName="flex-1 justify-center gap-4 px-6"
         keyboardShouldPersistTaps="handled"
       >
-        <View className="mb-4 gap-1">
-          <Text className="text-3xl font-bold text-primary dark:text-primary-dark">Turma+</Text>
-          <Text className="text-base text-slate-600 dark:text-slate-400">
-            Entra com seu e-mail e senha.
-          </Text>
+        <View className="mb-6 items-center gap-3">
+          <View className="h-20 w-20 items-center justify-center rounded-3xl bg-primary shadow-lg shadow-primary/40 dark:bg-primary-dark">
+            <Ionicons name="school" size={36} color="#FFFFFF" />
+          </View>
+          <View className="items-center gap-1">
+            <Text className="text-3xl font-bold text-primary dark:text-primary-dark">Turma+</Text>
+            <Text className="text-base text-slate-600 dark:text-slate-400">
+              Entra com seu e-mail e senha.
+            </Text>
+          </View>
         </View>
 
         <TextField
           label="E-mail"
+          icon="mail-outline"
           value={email}
           onChangeText={setEmail}
           error={erros.email}
@@ -60,6 +67,7 @@ export default function LoginScreen() {
         />
         <TextField
           label="Senha"
+          icon="lock-closed-outline"
           value={senha}
           onChangeText={setSenha}
           error={erros.senha}
@@ -70,12 +78,21 @@ export default function LoginScreen() {
         />
 
         {erros.geral ? (
-          <Text className="text-sm text-danger dark:text-danger-dark">{erros.geral}</Text>
+          <View className="flex-row items-center gap-1.5">
+            <Ionicons name="alert-circle" size={14} color="#DC2626" />
+            <Text className="text-sm text-danger dark:text-danger-dark">{erros.geral}</Text>
+          </View>
         ) : null}
 
-        <Button label="Entrar" onPress={handleSubmit} loading={mutation.isPending} />
+        <Button
+          label="Entrar"
+          icon="log-in-outline"
+          onPress={handleSubmit}
+          loading={mutation.isPending}
+        />
         <Button
           label="Ainda não tenho conta"
+          icon="person-add-outline"
           variant="secondary"
           onPress={() => router.push('/cadastro')}
         />

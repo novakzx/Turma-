@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
@@ -25,13 +26,14 @@ function ItemSelecionavel({
       onPress={onPress}
       accessibilityRole="button"
       accessibilityState={{ selected: selecionado }}
-      className={`min-h-11 justify-center rounded-lg border px-3 py-2 ${
+      className={`min-h-11 flex-row items-center justify-between rounded-2xl border px-4 py-3 ${
         selecionado
           ? 'border-primary bg-primary/10 dark:border-primary-dark'
-          : 'border-slate-300 dark:border-slate-700'
+          : 'border-slate-200 dark:border-slate-700'
       }`}
     >
-      <Text className="text-base text-slate-900 dark:text-slate-100">{label}</Text>
+      <Text className="flex-1 text-base text-slate-900 dark:text-slate-100">{label}</Text>
+      {selecionado ? <Ionicons name="checkmark-circle" size={20} color="#4F46E5" /> : null}
     </Pressable>
   );
 }
@@ -79,19 +81,27 @@ export default function OnboardingScreen() {
       contentContainerClassName="gap-4 bg-background px-6 pb-10 pt-16 dark:bg-background-dark"
       className="flex-1 bg-background dark:bg-background-dark"
     >
-      <View className="gap-1">
-        <Text className="text-2xl font-bold text-primary dark:text-primary-dark">
-          Escolha sua escola e turma
-        </Text>
-        <Text className="text-base text-slate-600 dark:text-slate-400">
-          Isso decide quais avisos e turmas você vê no app.
-        </Text>
+      <View className="mb-2 items-center gap-3">
+        <View className="h-16 w-16 items-center justify-center rounded-3xl bg-primary shadow-lg shadow-primary/40 dark:bg-primary-dark">
+          <Ionicons name="location" size={30} color="#FFFFFF" />
+        </View>
+        <View className="items-center gap-1">
+          <Text className="text-center text-2xl font-bold text-primary dark:text-primary-dark">
+            Escolha sua escola e turma
+          </Text>
+          <Text className="text-center text-base text-slate-600 dark:text-slate-400">
+            Isso decide quais avisos e turmas você vê no app.
+          </Text>
+        </View>
       </View>
 
       <View className="gap-2">
-        <Text className="text-sm font-medium text-slate-700 dark:text-slate-300">Escola</Text>
+        <View className="flex-row items-center gap-1.5">
+          <Ionicons name="business-outline" size={16} color="#64748B" />
+          <Text className="text-sm font-medium text-slate-700 dark:text-slate-300">Escola</Text>
+        </View>
         {escolasQuery.isLoading ? (
-          <ActivityIndicator />
+          <ActivityIndicator color="#4F46E5" />
         ) : escolasQuery.isError ? (
           <Text className="text-danger dark:text-danger-dark">
             Não deu pra carregar as escolas. Tenta de novo mais tarde.
@@ -120,9 +130,12 @@ export default function OnboardingScreen() {
 
       {escolaId ? (
         <View className="gap-2">
-          <Text className="text-sm font-medium text-slate-700 dark:text-slate-300">Turma</Text>
+          <View className="flex-row items-center gap-1.5">
+            <Ionicons name="people-outline" size={16} color="#64748B" />
+            <Text className="text-sm font-medium text-slate-700 dark:text-slate-300">Turma</Text>
+          </View>
           {turmasQuery.isLoading ? (
-            <ActivityIndicator />
+            <ActivityIndicator color="#4F46E5" />
           ) : turmasQuery.isError ? (
             <Text className="text-danger dark:text-danger-dark">
               Não deu pra carregar as turmas. Tenta de novo mais tarde.
@@ -149,9 +162,19 @@ export default function OnboardingScreen() {
         </View>
       ) : null}
 
-      {erro ? <Text className="text-sm text-danger dark:text-danger-dark">{erro}</Text> : null}
+      {erro ? (
+        <View className="flex-row items-center gap-1.5">
+          <Ionicons name="alert-circle" size={14} color="#DC2626" />
+          <Text className="text-sm text-danger dark:text-danger-dark">{erro}</Text>
+        </View>
+      ) : null}
 
-      <Button label="Confirmar" onPress={handleConfirmar} loading={mutation.isPending} />
+      <Button
+        label="Confirmar"
+        icon="checkmark-circle-outline"
+        onPress={handleConfirmar}
+        loading={mutation.isPending}
+      />
     </ScrollView>
   );
 }

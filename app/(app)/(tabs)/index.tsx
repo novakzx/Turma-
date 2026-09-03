@@ -1,12 +1,14 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useEffect } from 'react';
 import { FlatList, Pressable, Text, View } from 'react-native';
 
 import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
+import { EntradaAnimada } from '@/components/ui/EntradaAnimada';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { listarAvisos } from '@/features/avisos/api';
-import { ROTULO_TIPO_AVISO, type Aviso } from '@/features/avisos/types';
+import { ICONE_TIPO_AVISO, ROTULO_TIPO_AVISO, type Aviso } from '@/features/avisos/types';
 import { supabase } from '@/lib/supabase';
 
 function formatarData(iso: string) {
@@ -18,32 +20,44 @@ function formatarData(iso: string) {
   }).format(new Date(iso));
 }
 
-function CartaoAviso({ aviso }: { aviso: Aviso }) {
+function CartaoAviso({ aviso, index }: { aviso: Aviso; index: number }) {
   const isAutomatico = aviso.origem === 'automatico';
+  const corAcento = isAutomatico ? '#F59E0B' : '#4F46E5';
   return (
-    <View className="gap-1.5 rounded-lg border border-slate-200 bg-surface p-4 dark:border-slate-700 dark:bg-surface-dark">
-      <View className="flex-row items-center justify-between">
-        <Text
-          className={`text-xs font-semibold uppercase tracking-wide ${
-            isAutomatico
-              ? 'text-accent dark:text-accent-dark'
-              : 'text-primary dark:text-primary-dark'
-          }`}
+    <EntradaAnimada
+      index={index}
+      className="gap-2 rounded-3xl border border-slate-100 bg-surface p-4 shadow-sm shadow-slate-900/5 dark:border-slate-800 dark:bg-surface-dark"
+    >
+      <View className="flex-row items-center gap-3">
+        <View
+          className="h-10 w-10 items-center justify-center rounded-full"
+          style={{ backgroundColor: `${corAcento}1A` }}
         >
-          {ROTULO_TIPO_AVISO[aviso.tipo]}
-          {aviso.turma_id ? ' · turma' : ' · escola toda'}
-        </Text>
+          <Ionicons name={ICONE_TIPO_AVISO[aviso.tipo]} size={20} color={corAcento} />
+        </View>
+        <View className="flex-1">
+          <Text
+            className={`text-xs font-semibold uppercase tracking-wide ${
+              isAutomatico
+                ? 'text-accent dark:text-accent-dark'
+                : 'text-primary dark:text-primary-dark'
+            }`}
+          >
+            {ROTULO_TIPO_AVISO[aviso.tipo]}
+            {aviso.turma_id ? ' · turma' : ' · escola toda'}
+          </Text>
+          <Text className="text-base font-semibold text-slate-900 dark:text-slate-100">
+            {aviso.titulo}
+          </Text>
+        </View>
         <Text className="text-xs text-slate-500 dark:text-slate-400">
           {formatarData(aviso.criado_em)}
         </Text>
       </View>
-      <Text className="text-base font-semibold text-slate-900 dark:text-slate-100">
-        {aviso.titulo}
-      </Text>
       {aviso.descricao ? (
         <Text className="text-sm text-slate-600 dark:text-slate-400">{aviso.descricao}</Text>
       ) : null}
-    </View>
+    </EntradaAnimada>
   );
 }
 
@@ -90,8 +104,8 @@ export default function MuralDeAvisos() {
         <FlatList
           data={avisosQuery.data}
           keyExtractor={(item) => item.id}
-          contentContainerClassName="gap-3 p-4"
-          renderItem={({ item }) => <CartaoAviso aviso={item} />}
+          contentContainerClassName="gap-3 p-4 pb-28"
+          renderItem={({ item, index }) => <CartaoAviso aviso={item} index={index} />}
         />
       )}
 
@@ -100,9 +114,9 @@ export default function MuralDeAvisos() {
           onPress={() => router.push('/novo-aviso')}
           accessibilityRole="button"
           accessibilityLabel="Publicar aviso"
-          className="absolute bottom-6 right-6 h-14 w-14 items-center justify-center rounded-full bg-primary shadow-lg dark:bg-primary-dark"
+          className="absolute bottom-24 right-6 h-14 w-14 items-center justify-center rounded-full bg-primary shadow-lg shadow-primary/40 dark:bg-primary-dark"
         >
-          <Text className="text-2xl font-bold text-white">+</Text>
+          <Ionicons name="add" size={28} color="#FFFFFF" />
         </Pressable>
       ) : null}
     </View>

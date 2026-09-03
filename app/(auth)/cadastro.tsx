@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useMutation } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useState } from 'react';
@@ -50,6 +51,9 @@ export default function CadastroScreen() {
   if (aguardandoConfirmacao) {
     return (
       <View className="flex-1 items-center justify-center gap-3 bg-background px-6 dark:bg-background-dark">
+        <View className="mb-2 h-20 w-20 items-center justify-center rounded-full bg-success/10 dark:bg-success-dark/10">
+          <Ionicons name="mail-unread-outline" size={36} color="#16A34A" />
+        </View>
         <Text className="text-center text-xl font-bold text-primary dark:text-primary-dark">
           Confirme seu e-mail
         </Text>
@@ -57,7 +61,7 @@ export default function CadastroScreen() {
           Enviamos um link de confirmação pra {email}. Depois de confirmar, volte aqui e entre com
           sua senha.
         </Text>
-        <Button label="Ir para o login" onPress={() => router.replace('/')} />
+        <Button label="Ir para o login" icon="log-in-outline" onPress={() => router.replace('/')} />
       </View>
     );
   }
@@ -82,6 +86,7 @@ export default function CadastroScreen() {
 
         <TextField
           label="Nome"
+          icon="person-outline"
           value={nome}
           onChangeText={setNome}
           error={erros.nome}
@@ -90,6 +95,7 @@ export default function CadastroScreen() {
         />
         <TextField
           label="E-mail"
+          icon="mail-outline"
           value={email}
           onChangeText={setEmail}
           error={erros.email}
@@ -100,6 +106,7 @@ export default function CadastroScreen() {
         />
         <TextField
           label="Senha"
+          icon="lock-closed-outline"
           value={senha}
           onChangeText={setSenha}
           error={erros.senha}
@@ -109,6 +116,7 @@ export default function CadastroScreen() {
         />
         <TextField
           label="Confirmar senha"
+          icon="lock-closed-outline"
           value={confirmarSenha}
           onChangeText={setConfirmarSenha}
           error={erros.confirmarSenha}
@@ -118,11 +126,24 @@ export default function CadastroScreen() {
         />
 
         {erros.geral ? (
-          <Text className="text-sm text-danger dark:text-danger-dark">{erros.geral}</Text>
+          <View className="flex-row items-center gap-1.5">
+            <Ionicons name="alert-circle" size={14} color="#DC2626" />
+            <Text className="text-sm text-danger dark:text-danger-dark">{erros.geral}</Text>
+          </View>
         ) : null}
 
-        <Button label="Criar conta" onPress={handleSubmit} loading={mutation.isPending} />
-        <Button label="Já tenho conta" variant="secondary" onPress={() => router.back()} />
+        <Button
+          label="Criar conta"
+          icon="person-add"
+          onPress={handleSubmit}
+          loading={mutation.isPending}
+        />
+        <Button
+          label="Já tenho conta"
+          icon="arrow-back"
+          variant="secondary"
+          onPress={() => router.back()}
+        />
       </ScrollView>
     </KeyboardAvoidingView>
   );

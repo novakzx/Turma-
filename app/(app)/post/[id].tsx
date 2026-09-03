@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
@@ -18,7 +19,7 @@ import {
 } from '@/features/feed/api';
 import { BotaoDenunciar } from '@/features/feed/BotaoDenunciar';
 import { ImagemPost } from '@/features/feed/ImagemPost';
-import { ROTULO_TIPO_POST } from '@/features/feed/types';
+import { ICONE_TIPO_POST, ROTULO_TIPO_POST } from '@/features/feed/types';
 
 function formatarData(iso: string) {
   return new Intl.DateTimeFormat('pt-PT', {
@@ -77,8 +78,9 @@ function LinhaComentario({
             onPress={onApagar}
             accessibilityRole="button"
             accessibilityLabel="Apagar comentário"
-            className="min-h-11 min-w-11 items-center justify-center px-2"
+            className="min-h-11 min-w-11 flex-row items-center gap-1 px-2"
           >
+            <Ionicons name="trash-outline" size={14} color="#DC2626" />
             <Text className="text-xs text-danger dark:text-danger-dark">Apagar</Text>
           </Pressable>
         ) : null}
@@ -168,8 +170,11 @@ export default function DetalhePost() {
       className="flex-1 bg-background dark:bg-background-dark"
       contentContainerClassName="gap-3 px-6 pb-10 pt-6"
       ListHeaderComponent={
-        <View className="gap-3 border-b border-slate-200 pb-4 dark:border-slate-800">
-          <View className="flex-row items-center justify-between">
+        <View className="gap-3 border-b border-slate-100 pb-4 dark:border-slate-800">
+          <View className="flex-row items-center gap-3">
+            <View className="h-10 w-10 items-center justify-center rounded-full bg-primary/10 dark:bg-primary-dark/10">
+              <Ionicons name={ICONE_TIPO_POST[post.tipo]} size={20} color="#4F46E5" />
+            </View>
             <View className="flex-1 gap-1">
               <Text className="text-base font-semibold text-slate-900 dark:text-slate-100">
                 {post.profiles?.nome ?? 'Aluno'}
@@ -189,15 +194,18 @@ export default function DetalhePost() {
                 accessibilityLabel="Apagar post"
                 className="min-h-11 min-w-11 items-center justify-center px-2"
               >
-                <Text className="text-xs text-danger dark:text-danger-dark">Apagar</Text>
+                <Ionicons name="trash-outline" size={18} color="#DC2626" />
               </Pressable>
             ) : null}
           </View>
 
           {post.tipo === 'evento' && post.data_evento ? (
-            <Text className="text-sm font-medium text-primary dark:text-primary-dark">
-              📅 {formatarDataEvento(post.data_evento)}
-            </Text>
+            <View className="flex-row items-center gap-1.5 self-start rounded-full bg-primary/10 px-3 py-1 dark:bg-primary-dark/10">
+              <Ionicons name="calendar" size={14} color="#4F46E5" />
+              <Text className="text-sm font-medium text-primary dark:text-primary-dark">
+                {formatarDataEvento(post.data_evento)}
+              </Text>
+            </View>
           ) : null}
 
           {post.conteudo ? (
@@ -228,15 +236,19 @@ export default function DetalhePost() {
         comentariosQuery.isLoading ? (
           <LoadingState />
         ) : (
-          <Text className="py-4 text-sm text-slate-500 dark:text-slate-400">
-            Ainda sem comentários. Sê o primeiro a comentar.
-          </Text>
+          <View className="flex-row items-center gap-1.5 py-4">
+            <Ionicons name="chatbubble-outline" size={14} color="#94A3B8" />
+            <Text className="text-sm text-slate-500 dark:text-slate-400">
+              Ainda sem comentários. Sê o primeiro a comentar.
+            </Text>
+          </View>
         )
       }
       ListFooterComponent={
         <View className="mt-4 gap-2">
           <TextField
             label="Adicionar comentário"
+            icon="chatbubble-outline"
             value={novoComentario}
             onChangeText={setNovoComentario}
             error={erro ?? undefined}
@@ -244,6 +256,7 @@ export default function DetalhePost() {
           />
           <Button
             label="Comentar"
+            icon="send"
             onPress={handleEnviarComentario}
             loading={comentarMutation.isPending}
           />

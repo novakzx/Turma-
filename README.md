@@ -97,6 +97,8 @@ Nome do app: **Turma+**. Paleta pensada pra público adolescente sem parecer inf
 
 Modo escuro segue a preferência do sistema por padrão (`nativewind`'s `useColorScheme`, `darkMode: 'class'` no Tailwind) — dá pra evoluir pra um toggle manual na Fase 6 sem mudar a estratégia.
 
+**Linguagem visual** (redesenho pedido junto com a Fase 6): pílulas arredondadas em vez de cantos retos (`rounded-full`/`rounded-2xl`/`rounded-3xl` em quase tudo — botão, campo, card, chip), ícone (`@expo/vector-icons`/Ionicons) em praticamente toda ação e badge de tipo, cards com sombra leve (`shadow-sm`/`shadow-slate-900/5`) e barra de abas flutuante arredondada com ícone por aba. Toque num botão encolhe levemente (`react-native-reanimated`) e um card de lista entra com um fade+slide em cascata (`src/components/ui/EntradaAnimada.tsx`) — ambos desligados quando o sistema pede "reduzir movimento" (`useReducedMotion`). `Animated.View`/`AnimatedPressable` do Reanimated não entendem `className` sozinhos — `src/lib/nativewindAnimated.ts` registra esse suporte uma vez, importado no `app/_layout.tsx` raiz.
+
 ## Estrutura de pastas
 
 ```
@@ -112,8 +114,8 @@ app/
     sala/[id].tsx     # Sala de chat: mensagens em tempo real, moderação (staff)
 src/
   features/           # Uma pasta por domínio: auth, onboarding, perfil, avisos, notificacoes, notas, estudo, feed, chat
-  components/ui/      # Componentes visuais reutilizáveis, sem regra de negócio
-  lib/                # Supabase client, TanStack Query client, global.css
+  components/ui/      # Componentes visuais reutilizáveis, sem regra de negócio (inclui EntradaAnimada.tsx)
+  lib/                # Supabase client, TanStack Query client, global.css, nativewindAnimated.ts (registro de className pro Reanimated)
   stores/             # Zustand — só estado client-side (filtros, rascunhos)
   types/              # Tipos compartilhados (database.ts é gerado pelo Supabase CLI)
 supabase/
@@ -157,11 +159,13 @@ O público é majoritariamente menor de idade — isto é requisito de MVP, não
 - [x] **Fase 3 — Estudo**: chat com IA por matéria (aguardando secret `ANTHROPIC_API_KEY`), calculadora de notas.
 - [x] **Fase 4 — Feed da turma**: post, curtida, comentário, upload de imagem.
 - [x] **Fase 5 — Chat comunitário**: salas em tempo real, moderação.
-- [ ] **Fase 6 — Acabamento**: acessibilidade, estados vazio/erro, build EAS, preparação pra loja.
+- [~] **Fase 6 — Acabamento**: linguagem visual (ícones, animações, cantos arredondados) já aplicada em todo o app; acessibilidade, estados vazio/erro (já cobertos desde a Fase 0), build EAS e preparação pra loja seguem pendentes.
 
 ## Status atual
 
-Fase 5 completa e testada de ponta a ponta contra o projeto Supabase real, com duas contas simultâneas (aluno + professor): sala de turma e de matéria nascem sozinhas (trigger), sala de assunto criada pelo aluno, mensagem em tempo real via Supabase Realtime (inserida por um usuário aparece no outro sem refresh), apagar mensagem (soft delete, só staff), silenciar usuário (1h/24h, prazo calculado no servidor) e trancar/destrancar sala (só staff) — RLS testada diretamente (insert de mensagem silenciada/em sala trancada é rejeitado pelo banco, não só escondido na UI). Fase 4 (feed) e Fase 3 (notas/chat IA) seguem como antes. Fase 6 (acabamento) é o próximo passo.
+Redesign visual aplicado em todo o app (todas as telas de `(auth)`, `(onboarding)` e `(app)`, mais os componentes base em `src/components/ui/`): botões-pílula com ícone e leve encolher no toque, campos com ícone, cards com sombra suave e cantos bem arredondados, barra de abas flutuante com ícone por aba, e listas com entrada em cascata (fade+slide) — tudo desligado quando o sistema pede "reduzir movimento". Paleta de cores mantida (decisão do usuário). Verificado visualmente no browser contra o app rodando de verdade (login, feed, chat com duas contas, notas, perfil), sem erro novo no console.
+
+Fase 5 completa e testada de ponta a ponta contra o projeto Supabase real, com duas contas simultâneas (aluno + professor): sala de turma e de matéria nascem sozinhas (trigger), sala de assunto criada pelo aluno, mensagem em tempo real via Supabase Realtime (inserida por um usuário aparece no outro sem refresh), apagar mensagem (soft delete, só staff), silenciar usuário (1h/24h, prazo calculado no servidor) e trancar/destrancar sala (só staff) — RLS testada diretamente (insert de mensagem silenciada/em sala trancada é rejeitado pelo banco, não só escondido na UI). Fase 4 (feed) e Fase 3 (notas/chat IA) seguem como antes. O que falta da Fase 6 — auditoria de acessibilidade, build via EAS, preparação pra loja — é o próximo passo.
 
 ### Dados de exemplo
 

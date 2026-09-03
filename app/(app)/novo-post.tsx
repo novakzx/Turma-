@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useState } from 'react';
@@ -16,7 +17,7 @@ import { TextField } from '@/components/ui/TextField';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { mensagemDeErro } from '@/features/auth/errors';
 import { criarPost, escolherImagem, fazerUploadImagemPost } from '@/features/feed/api';
-import { ROTULO_TIPO_POST, type TipoPost } from '@/features/feed/types';
+import { ICONE_TIPO_POST, ROTULO_TIPO_POST, type TipoPost } from '@/features/feed/types';
 
 const TIPOS: TipoPost[] = ['texto', 'foto', 'evento', 'lembrete'];
 const REGEX_DATA = /^\d{4}-\d{2}-\d{2}$/;
@@ -96,12 +97,17 @@ export default function NovoPost() {
               onPress={() => setTipo(opcao)}
               accessibilityRole="button"
               accessibilityState={{ selected: tipo === opcao }}
-              className={`min-h-11 justify-center rounded-full border px-4 ${
+              className={`min-h-11 flex-row items-center justify-center gap-1.5 rounded-full border px-4 ${
                 tipo === opcao
                   ? 'border-primary bg-primary/10 dark:border-primary-dark'
-                  : 'border-slate-300 dark:border-slate-700'
+                  : 'border-slate-200 dark:border-slate-700'
               }`}
             >
+              <Ionicons
+                name={ICONE_TIPO_POST[opcao]}
+                size={15}
+                color={tipo === opcao ? '#4F46E5' : '#94A3B8'}
+              />
               <Text className="text-sm text-slate-900 dark:text-slate-100">
                 {ROTULO_TIPO_POST[opcao]}
               </Text>
@@ -112,6 +118,7 @@ export default function NovoPost() {
         {tipo === 'evento' ? (
           <TextField
             label="Data do evento (AAAA-MM-DD)"
+            icon="calendar-outline"
             value={dataEvento}
             onChangeText={setDataEvento}
             placeholder="2026-10-15"
@@ -133,21 +140,32 @@ export default function NovoPost() {
             {imagemUri ? (
               <Image
                 source={{ uri: imagemUri }}
-                className="h-48 w-full rounded-lg"
+                className="h-48 w-full rounded-2xl"
                 resizeMode="cover"
               />
             ) : null}
             <Button
               label={imagemUri ? 'Trocar imagem' : 'Escolher imagem'}
+              icon="image-outline"
               variant="secondary"
               onPress={handleEscolherImagem}
             />
           </View>
         ) : null}
 
-        {erro ? <Text className="text-sm text-danger dark:text-danger-dark">{erro}</Text> : null}
+        {erro ? (
+          <View className="flex-row items-center gap-1.5">
+            <Ionicons name="alert-circle" size={14} color="#DC2626" />
+            <Text className="text-sm text-danger dark:text-danger-dark">{erro}</Text>
+          </View>
+        ) : null}
 
-        <Button label="Publicar" onPress={handlePublicar} loading={mutation.isPending} />
+        <Button
+          label="Publicar"
+          icon="paper-plane"
+          onPress={handlePublicar}
+          loading={mutation.isPending}
+        />
       </ScrollView>
     </KeyboardAvoidingView>
   );

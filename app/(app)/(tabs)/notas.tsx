@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
@@ -34,12 +35,13 @@ function ChipMateria({
       onPress={onPress}
       accessibilityRole="button"
       accessibilityState={{ selected: selecionada }}
-      className={`min-h-11 justify-center rounded-full border px-4 ${
+      className={`min-h-11 flex-row items-center justify-center gap-1.5 rounded-full border px-4 ${
         selecionada
           ? 'border-primary bg-primary/10 dark:border-primary-dark'
-          : 'border-slate-300 dark:border-slate-700'
+          : 'border-slate-200 dark:border-slate-700'
       }`}
     >
+      <Ionicons name="book-outline" size={15} color={selecionada ? '#4F46E5' : '#94A3B8'} />
       <Text className="text-sm text-slate-900 dark:text-slate-100">{nome}</Text>
     </Pressable>
   );
@@ -78,7 +80,7 @@ function LinhaAvaliacao({
   }
 
   return (
-    <View className="gap-2 rounded-lg border border-slate-200 bg-surface p-3 dark:border-slate-700 dark:bg-surface-dark">
+    <View className="gap-2 rounded-2xl border border-slate-100 bg-surface p-3 shadow-sm shadow-slate-900/5 dark:border-slate-800 dark:bg-surface-dark">
       <View className="flex-row items-center justify-between">
         <View className="flex-1">
           <Text className="text-base font-medium text-slate-900 dark:text-slate-100">
@@ -94,8 +96,9 @@ function LinhaAvaliacao({
             onPress={() => setEditando(true)}
             accessibilityRole="button"
             accessibilityLabel={`Lançar nota de ${avaliacao.nome}`}
-            className="min-h-11 min-w-11 items-center justify-center rounded-lg bg-primary/10 px-3 dark:bg-primary-dark/20"
+            className="min-h-11 min-w-11 flex-row items-center gap-1 rounded-full bg-primary/10 px-3 dark:bg-primary-dark/20"
           >
+            <Ionicons name="add-circle-outline" size={16} color="#4F46E5" />
             <Text className="text-primary dark:text-primary-dark">Lançar</Text>
           </Pressable>
         ) : null}
@@ -103,9 +106,9 @@ function LinhaAvaliacao({
           onPress={onApagar}
           accessibilityRole="button"
           accessibilityLabel={`Apagar ${avaliacao.nome}`}
-          className="ml-2 min-h-11 min-w-11 items-center justify-center rounded-lg px-3"
+          className="ml-2 min-h-11 min-w-11 items-center justify-center rounded-full px-3"
         >
-          <Text className="text-danger dark:text-danger-dark">Apagar</Text>
+          <Ionicons name="trash-outline" size={18} color="#DC2626" />
         </Pressable>
       </View>
 
@@ -121,7 +124,7 @@ function LinhaAvaliacao({
               autoFocus
             />
           </View>
-          <Button label="Salvar" onPress={handleSalvar} loading={salvandoNota} />
+          <Button label="Salvar" icon="checkmark" onPress={handleSalvar} loading={salvandoNota} />
         </View>
       ) : null}
     </View>
@@ -247,6 +250,7 @@ export default function Notas() {
   if ((materiasQuery.data?.length ?? 0) === 0) {
     return (
       <EmptyState
+        icon="book-outline"
         titulo="Sua turma ainda não tem matéria cadastrada"
         descricao="Fale com a coordenação — matéria é cadastrada por ela."
       />
@@ -256,7 +260,7 @@ export default function Notas() {
   return (
     <ScrollView
       className="flex-1 bg-background dark:bg-background-dark"
-      contentContainerClassName="gap-4 p-4 pb-10"
+      contentContainerClassName="gap-4 p-4 pb-28"
     >
       <View className="flex-row flex-wrap gap-2">
         {(materiasQuery.data ?? []).map((materia) => (
@@ -271,6 +275,7 @@ export default function Notas() {
 
       {!materiaId ? (
         <EmptyState
+          icon="hand-left-outline"
           titulo="Escolha uma matéria"
           descricao="Toque num chip acima pra ver as avaliações."
         />
@@ -311,10 +316,13 @@ export default function Notas() {
             )}
           </View>
 
-          <View className="gap-3 rounded-lg border border-slate-200 p-4 dark:border-slate-700">
-            <Text className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-              Nova avaliação
-            </Text>
+          <View className="gap-3 rounded-3xl border border-slate-100 bg-surface p-4 shadow-sm shadow-slate-900/5 dark:border-slate-800 dark:bg-surface-dark">
+            <View className="flex-row items-center gap-1.5">
+              <Ionicons name="add-circle-outline" size={16} color="#4F46E5" />
+              <Text className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                Nova avaliação
+              </Text>
+            </View>
             <TextField
               label="Nome"
               value={novoNome}
@@ -342,20 +350,27 @@ export default function Notas() {
               </View>
             </View>
             {erroForm ? (
-              <Text className="text-sm text-danger dark:text-danger-dark">{erroForm}</Text>
+              <View className="flex-row items-center gap-1.5">
+                <Ionicons name="alert-circle" size={14} color="#DC2626" />
+                <Text className="text-sm text-danger dark:text-danger-dark">{erroForm}</Text>
+              </View>
             ) : null}
             <Button
               label="Adicionar"
+              icon="add"
               variant="secondary"
               onPress={handleAdicionarAvaliacao}
               loading={criarMutation.isPending}
             />
           </View>
 
-          <View className="gap-3 rounded-lg border border-slate-200 p-4 dark:border-slate-700">
-            <Text className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-              Quanto preciso tirar?
-            </Text>
+          <View className="gap-3 rounded-3xl border border-slate-100 bg-surface p-4 shadow-sm shadow-slate-900/5 dark:border-slate-800 dark:bg-surface-dark">
+            <View className="flex-row items-center gap-1.5">
+              <Ionicons name="calculator-outline" size={16} color="#4F46E5" />
+              <Text className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                Quanto preciso tirar?
+              </Text>
+            </View>
             <TextField
               label={`Média desejada (0-${notaMaxima})`}
               value={mediaDesejada}
@@ -364,18 +379,27 @@ export default function Notas() {
               placeholder="7"
             />
             {resultadoCalculo?.status === 'ok' ? (
-              <Text className="text-base font-semibold text-primary dark:text-primary-dark">
-                Você precisa de {formatadorNota.format(resultadoCalculo.notaNecessaria)} nas
-                avaliações que faltam.
-              </Text>
+              <View className="flex-row items-center gap-2 rounded-2xl bg-primary/10 p-3 dark:bg-primary-dark/10">
+                <Ionicons name="trending-up" size={20} color="#4F46E5" />
+                <Text className="flex-1 text-base font-semibold text-primary dark:text-primary-dark">
+                  Você precisa de {formatadorNota.format(resultadoCalculo.notaNecessaria)} nas
+                  avaliações que faltam.
+                </Text>
+              </View>
             ) : resultadoCalculo?.status === 'impossivel' ? (
-              <Text className="text-base font-semibold text-danger dark:text-danger-dark">
-                Não dá mais pra bater essa média só com essa prova.
-              </Text>
+              <View className="flex-row items-center gap-2 rounded-2xl bg-danger/10 p-3 dark:bg-danger-dark/10">
+                <Ionicons name="close-circle" size={20} color="#DC2626" />
+                <Text className="flex-1 text-base font-semibold text-danger dark:text-danger-dark">
+                  Não dá mais pra bater essa média só com essa prova.
+                </Text>
+              </View>
             ) : resultadoCalculo?.status === 'ja_atingida' ? (
-              <Text className="text-base font-semibold text-success dark:text-success-dark">
-                Já bateu essa média — nem precisa de nota nas que faltam.
-              </Text>
+              <View className="flex-row items-center gap-2 rounded-2xl bg-success/10 p-3 dark:bg-success-dark/10">
+                <Ionicons name="trophy" size={20} color="#16A34A" />
+                <Text className="flex-1 text-base font-semibold text-success dark:text-success-dark">
+                  Já bateu essa média — nem precisa de nota nas que faltam.
+                </Text>
+              </View>
             ) : resultadoCalculo?.status === 'sem_pendentes' ? (
               <Text className="text-sm text-slate-500 dark:text-slate-400">
                 Todas as avaliações já têm nota lançada.

@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useState } from 'react';
@@ -7,7 +8,12 @@ import { Button } from '@/components/ui/Button';
 import { TextField } from '@/components/ui/TextField';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { criarAviso } from '@/features/avisos/api';
-import { ROTULO_TIPO_AVISO, TIPOS_AVISO_MANUAL, type TipoAviso } from '@/features/avisos/types';
+import {
+  ICONE_TIPO_AVISO,
+  ROTULO_TIPO_AVISO,
+  TIPOS_AVISO_MANUAL,
+  type TipoAviso,
+} from '@/features/avisos/types';
 import { mensagemDeErro } from '@/features/auth/errors';
 
 type Escopo = 'escola' | 'turma';
@@ -76,12 +82,17 @@ export default function NovoAviso() {
                 onPress={() => setTipo(opcao)}
                 accessibilityRole="button"
                 accessibilityState={{ selected: tipo === opcao }}
-                className={`min-h-11 justify-center rounded-full border px-4 ${
+                className={`min-h-11 flex-row items-center justify-center gap-1.5 rounded-full border px-4 ${
                   tipo === opcao
                     ? 'border-primary bg-primary/10 dark:border-primary-dark'
-                    : 'border-slate-300 dark:border-slate-700'
+                    : 'border-slate-200 dark:border-slate-700'
                 }`}
               >
+                <Ionicons
+                  name={ICONE_TIPO_AVISO[opcao]}
+                  size={15}
+                  color={tipo === opcao ? '#4F46E5' : '#94A3B8'}
+                />
                 <Text className="text-sm text-slate-900 dark:text-slate-100">
                   {ROTULO_TIPO_AVISO[opcao]}
                 </Text>
@@ -99,30 +110,46 @@ export default function NovoAviso() {
               onPress={() => setEscopo('turma')}
               accessibilityRole="button"
               accessibilityState={{ selected: escopo === 'turma' }}
-              className={`min-h-11 flex-1 items-center justify-center rounded-lg border ${
+              className={`min-h-11 flex-1 flex-row items-center justify-center gap-1.5 rounded-2xl border ${
                 escopo === 'turma'
                   ? 'border-primary bg-primary/10 dark:border-primary-dark'
-                  : 'border-slate-300 dark:border-slate-700'
+                  : 'border-slate-200 dark:border-slate-700'
               }`}
             >
+              <Ionicons
+                name="people-outline"
+                size={16}
+                color={escopo === 'turma' ? '#4F46E5' : '#94A3B8'}
+              />
               <Text className="text-slate-900 dark:text-slate-100">Só minha turma</Text>
             </Pressable>
             <Pressable
               onPress={() => setEscopo('escola')}
               accessibilityRole="button"
               accessibilityState={{ selected: escopo === 'escola' }}
-              className={`min-h-11 flex-1 items-center justify-center rounded-lg border ${
+              className={`min-h-11 flex-1 flex-row items-center justify-center gap-1.5 rounded-2xl border ${
                 escopo === 'escola'
                   ? 'border-primary bg-primary/10 dark:border-primary-dark'
-                  : 'border-slate-300 dark:border-slate-700'
+                  : 'border-slate-200 dark:border-slate-700'
               }`}
             >
+              <Ionicons
+                name="school-outline"
+                size={16}
+                color={escopo === 'escola' ? '#4F46E5' : '#94A3B8'}
+              />
               <Text className="text-slate-900 dark:text-slate-100">Escola toda</Text>
             </Pressable>
           </View>
         </View>
 
-        <TextField label="Título" value={titulo} onChangeText={setTitulo} error={erros.titulo} />
+        <TextField
+          label="Título"
+          icon="text-outline"
+          value={titulo}
+          onChangeText={setTitulo}
+          error={erros.titulo}
+        />
         <TextField
           label="Descrição (opcional)"
           value={descricao}
@@ -133,10 +160,18 @@ export default function NovoAviso() {
         />
 
         {erros.geral ? (
-          <Text className="text-sm text-danger dark:text-danger-dark">{erros.geral}</Text>
+          <View className="flex-row items-center gap-1.5">
+            <Ionicons name="alert-circle" size={14} color="#DC2626" />
+            <Text className="text-sm text-danger dark:text-danger-dark">{erros.geral}</Text>
+          </View>
         ) : null}
 
-        <Button label="Publicar" onPress={handlePublicar} loading={mutation.isPending} />
+        <Button
+          label="Publicar"
+          icon="megaphone"
+          onPress={handlePublicar}
+          loading={mutation.isPending}
+        />
       </ScrollView>
     </KeyboardAvoidingView>
   );

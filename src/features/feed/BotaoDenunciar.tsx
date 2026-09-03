@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
@@ -39,7 +40,12 @@ export function BotaoDenunciar({
   });
 
   if (enviado) {
-    return <Text className="text-xs text-slate-500 dark:text-slate-400">Denúncia enviada</Text>;
+    return (
+      <View className="flex-row items-center gap-1">
+        <Ionicons name="checkmark-circle" size={14} color="#94A3B8" />
+        <Text className="text-xs text-slate-500 dark:text-slate-400">Denúncia enviada</Text>
+      </View>
+    );
   }
 
   if (!aberto) {
@@ -48,8 +54,9 @@ export function BotaoDenunciar({
         onPress={() => setAberto(true)}
         accessibilityRole="button"
         accessibilityLabel="Denunciar"
-        className="min-h-11 min-w-11 items-center justify-center px-2"
+        className="min-h-11 min-w-11 flex-row items-center gap-1 px-2"
       >
+        <Ionicons name="flag-outline" size={14} color="#94A3B8" />
         <Text className="text-xs text-slate-500 dark:text-slate-400">Denunciar</Text>
       </Pressable>
     );
@@ -72,9 +79,10 @@ export function BotaoDenunciar({
   }
 
   return (
-    <View className="w-full gap-2 rounded-lg border border-slate-200 p-3 dark:border-slate-700">
+    <View className="w-full gap-2 rounded-2xl border border-slate-100 bg-surface p-3 dark:border-slate-800 dark:bg-surface-dark">
       <TextField
         label="Motivo da denúncia"
+        icon="flag-outline"
         value={motivo}
         onChangeText={setMotivo}
         error={erro ?? undefined}
@@ -85,7 +93,12 @@ export function BotaoDenunciar({
           <Button label="Cancelar" variant="secondary" onPress={() => setAberto(false)} />
         </View>
         <View className="flex-1">
-          <Button label="Enviar" onPress={handleEnviar} loading={mutation.isPending} />
+          <Button
+            label="Enviar"
+            icon="paper-plane-outline"
+            onPress={handleEnviar}
+            loading={mutation.isPending}
+          />
         </View>
       </View>
     </View>

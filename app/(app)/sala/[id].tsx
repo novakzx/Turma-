@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
@@ -54,10 +55,10 @@ function LinhaMensagem({
   return (
     <View className={`max-w-[85%] gap-1 py-1.5 ${ehPropria ? 'items-end self-end' : 'self-start'}`}>
       <View
-        className={`gap-1 rounded-lg px-3 py-2 ${
+        className={`gap-1 rounded-2xl px-4 py-2.5 shadow-sm shadow-slate-900/5 ${
           ehPropria
             ? 'bg-primary dark:bg-primary-dark'
-            : 'border border-slate-200 bg-surface dark:border-slate-700 dark:bg-surface-dark'
+            : 'border border-slate-100 bg-surface dark:border-slate-800 dark:bg-surface-dark'
         }`}
       >
         {!ehPropria ? (
@@ -82,8 +83,9 @@ function LinhaMensagem({
               onPress={onApagar}
               accessibilityRole="button"
               accessibilityLabel="Apagar mensagem"
-              className="min-h-11 min-w-11 items-center justify-center px-1"
+              className="min-h-11 min-w-11 flex-row items-center gap-1 px-1"
             >
+              <Ionicons name="trash-outline" size={14} color="#DC2626" />
               <Text className="text-xs text-danger dark:text-danger-dark">Apagar</Text>
             </Pressable>
             {mensagem.autor_id ? <BotaoSilenciar perfilId={mensagem.autor_id} /> : null}
@@ -175,12 +177,20 @@ export default function SalaChat() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       {ehStaff ? (
-        <View className="flex-row items-center justify-between border-b border-slate-200 px-4 py-2 dark:border-slate-800">
-          <Text className="text-sm text-slate-600 dark:text-slate-400">
-            {sala.trancada ? 'Sala trancada' : 'Sala aberta'}
-          </Text>
+        <View className="flex-row items-center justify-between border-b border-slate-100 px-4 py-2 dark:border-slate-800">
+          <View className="flex-row items-center gap-1.5">
+            <Ionicons
+              name={sala.trancada ? 'lock-closed' : 'lock-open-outline'}
+              size={16}
+              color="#64748B"
+            />
+            <Text className="text-sm text-slate-600 dark:text-slate-400">
+              {sala.trancada ? 'Sala trancada' : 'Sala aberta'}
+            </Text>
+          </View>
           <Button
             label={sala.trancada ? 'Destrancar sala' : 'Trancar sala'}
+            icon={sala.trancada ? 'lock-open-outline' : 'lock-closed'}
             variant="secondary"
             onPress={() => trancarMutation.mutate(!sala.trancada)}
             loading={trancarMutation.isPending}
@@ -203,19 +213,24 @@ export default function SalaChat() {
           />
         )}
         ListEmptyComponent={
-          <Text className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">
-            Nenhuma mensagem ainda. Manda a primeira!
-          </Text>
+          <EmptyState
+            icon="chatbubble-ellipses-outline"
+            titulo="Nenhuma mensagem ainda"
+            descricao="Manda a primeira pra puxar a conversa."
+          />
         }
       />
 
-      <View className="gap-1 border-t border-slate-200 p-3 dark:border-slate-800">
+      <View className="gap-1 border-t border-slate-100 p-3 dark:border-slate-800">
         {!podeEnviar ? (
-          <Text className="px-1 text-xs text-slate-500 dark:text-slate-400">
-            {sala.trancada
-              ? 'Esta sala foi trancada pela moderação — só leitura.'
-              : `Você está impedido de enviar mensagens até ${silenciadoAte ? new Intl.DateTimeFormat('pt-PT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(silenciadoAte) : ''}.`}
-          </Text>
+          <View className="flex-row items-center gap-1.5 px-1">
+            <Ionicons name="information-circle-outline" size={14} color="#94A3B8" />
+            <Text className="flex-1 text-xs text-slate-500 dark:text-slate-400">
+              {sala.trancada
+                ? 'Esta sala foi trancada pela moderação — só leitura.'
+                : `Você está impedido de enviar mensagens até ${silenciadoAte ? new Intl.DateTimeFormat('pt-PT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(silenciadoAte) : ''}.`}
+            </Text>
+          </View>
         ) : (
           <View className="flex-row items-end gap-2">
             <View className="flex-1">
@@ -227,7 +242,12 @@ export default function SalaChat() {
                 error={erro ?? undefined}
               />
             </View>
-            <Button label="Enviar" onPress={handleEnviar} loading={enviarMutation.isPending} />
+            <Button
+              label="Enviar"
+              icon="send"
+              onPress={handleEnviar}
+              loading={enviarMutation.isPending}
+            />
           </View>
         )}
       </View>

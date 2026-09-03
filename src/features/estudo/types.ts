@@ -1,3 +1,5 @@
+import type { Ionicons } from '@expo/vector-icons';
+
 import type { Tables } from '@/types/database';
 
 export type MensagemChatIA = Tables<'chat_ia_mensagens'>;
@@ -12,4 +14,11 @@ export const ROTULO_MODO: Record<ModoChatEstudo, string> = {
   duvida: 'Tirar dúvida',
   resumo: 'Gerar resumo',
   plano: 'Plano de estudo',
+};
+
+export const ICONE_MODO: Record<ModoChatEstudo, keyof typeof Ionicons.glyphMap> = {
+  explicar: 'bulb-outline',
+  duvida: 'help-circle-outline',
+  resumo: 'document-text-outline',
+  plano: 'calendar-outline',
 };
