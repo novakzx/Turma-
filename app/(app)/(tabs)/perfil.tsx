@@ -24,6 +24,7 @@ const ICONE_PAPEL = {
 export default function Perfil() {
   const { profile } = useAuth();
   const queryClient = useQueryClient();
+  const ehStaff = profile?.papel === 'professor' || profile?.papel === 'coordenacao';
 
   const turmaQuery = useQuery({
     queryKey: ['turma-com-escola', profile?.turma_id],
@@ -113,6 +114,15 @@ export default function Perfil() {
             </View>
           </View>
         </View>
+      ) : null}
+
+      {ehStaff ? (
+        <Button
+          label="Gerenciar matérias"
+          icon="library-outline"
+          variant="secondary"
+          onPress={() => router.push('/gerenciar-materias')}
+        />
       ) : null}
 
       <Button

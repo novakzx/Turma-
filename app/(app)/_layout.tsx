@@ -30,6 +30,7 @@ export default function AppLayout() {
       />
       <Stack.Screen name="minhas-publicacoes" options={{ title: 'Minhas publicações' }} />
       <Stack.Screen name="configuracoes" options={{ title: 'Configurações' }} />
+      <Stack.Screen name="gerenciar-materias" options={{ title: 'Matérias' }} />
     </Stack>
   );
 }

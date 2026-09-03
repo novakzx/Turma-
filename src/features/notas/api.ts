@@ -12,6 +12,29 @@ export async function listarMateriasDaTurma(turmaId: string): Promise<Materia[]>
   return data;
 }
 
+/** Fase 8: matéria deixa de ser só gerenciável pelo Studio — staff da
+ * escola da turma pode criar/renomear/apagar (RLS restringe quem
+ * realmente consegue; ver migration `materias_gerenciaveis`). */
+export async function criarMateria(params: { turmaId: string; nome: string }) {
+  const { error } = await supabase
+    .from('materias')
+    .insert({ turma_id: params.turmaId, nome: params.nome });
+  if (error) throw error;
+}
+
+export async function renomearMateria(id: string, nome: string) {
+  const { error } = await supabase.from('materias').update({ nome }).eq('id', id);
+  if (error) throw error;
+}
+
+/** Destrutivo: avaliacoes, histórico de chat com IA e a sala de chat da
+ * matéria são apagados junto (ON DELETE CASCADE) — o app confirma com o
+ * usuário antes de chamar isso. */
+export async function apagarMateria(id: string) {
+  const { error } = await supabase.from('materias').delete().eq('id', id);
+  if (error) throw error;
+}
+
 /** Escala de nota da escola do aluno (brief 6.3: configurável, 0-10 ou
  * 0-20, nunca fixa no código). */
 export async function buscarNotaMaximaDaEscola(escolaId: string): Promise<number> {

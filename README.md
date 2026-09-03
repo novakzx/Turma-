@@ -196,7 +196,7 @@ O público é majoritariamente menor de idade — isto é requisito de MVP, não
 Lista grande de funcionalidades estilo Instagram (perfil com seguidores, stories, mensagens diretas, busca global de usuário, feed em scroll contínuo, matérias editáveis, cadastro com busca de escola, filtro de palavrões) — organizada em sub-fases próprias:
 
 - [x] **Fase 7 — Configurações**: tema (claro/escuro/sistema, persistido), privacidade da conta (público/privado — coluna gravada, aplicação de verdade na visibilidade entra junto da busca global na Fase 13), alterar e-mail (fluxo de confirmação do Supabase Auth) e alterar senha.
-- [ ] **Fase 8 — Matérias editáveis** pelo admin da turma.
+- [x] **Fase 8 — Matérias editáveis**: professor/coordenacao da escola cria, renomeia e apaga matéria da turma (`app/(app)/gerenciar-materias.tsx`, atrás do botão "Gerenciar matérias" no Perfil, só visível pra staff). Apagar é destrutivo (cascade em avaliações, histórico de chat com IA e a sala de chat da matéria) — o app confirma explicitamente antes.
 - [ ] **Fase 9 — Cadastro**: busca de escola com autocomplete, verificação de estudante.
 - [ ] **Fase 10 — Perfil estilo Instagram**: bio, grid de posts, seguidores, stories.
 - [ ] **Fase 11 — Feed redesenhado** (scroll contínuo estilo Instagram/Twitter).
