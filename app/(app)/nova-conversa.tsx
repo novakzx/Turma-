@@ -9,6 +9,7 @@ import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
 import { TextField } from '@/components/ui/TextField';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { mensagemDeErro } from '@/features/auth/errors';
+import { buscarUsuarios } from '@/features/busca/api';
 import { criarConversaDireta, criarConversaGrupo } from '@/features/mensagens/api';
 import { FotoPerfil } from '@/features/perfil/FotoPerfil';
 import { listarSeguidores, listarSeguindo } from '@/features/social/api';
@@ -37,14 +38,27 @@ export default function NovaConversa() {
     enabled: !!profile,
   });
 
+  // Busca global (Fase 13) — só dispara com 2+ letras, e complementa a
+  // lista de quem eu sigo/me segue em vez de substituir (assim quem
+  // digita nada ainda vê sugestões óbvias pra conversar).
+  const buscaGlobalQuery = useQuery({
+    queryKey: ['busca-usuarios', busca],
+    queryFn: () => buscarUsuarios(busca, profile!.id),
+    enabled: !!profile && busca.trim().length >= 2,
+  });
+
   const pessoas = useMemo(() => {
     const mapa = new Map<string, PerfilResumo>();
-    for (const p of [...(seguindoQuery.data ?? []), ...(seguidoresQuery.data ?? [])]) {
+    for (const p of [
+      ...(seguindoQuery.data ?? []),
+      ...(seguidoresQuery.data ?? []),
+      ...(buscaGlobalQuery.data ?? []),
+    ]) {
       mapa.set(p.id, p);
     }
     const termo = busca.trim().toLowerCase();
     return Array.from(mapa.values()).filter((p) => !termo || p.nome.toLowerCase().includes(termo));
-  }, [seguindoQuery.data, seguidoresQuery.data, busca]);
+  }, [seguindoQuery.data, seguidoresQuery.data, buscaGlobalQuery.data, busca]);
 
   const iniciarDiretaMutation = useMutation({
     mutationFn: (outroId: string) => criarConversaDireta(outroId),

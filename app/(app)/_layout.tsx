@@ -47,6 +47,7 @@ export default function AppLayout() {
       />
       <Stack.Screen name="grupo-participantes/[id]" options={{ title: 'Participantes' }} />
       <Stack.Screen name="moderacao-denuncias" options={{ title: 'Denúncias' }} />
+      <Stack.Screen name="buscar-usuarios" options={{ title: 'Pesquisar' }} />
     </Stack>
   );
 }

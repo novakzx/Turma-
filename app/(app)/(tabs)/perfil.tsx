@@ -128,6 +128,13 @@ export default function Perfil() {
         ) : null}
 
         <Button
+          label="Pesquisar usuários"
+          icon="search-outline"
+          variant="secondary"
+          onPress={() => router.push('/buscar-usuarios')}
+        />
+
+        <Button
           label="Minhas publicações"
           icon="newspaper-outline"
           variant="secondary"

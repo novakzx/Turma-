@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Tabs } from 'expo-router';
+import { Tabs, router } from 'expo-router';
 import { useColorScheme } from 'nativewind';
+import { Pressable } from 'react-native';
 
 const ICONE_POR_ROTA: Record<string, keyof typeof Ionicons.glyphMap> = {
   index: 'megaphone',
@@ -63,6 +64,16 @@ export default function TabsLayout() {
           title: 'Feed',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name={ICONE_POR_ROTA.feed} size={size} color={color} />
+          ),
+          headerRight: () => (
+            <Pressable
+              onPress={() => router.push('/buscar-usuarios')}
+              accessibilityRole="button"
+              accessibilityLabel="Pesquisar usuários"
+              className="min-h-11 min-w-11 items-center justify-center px-2"
+            >
+              <Ionicons name="search-outline" size={22} color={escuro ? '#818CF8' : '#4F46E5'} />
+            </Pressable>
           ),
         }}
       />
