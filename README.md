@@ -46,16 +46,19 @@ Copie `.env.example` pra `.env` e preencha:
 
 As duas últimas linhas da tabela são secrets de Edge Function, não variáveis do app — não existe `.env` pra elas neste repo; são configuradas direto no projeto Supabase (`supabase secrets set NOME=valor`).
 
-### Edge Functions e automações (Fase 2)
+### Edge Functions e automações
 
-| Nome              | Disparo                                                               | O que faz                                                                                                                                                                                                            |
-| ----------------- | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `notificar-aviso` | Trigger `AFTER INSERT` em `avisos` (`private.notificar_aviso_criado`) | Lê `push_token` de quem tem direito ao aviso (escopo escola/turma, só `aluno` — ver `supabase/functions/_shared/regras.ts`) e manda pro Expo Push Service.                                                           |
-| `aviso-clima`     | `pg_cron`, a cada 4h (`aviso-clima-periodico`)                        | Pra cada escola com `latitude`/`longitude` cadastrada, consulta o Open-Meteo e cria um aviso `tipo='trajeto'` quando a previsão passa o limite configurável daquela escola. O INSERT aciona sozinho o trigger acima. |
+| Nome              | Disparo                                                               | O que faz                                                                                                                                                                                                                                                                        |
+| ----------------- | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `notificar-aviso` | Trigger `AFTER INSERT` em `avisos` (`private.notificar_aviso_criado`) | Lê `push_token` de quem tem direito ao aviso (escopo escola/turma, só `aluno` — ver `supabase/functions/_shared/regras.ts`) e manda pro Expo Push Service.                                                                                                                       |
+| `aviso-clima`     | `pg_cron`, a cada 4h (`aviso-clima-periodico`)                        | Pra cada escola com `latitude`/`longitude` cadastrada, consulta o Open-Meteo e cria um aviso `tipo='trajeto'` quando a previsão passa o limite configurável daquela escola. O INSERT aciona sozinho o trigger acima.                                                             |
+| `chat-estudo`     | Chamada direta do app (`supabase.functions.invoke`)                   | Recebe matéria + mensagem + modo (explicar/dúvida/resumo/plano), monta o histórico da conversa (`chat_ia_mensagens`, só leitura pro cliente) e o prompt de tutor (`supabase/functions/_shared/regrasEstudo.ts`), chama a Anthropic e grava as duas mensagens com a service role. |
 
-Ambas têm `verify_jwt` ligado (o padrão recomendado) — o trigger e o cron autenticam com a chave anon do projeto (pública, a mesma do `.env`), e a Edge Function usa a `SUPABASE_SERVICE_ROLE_KEY` que o runtime já injeta sozinho pra ler `profiles`/`escolas` ignorando RLS. Isso evitou precisar gerenciar um segredo próprio via `supabase secrets set`.
+`notificar-aviso`/`aviso-clima` têm `verify_jwt` ligado e autenticam com a chave anon do projeto (pública, a mesma do `.env`) — chamadas servidor-a-servidor (trigger/cron), sem CORS envolvido. `chat-estudo` **é** chamada direto do navegador/app, então precisa responder o preflight `OPTIONS` com os headers de CORS certos — sem isso o request nem sai do cliente (achado testando de verdade: ver `supabase/functions/chat-estudo/index.ts`). Todas usam a `SUPABASE_SERVICE_ROLE_KEY` que o runtime já injeta sozinho pra ler/escrever ignorando RLS quando precisam — não precisou gerenciar segredo próprio via `supabase secrets set` pra isso.
 
-Pra redeployar depois de mexer no código: `supabase functions deploy notificar-aviso` / `supabase functions deploy aviso-clima` (ou pelo MCP do Supabase, como foi feito aqui).
+**`chat-estudo` exige `ANTHROPIC_API_KEY`** como secret da função (`supabase secrets set ANTHROPIC_API_KEY=sk-ant-...`, ou Studio → Edge Functions → Secrets) — sem isso ela responde 503 com uma mensagem clara em vez de quebrar (é o estado atual: a função e o app estão prontos, só falta essa chave ser configurada por quem tem acesso a ela).
+
+Pra redeployar depois de mexer no código: `supabase functions deploy <nome>` (ou pelo MCP do Supabase, como foi feito aqui).
 
 ### Banco de dados (Supabase)
 
@@ -102,18 +105,21 @@ app/
   (auth)/             # Login (index) e cadastro — grupo ativo sem sessão
   (onboarding)/       # Escolha de escola/turma — grupo ativo com sessão incompleta
   (app)/              # Área logada — grupo ativo com onboarding completo
+    (tabs)/           # Avisos, Estudo, Notas, Perfil
+    novo-aviso.tsx    # Modal — só professor/coordenacao chega aqui de verdade (RLS + UI)
 src/
-  features/           # Uma pasta por domínio: auth, onboarding, perfil, avisos, notificacoes (estudo/notas/feed/chat vêm nas próximas fases)
+  features/           # Uma pasta por domínio: auth, onboarding, perfil, avisos, notificacoes, notas, estudo (feed/chat vêm nas próximas fases)
   components/ui/      # Componentes visuais reutilizáveis, sem regra de negócio
   lib/                # Supabase client, TanStack Query client, global.css
   stores/             # Zustand — só estado client-side (filtros, rascunhos)
   types/              # Tipos compartilhados (database.ts é gerado pelo Supabase CLI)
 supabase/
   migrations/         # Schema versionado, aplicado via `supabase db push`
-  seed.sql            # Dados de exemplo (escolas/turmas reais de Lisboa e Setúbal)
+  seed.sql            # Dados de exemplo (escolas/turmas de Lisboa/Setúbal + matérias de uma turma)
   functions/
-    _shared/regras.ts # Lógica pura das Edge Functions (testada com Jest)
+    _shared/          # Lógica pura das Edge Functions (regras.ts, regrasEstudo.ts — testada com Jest)
     notificar-aviso/  # Dispara push quando um aviso é criado
+    chat-estudo/      # Chat com IA por matéria (precisa de ANTHROPIC_API_KEY)
     aviso-clima/      # Cron: cria aviso automático de trajeto via Open-Meteo
 ```
 
@@ -129,6 +135,7 @@ O público é majoritariamente menor de idade — isto é requisito de MVP, não
 - Nenhuma chave de API sensível (Anthropic, service role) chega ao bundle do app — variável sem prefixo `EXPO_PUBLIC_` não é visível no cliente e vive só como secret de Edge Function.
 - Funções auxiliares de RLS (`current_papel`, `is_staff`, etc.) moram no schema `private`, fora do que o PostgREST expõe como API pública — evita que virem endpoint (`/rest/v1/rpc/...`) chamável por qualquer um.
 - **Pendente de configuração manual** (não tem endpoint de API pra isso): ligar "Leaked Password Protection" em Studio → Authentication → Policies, pra bloquear senha de cadastro conhecida em vazamento (checagem via HaveIBeenPwned).
+- Chat com IA (`chat_ia_mensagens`) não tem policy de `INSERT` pra `authenticated` — só a Edge Function `chat-estudo`, com a service role key, grava lá. Isso impede um cliente forjar uma mensagem "assistente" (fingir que a IA disse algo que não disse).
 
 ## Limitações conhecidas
 
@@ -136,20 +143,21 @@ O público é majoritariamente menor de idade — isto é requisito de MVP, não
 - **Só 2 das 222 escolas do seed têm `latitude`/`longitude`** (Escola Secundária Pedro Nunes, Lisboa e Escola Secundária Dom Manuel Martins, Setúbal — geocodificadas à mão só pra validar o pipeline de clima de ponta a ponta). `aviso-clima` pula sozinha qualquer escola sem coordenada, então isso não quebra nada — só significa que o aviso automático de trajeto só funciona pra essas duas por enquanto. Geocodificar as outras 220 é trabalho futuro (dá pra automatizar com Nominatim/OSM, respeitando o limite de 1 req/s do serviço gratuito).
 - **Push notification não dá pra testar no preview web**: `expo-notifications` não tem suporte completo no target web (o SDK avisa isso sozinho no console) e `Alert.alert` do React Native também não tem UI no web — o fluxo de logout e o pipeline de push foram verificados via chamada direta à API/Edge Function em vez de clique na tela. Ambos usam APIs padrão do React Native/Expo, então funcionam normalmente em iOS/Android — só não dá pra ver rodando neste preview.
 - **`getExpoPushTokenAsync` precisa de `projectId`** (extra.eas.projectId no app config), que só existe depois de `eas init` — isso é trabalho da Fase 6 (build via EAS). Até lá, `registrarPushToken` roda sem erro mas não salva token nenhum (device sem projectId configurado).
+- **`chat-estudo` sem `ANTHROPIC_API_KEY` configurada** — responde 503 com uma mensagem clara ("Chat com IA ainda não foi configurado") em vez de dar resposta de IA de verdade. Configure o secret (ver seção "Edge Functions e automações") pra testar a conversa de ponta a ponta.
 
 ## Roadmap
 
 - [x] **Fase 0 — Fundação**: projeto Expo + TypeScript, schema Supabase com RLS, lint/test/CI.
 - [x] **Fase 1 — Conta e perfil**: cadastro/login (email+senha), onboarding de escola/turma, papel `aluno` por padrão.
 - [x] **Fase 2 — Avisos e clima**: mural em tempo real, push via Edge Function, integração Open-Meteo, aviso automático de trajeto.
-- [ ] **Fase 3 — Estudo**: chat com IA por matéria, calculadora de notas.
+- [x] **Fase 3 — Estudo**: chat com IA por matéria (aguardando secret `ANTHROPIC_API_KEY`), calculadora de notas.
 - [ ] **Fase 4 — Feed da turma**: post, curtida, comentário, upload de imagem.
 - [ ] **Fase 5 — Chat comunitário**: salas em tempo real, moderação.
 - [ ] **Fase 6 — Acabamento**: acessibilidade, estados vazio/erro, build EAS, preparação pra loja.
 
 ## Status atual
 
-Fase 2 completa e testada de ponta a ponta contra o projeto Supabase real: cadastro → confirmação de e-mail → login → onboarding → mural de avisos (com tema `Stack.Protected` do Expo Router decidindo a rota certa a partir de sessão + perfil) → professor publica aviso pela tela de novo aviso → aviso aparece em tempo real pro aluno → Edge Function de push dispara → logout. `aviso-clima` também foi disparado manualmente e criou um aviso automático de trajeto de verdade (removido depois de confirmar). Fase 3 (chat com IA + calculadora de notas) é o próximo passo.
+Fase 3 completa e testada de ponta a ponta contra o projeto Supabase real. Calculadora de notas: lança avaliação com peso/nota, lança nota de uma pendente inline, e "quanto preciso tirar" calcula certo nos três casos (número normal, "já bateu", "impossível na escala"). Chat com IA: seletor de matéria + modo, mensagem chega na Edge Function, RLS decide o histórico certo, e — sem `ANTHROPIC_API_KEY` configurada ainda — a função responde 503 com uma mensagem clara em vez de travar, exatamente como planejado. Fase 4 (feed da turma) é o próximo passo.
 
 ### Dados de exemplo
 

@@ -239,3 +239,18 @@ insert into public.turmas (escola_id, nome, serie_ano)
 select ne.id, 'Turma Única', ano
 from novas_escolas ne
 cross join (values ('5º ano'), ('6º ano'), ('7º ano'), ('8º ano'), ('9º ano'), ('10º ano'), ('11º ano'), ('12º ano')) as anos(ano);
+
+-- Matérias de exemplo (curso científico-humanístico geral) só na turma de
+-- 10º ano da Escola Secundária Pedro Nunes — usada nos testes manuais de
+-- Fase 3 (chat com IA + calculadora de notas). As outras 1775 turmas
+-- ficam sem matéria até a coordenação de cada escola cadastrar as suas
+-- pelo Studio (mesma decisão de "sem admin panel" das seções 5 e 11).
+insert into public.materias (turma_id, nome)
+select t.id, materia.nome
+from public.turmas t
+join public.escolas e on e.id = t.escola_id
+cross join (
+  values ('Português'), ('Matemática A'), ('Inglês'), ('Filosofia'),
+         ('Físico-Química A'), ('História A'), ('Educação Física')
+) as materia(nome)
+where e.nome = 'Escola Secundária Pedro Nunes, Lisboa' and t.serie_ano = '10º ano';

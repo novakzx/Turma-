@@ -74,6 +74,8 @@ export default function NovoAviso() {
               <Pressable
                 key={opcao}
                 onPress={() => setTipo(opcao)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: tipo === opcao }}
                 className={`min-h-11 justify-center rounded-full border px-4 ${
                   tipo === opcao
                     ? 'border-primary bg-primary/10 dark:border-primary-dark'
@@ -95,6 +97,8 @@ export default function NovoAviso() {
           <View className="flex-row gap-2">
             <Pressable
               onPress={() => setEscopo('turma')}
+              accessibilityRole="button"
+              accessibilityState={{ selected: escopo === 'turma' }}
               className={`min-h-11 flex-1 items-center justify-center rounded-lg border ${
                 escopo === 'turma'
                   ? 'border-primary bg-primary/10 dark:border-primary-dark'
@@ -105,6 +109,8 @@ export default function NovoAviso() {
             </Pressable>
             <Pressable
               onPress={() => setEscopo('escola')}
+              accessibilityRole="button"
+              accessibilityState={{ selected: escopo === 'escola' }}
               className={`min-h-11 flex-1 items-center justify-center rounded-lg border ${
                 escopo === 'escola'
                   ? 'border-primary bg-primary/10 dark:border-primary-dark'

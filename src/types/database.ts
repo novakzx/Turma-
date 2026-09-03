@@ -124,6 +124,48 @@ export type Database = {
           },
         ];
       };
+      chat_ia_mensagens: {
+        Row: {
+          aluno_id: string;
+          conteudo: string;
+          criado_em: string;
+          id: string;
+          materia_id: string;
+          papel: Database['public']['Enums']['papel_mensagem_ia'];
+        };
+        Insert: {
+          aluno_id: string;
+          conteudo: string;
+          criado_em?: string;
+          id?: string;
+          materia_id: string;
+          papel: Database['public']['Enums']['papel_mensagem_ia'];
+        };
+        Update: {
+          aluno_id?: string;
+          conteudo?: string;
+          criado_em?: string;
+          id?: string;
+          materia_id?: string;
+          papel?: Database['public']['Enums']['papel_mensagem_ia'];
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'chat_ia_mensagens_aluno_id_fkey';
+            columns: ['aluno_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'chat_ia_mensagens_materia_id_fkey';
+            columns: ['materia_id'];
+            isOneToOne: false;
+            referencedRelation: 'materias';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       denuncias: {
         Row: {
           conteudo_id: string;
@@ -569,6 +611,7 @@ export type Database = {
     };
     Enums: {
       origem_aviso: 'manual' | 'automatico';
+      papel_mensagem_ia: 'usuario' | 'assistente';
       papel_usuario: 'aluno' | 'professor' | 'coordenacao';
       status_denuncia: 'pendente' | 'revisado' | 'resolvido';
       tipo_aviso:
@@ -705,6 +748,7 @@ export const Constants = {
   public: {
     Enums: {
       origem_aviso: ['manual', 'automatico'],
+      papel_mensagem_ia: ['usuario', 'assistente'],
       papel_usuario: ['aluno', 'professor', 'coordenacao'],
       status_denuncia: ['pendente', 'revisado', 'resolvido'],
       tipo_aviso: [
