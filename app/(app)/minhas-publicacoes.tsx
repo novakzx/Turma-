@@ -1,22 +1,22 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { router } from 'expo-router';
 import { useMemo } from 'react';
-import { FlatList, Pressable, View } from 'react-native';
+import { FlatList, View } from 'react-native';
 
 import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
 import { useAuth } from '@/features/auth/AuthProvider';
-import { curtir, descurtir, listarMeusLikes, listarPosts } from '@/features/feed/api';
+import { curtir, descurtir, listarMeusLikes, listarPostsDoAutor } from '@/features/feed/api';
 import { CartaoPost } from '@/features/feed/CartaoPost';
 
-export default function Feed() {
+/** "Ver as publicações" no perfil — mesmo card do feed da turma, só que
+ * filtrado por autor em vez de turma (ver `listarPostsDoAutor`). */
+export default function MinhasPublicacoes() {
   const { profile } = useAuth();
   const queryClient = useQueryClient();
 
   const postsQuery = useQuery({
-    queryKey: ['posts', profile?.turma_id],
-    queryFn: () => listarPosts(profile?.turma_id as string),
-    enabled: !!profile?.turma_id,
+    queryKey: ['meus-posts', profile?.id],
+    queryFn: () => listarPostsDoAutor(profile?.id as string),
+    enabled: !!profile?.id,
   });
 
   const postIds = useMemo(() => (postsQuery.data ?? []).map((p) => p.id), [postsQuery.data]);
@@ -27,7 +27,7 @@ export default function Feed() {
   });
 
   function invalidarTudo() {
-    queryClient.invalidateQueries({ queryKey: ['posts', profile?.turma_id] });
+    queryClient.invalidateQueries({ queryKey: ['meus-posts', profile?.id] });
     queryClient.invalidateQueries({ queryKey: ['meus-likes'] });
   }
 
@@ -42,9 +42,7 @@ export default function Feed() {
 
   if (postsQuery.isLoading) return <LoadingState />;
   if (postsQuery.isError) {
-    return (
-      <EmptyState titulo="Não deu pra carregar o feed" onTentarNovo={() => postsQuery.refetch()} />
-    );
+    return <EmptyState titulo="Não deu pra carregar" onTentarNovo={() => postsQuery.refetch()} />;
   }
 
   return (
@@ -52,14 +50,14 @@ export default function Feed() {
       {(postsQuery.data ?? []).length === 0 ? (
         <EmptyState
           icon="newspaper-outline"
-          titulo="Nenhum post na turma ainda"
-          descricao="Seja o primeiro a postar algo pra galera."
+          titulo="Você ainda não postou nada"
+          descricao="Os posts que você criar no feed da turma aparecem aqui."
         />
       ) : (
         <FlatList
           data={postsQuery.data ?? []}
           keyExtractor={(item) => item.id}
-          contentContainerClassName="gap-3 p-4 pb-28"
+          contentContainerClassName="gap-3 p-4"
           renderItem={({ item, index }) => (
             <CartaoPost
               post={item}
@@ -71,15 +69,6 @@ export default function Feed() {
           )}
         />
       )}
-
-      <Pressable
-        onPress={() => router.push('/novo-post')}
-        accessibilityRole="button"
-        accessibilityLabel="Novo post"
-        className="absolute bottom-24 right-6 h-14 w-14 items-center justify-center rounded-full bg-primary shadow-lg shadow-primary/40 dark:bg-primary-dark"
-      >
-        <Ionicons name="add" size={28} color="#FFFFFF" />
-      </Pressable>
     </View>
   );
 }

@@ -25,4 +25,14 @@ describe('mensagemDeErro', () => {
   it('não quebra com um valor totalmente inesperado (string solta)', () => {
     expect(mensagemDeErro('falha genérica')).toBe('falha genérica');
   });
+
+  it('traduz violação de unique constraint de nome_usuario pelo trecho da mensagem', () => {
+    // Erro de verdade do Postgres vem com o nome da constraint embutido
+    // (não uma frase fixa), então precisa casar por trecho, não igualdade.
+    const erroPostgres = {
+      message: 'duplicate key value violates unique constraint "profiles_nome_usuario_key"',
+      code: '23505',
+    };
+    expect(mensagemDeErro(erroPostgres)).toBe('Esse nome de usuário já está em uso.');
+  });
 });

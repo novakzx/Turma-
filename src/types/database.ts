@@ -456,36 +456,42 @@ export type Database = {
       };
       profiles: {
         Row: {
+          bio: string | null;
           criado_em: string;
           email: string;
           escola_id: string | null;
           foto_url: string | null;
           id: string;
           nome: string;
+          nome_usuario: string | null;
           papel: Database['public']['Enums']['papel_usuario'];
           push_token: string | null;
           silenciado_ate: string | null;
           turma_id: string | null;
         };
         Insert: {
+          bio?: string | null;
           criado_em?: string;
           email: string;
           escola_id?: string | null;
           foto_url?: string | null;
           id: string;
           nome: string;
+          nome_usuario?: string | null;
           papel?: Database['public']['Enums']['papel_usuario'];
           push_token?: string | null;
           silenciado_ate?: string | null;
           turma_id?: string | null;
         };
         Update: {
+          bio?: string | null;
           criado_em?: string;
           email?: string;
           escola_id?: string | null;
           foto_url?: string | null;
           id?: string;
           nome?: string;
+          nome_usuario?: string | null;
           papel?: Database['public']['Enums']['papel_usuario'];
           push_token?: string | null;
           silenciado_ate?: string | null;

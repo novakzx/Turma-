@@ -11,6 +11,17 @@ const TRADUCOES: Record<string, string> = {
   'Unable to validate email address: invalid format': 'Esse e-mail não parece válido.',
 };
 
+// Erro de constraint do Postgres não é uma mensagem fixa (vem com o nome
+// da constraint dentro), então não dá pra usar o dicionário de tradução
+// exata acima — casa por trecho da mensagem em vez disso.
+const TRADUCOES_PARCIAIS: [substring: string, mensagem: string][] = [
+  ['profiles_nome_usuario_key', 'Esse nome de usuário já está em uso.'],
+  [
+    'profiles_nome_usuario_formato',
+    'Nome de usuário: só letras minúsculas, número e "_", 3 a 20 caracteres.',
+  ],
+];
+
 export function mensagemDeErro(error: unknown): string {
   // Erros do supabase-js (PostgrestError, AuthError, StorageError) nem
   // sempre são `instanceof Error` — são objetos simples com `.message`.
@@ -21,5 +32,7 @@ export function mensagemDeErro(error: unknown): string {
       : typeof error === 'object' && error !== null && 'message' in error
         ? String((error as { message: unknown }).message)
         : String(error);
-  return TRADUCOES[bruta] ?? bruta;
+  if (TRADUCOES[bruta]) return TRADUCOES[bruta];
+  const parcial = TRADUCOES_PARCIAIS.find(([trecho]) => bruta.includes(trecho));
+  return parcial ? parcial[1] : bruta;
 }

@@ -1,10 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { router } from 'expo-router';
 import { Alert, ScrollView, Text, View } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
 import { signOut } from '@/features/auth/api';
 import { useAuth } from '@/features/auth/AuthProvider';
+import { FotoPerfil } from '@/features/perfil/FotoPerfil';
 import { buscarTurmaComEscola } from '@/features/perfil/api';
 
 const ROTULO_PAPEL = {
@@ -18,13 +20,6 @@ const ICONE_PAPEL = {
   professor: 'briefcase-outline',
   coordenacao: 'shield-checkmark-outline',
 } as const;
-
-function iniciais(nome: string) {
-  const partes = nome.trim().split(/\s+/);
-  const primeira = partes[0]?.[0] ?? '';
-  const ultima = partes.length > 1 ? (partes[partes.length - 1]?.[0] ?? '') : '';
-  return (primeira + ultima).toUpperCase();
-}
 
 export default function Perfil() {
   const { profile } = useAuth();
@@ -56,23 +51,42 @@ export default function Perfil() {
       contentContainerClassName="gap-6 px-6 pb-28 pt-20"
     >
       <View className="items-center gap-3">
-        <View className="h-24 w-24 items-center justify-center rounded-full bg-primary shadow-lg shadow-primary/30 dark:bg-primary-dark">
-          <Text className="text-3xl font-bold text-white">{iniciais(profile?.nome ?? '...')}</Text>
-        </View>
+        <FotoPerfil
+          caminho={profile?.foto_url ?? null}
+          nome={profile?.nome ?? '...'}
+          tamanho={96}
+        />
         <View className="items-center gap-1">
           <Text className="text-2xl font-bold text-slate-900 dark:text-slate-100">
             {profile?.nome ?? '...'}
           </Text>
+          {profile?.nome_usuario ? (
+            <Text className="text-sm text-slate-500 dark:text-slate-400">
+              @{profile.nome_usuario}
+            </Text>
+          ) : null}
           {profile ? (
-            <View className="flex-row items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 dark:bg-primary-dark/10">
+            <View className="mt-1 flex-row items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 dark:bg-primary-dark/10">
               <Ionicons name={ICONE_PAPEL[profile.papel]} size={14} color="#4F46E5" />
               <Text className="text-xs font-semibold text-primary dark:text-primary-dark">
                 {ROTULO_PAPEL[profile.papel]}
               </Text>
             </View>
           ) : null}
+          {profile?.bio ? (
+            <Text className="mt-2 text-center text-sm text-slate-600 dark:text-slate-400">
+              {profile.bio}
+            </Text>
+          ) : null}
         </View>
       </View>
+
+      <Button
+        label="Editar perfil"
+        icon="create-outline"
+        variant="secondary"
+        onPress={() => router.push('/editar-perfil')}
+      />
 
       {turmaQuery.data ? (
         <View className="gap-3 rounded-3xl border border-slate-100 bg-surface p-4 shadow-sm shadow-slate-900/5 dark:border-slate-800 dark:bg-surface-dark">
@@ -100,6 +114,13 @@ export default function Perfil() {
           </View>
         </View>
       ) : null}
+
+      <Button
+        label="Minhas publicações"
+        icon="newspaper-outline"
+        variant="secondary"
+        onPress={() => router.push('/minhas-publicacoes')}
+      />
 
       <Button
         label="Sair da conta"

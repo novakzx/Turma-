@@ -127,6 +127,8 @@ app/
     novo-post.tsx     # Modal — criar post (texto/foto/evento/lembrete) na turma
     post/[id].tsx     # Detalhe do post: comentários, denúncia, apagar (autor/staff)
     sala/[id].tsx     # Sala de chat: mensagens em tempo real, moderação (staff)
+    editar-perfil.tsx       # Modal — nome, nome de usuário, bio, foto (upload)
+    minhas-publicacoes.tsx  # Posts do próprio usuário (mesmo card do feed, filtrado por autor)
 src/
   features/           # Uma pasta por domínio: auth, onboarding, perfil, avisos, notificacoes, notas, estudo, feed, chat
   components/ui/      # Componentes visuais reutilizáveis, sem regra de negócio (inclui EntradaAnimada.tsx)
@@ -157,6 +159,7 @@ O público é majoritariamente menor de idade — isto é requisito de MVP, não
 - **Pendente de configuração manual** (não tem endpoint de API pra isso): ligar "Leaked Password Protection" em Studio → Authentication → Policies, pra bloquear senha de cadastro conhecida em vazamento (checagem via HaveIBeenPwned).
 - Chat com IA (`chat_ia_mensagens`) não tem policy de `INSERT` pra `authenticated` — só a Edge Function `chat-estudo`, com a service role key, grava lá. Isso impede um cliente forjar uma mensagem "assistente" (fingir que a IA disse algo que não disse).
 - Mídia de post (`posts-midia`) é um bucket **privado** do Storage, não público — link direto adivinhável exporia foto de post de menor de idade pra quem tiver a URL. O app sempre lê via `createSignedUrl` (validade de 1h); a policy de `SELECT` em `storage.objects` restringe ao primeiro segmento do caminho (`turma_id`) do próprio usuário, com leitura cross-turma só pra professor/coordenacao da mesma escola.
+- Foto de perfil (`perfil-fotos`) é o mesmo racional: bucket privado, caminho fixo `{user_id}/avatar.<ext>` (`upsert: true` — trocar a foto sobrescreve, não acumula arquivo órfão), leitura via `createSignedUrl` liberada pra quem já enxergaria o perfil da pessoa (mesma escola). `nome`/`foto_url`/`nome_usuario`/`bio` são as únicas colunas de `profiles` que o próprio dono pode `UPDATE` (GRANT restrito) — `papel`/`escola_id`/`turma_id` continuam fora do alcance do cliente pelas mesmas regras desde a Fase 1. Nome de usuário tem constraint de formato (`^[a-z0-9_]{3,20}$`) e é `unique` no banco — o app trata a violação de unicidade com uma mensagem amigável em vez de vazar o erro cru do Postgres.
 
 ## Limitações conhecidas
 
@@ -177,6 +180,8 @@ O público é majoritariamente menor de idade — isto é requisito de MVP, não
 - [~] **Fase 6 — Acabamento**: linguagem visual (ícones, animações, cantos arredondados), auditoria de acessibilidade e config de build EAS/ícones/splash já feitas; falta só o que exige conta Expo/loja de verdade (`eas init`, build, submit — ver seção "Build via EAS e preparação pra loja").
 
 ## Status atual
+
+Perfil editável (pedido extra do usuário, fora da numeração de fases original): nome, nome de usuário (`@handle`, único, formato validado), bio (280 caracteres) e foto (upload real pro Storage privado `perfil-fotos`, com URL assinada) — tela `editar-perfil.tsx`, acessível pelo botão "Editar perfil" no perfil. "Minhas publicações" (`minhas-publicacoes.tsx`) reusa o card do feed (`CartaoPost`, extraído pra `src/features/feed/CartaoPost.tsx`) filtrado pelo próprio autor. Testado de ponta a ponta contra o Supabase real: upload de foto, edição de nome/bio, e o caso de erro de nome de usuário duplicado (mensagem amigável em vez do erro cru do Postgres).
 
 Fase 6 em andamento: `eas.json` configurado (perfis `development`/`preview`/`production`), ícone e splash screen próprios gerados (`assets/icon.png` e afins — ver "Identidade visual"), `expo-splash-screen`/`expo-font` instalados e configurados, dependências alinhadas com o SDK (`npx expo-doctor` de 18/21 pra 20/21 checks — o 1 restante é um falso positivo conhecido do schema do `expo-doctor` com `newArchEnabled`, não bloqueia build). Auditoria de acessibilidade: campos de formulário (`TextField`) agora repetem o label (+ erro, se houver) em `accessibilityLabel` — sem isso um leitor de tela não tinha como saber o propósito do campo, já que React Native não associa `<Text>` a `<TextInput>` sozinho; todo `Pressable` do app já tinha `accessibilityRole`/`accessibilityLabel` desde as fases anteriores. Falta o que só dá pra fazer com uma conta Expo/loja de verdade: `eas init` (gera o `projectId`, resolve também a limitação de push notification abaixo), primeiro build via `eas build`, e submissão nas lojas.
 

@@ -28,6 +28,21 @@ export async function listarPosts(turmaId: string): Promise<PostComContadores[]>
   return data as unknown as PostComContadores[];
 }
 
+/** "Ver as publicações" no perfil (brief da Fase 6+: perfil editável) —
+ * mesmo formato de post-com-contadores do feed da turma, só que filtrado
+ * por autor em vez de turma. RLS de `posts` já restringe à turma/escola
+ * de quem está olhando, então isso nunca vaza post de fora do alcance
+ * de quem está vendo o perfil. */
+export async function listarPostsDoAutor(autorId: string): Promise<PostComContadores[]> {
+  const { data, error } = await supabase
+    .from('posts')
+    .select(SELECT_POST_COM_CONTADORES)
+    .eq('autor_id', autorId)
+    .order('criado_em', { ascending: false });
+  if (error) throw error;
+  return data as unknown as PostComContadores[];
+}
+
 export async function buscarPost(postId: string): Promise<PostComContadores> {
   const { data, error } = await supabase
     .from('posts')

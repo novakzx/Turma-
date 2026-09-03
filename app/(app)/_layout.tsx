@@ -24,6 +24,11 @@ export default function AppLayout() {
       <Stack.Screen name="novo-post" options={{ presentation: 'modal', title: 'Novo post' }} />
       <Stack.Screen name="post/[id]" options={{ title: 'Post' }} />
       <Stack.Screen name="sala/[id]" options={{ title: 'Sala de chat' }} />
+      <Stack.Screen
+        name="editar-perfil"
+        options={{ presentation: 'modal', title: 'Editar perfil' }}
+      />
+      <Stack.Screen name="minhas-publicacoes" options={{ title: 'Minhas publicações' }} />
     </Stack>
   );
 }
