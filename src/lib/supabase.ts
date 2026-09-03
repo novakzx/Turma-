@@ -9,15 +9,19 @@ import type { Database } from '@/types/database';
 // sigilo dela; é literalmente pra isso que existe o prefixo
 // `EXPO_PUBLIC_`, que já a expõe no bundle de qualquer forma). Existe
 // porque plataformas de deploy de terceiros (ex.: Vercel) às vezes não
-// repassam a env var pro processo de build por engano de configuração
-// — sem isso o app simplesmente não builda/roda nelas, mesmo sem
-// nenhum motivo de segurança real pra travar. `.env` continua sendo o
-// jeito certo de configurar localmente; isso só evita o app quebrar
-// inteiro quando outra pessoa hospeda o build sem repassar a env var.
+// repassam a env var pro processo de build direito — às vezes nem
+// "ausente" (`undefined`), e sim uma **string vazia** (`""`), que é
+// exatamente o motivo de usar `||` aqui em vez de `??`: `??` só troca
+// `null`/`undefined`, e uma env var configurada errada na plataforma de
+// deploy mas presente como "" passaria por ele igual, chegando vazia no
+// `createClient` (que falha com "supabaseUrl is required." — foi
+// exatamente o que aconteceu na Vercel). `.env` continua sendo o jeito
+// certo de configurar localmente; isso só evita o app quebrar inteiro
+// quando outra pessoa hospeda o build sem passar a env var direito.
 const supabaseUrl =
-  process.env.EXPO_PUBLIC_SUPABASE_URL ?? 'https://njzstudshifdjdqwbqsa.supabase.co';
+  process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://njzstudshifdjdqwbqsa.supabase.co';
 const supabaseAnonKey =
-  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? 'sb_publishable_451zpZIt-Kv262W9XfSvHQ_0TcsxvNY';
+  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_451zpZIt-Kv262W9XfSvHQ_0TcsxvNY';
 
 /**
  * Cliente Supabase do app. Usa apenas a chave anônima (pública) — ela é
