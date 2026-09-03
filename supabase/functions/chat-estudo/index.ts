@@ -108,25 +108,42 @@ Deno.serve(async (req) => {
     const modelo = escolherModelo(modo);
     const systemPrompt = montarPromptSistema({ nomeMateria: materia.nome, modo });
 
-    const respostaGemini = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-goog-api-key': GEMINI_API_KEY,
+    // A Gemini às vezes recusa com 503 "high demand" (sobrecarga
+    // temporária do lado deles, não um erro nosso — visto de verdade
+    // testando o chat) — uma única nova tentativa depois de um respiro
+    // curto resolve a maioria dos casos sem esperar o usuário clicar
+    // "Enviar" de novo.
+    async function chamarGemini() {
+      return fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-goog-api-key': GEMINI_API_KEY,
+          },
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: systemPrompt }] },
+            contents: historicoGemini,
+          }),
         },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: systemPrompt }] },
-          contents: historicoGemini,
-        }),
-      },
-    );
+      );
+    }
+
+    let respostaGemini = await chamarGemini();
+    if (respostaGemini.status === 503) {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      respostaGemini = await chamarGemini();
+    }
 
     if (!respostaGemini.ok) {
       const corpo = await respostaGemini.text();
       console.error('chat-estudo: Gemini recusou', respostaGemini.status, corpo);
-      return respostaJson({ error: 'Não deu pra falar com a IA agora.' }, 502);
+      const mensagemErro =
+        respostaGemini.status === 503
+          ? 'A IA está sobrecarregada agora — tenta de novo em alguns segundos.'
+          : 'Não deu pra falar com a IA agora.';
+      return respostaJson({ error: mensagemErro }, 502);
     }
 
     const dadosResposta = await respostaGemini.json();
