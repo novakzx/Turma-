@@ -49,14 +49,23 @@ function ChipMateria({
 function BolhaMensagem({ mensagem }: { mensagem: MensagemChatIA }) {
   const doAluno = mensagem.papel === 'usuario';
   return (
-    <View className={`max-w-[85%] flex-row items-end gap-2 ${doAluno ? 'self-end' : 'self-start'}`}>
+    // `shrink` (não só o `max-w-[85%]` do pai) é o que faz de verdade —
+    // sem isso, dentro de um `flex-row`, a bolha não respeita o teto de
+    // 85% e o texto simplesmente não quebra linha: a mensagem da IA
+    // vazava pra fora da tela (variando por aparelho, já que a largura
+    // de tela é diferente em cada iPhone/Android — o bug "muda com a
+    // resolução" era exatamente essa falta de encolhimento, não algo
+    // ligado a um device específico).
+    <View
+      className={`max-w-[85%] shrink flex-row items-end gap-2 ${doAluno ? 'self-end' : 'self-start'}`}
+    >
       {!doAluno ? (
-        <View className="h-7 w-7 items-center justify-center rounded-full bg-accent/10 dark:bg-accent-dark/10">
+        <View className="h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent/10 dark:bg-accent-dark/10">
           <Ionicons name="sparkles" size={14} color="#F59E0B" />
         </View>
       ) : null}
       <View
-        className={`rounded-2xl px-4 py-2.5 shadow-sm shadow-slate-900/5 ${
+        className={`shrink rounded-2xl px-4 py-2.5 shadow-sm shadow-slate-900/5 ${
           doAluno
             ? 'bg-primary dark:bg-primary-dark'
             : 'border border-slate-100 bg-surface dark:border-slate-800 dark:bg-surface-dark'
