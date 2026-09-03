@@ -7,13 +7,13 @@ import type { Post, PostComentario, TipoConteudoDenuncia, TipoPost } from './typ
 const BUCKET_MIDIA = 'posts-midia';
 
 export type PostComContadores = Post & {
-  profiles: { nome: string } | null;
+  profiles: { id: string; nome: string; foto_url: string | null } | null;
   post_curtidas: { count: number }[];
   post_comentarios: { count: number }[];
 };
 
 const SELECT_POST_COM_CONTADORES =
-  '*, profiles(nome), post_curtidas(count), post_comentarios(count)';
+  '*, profiles(id, nome, foto_url), post_curtidas(count), post_comentarios(count)';
 
 /** RLS já restringe a `turma_id` própria (ou escola inteira pra
  * coordenacao) — aqui só ordena e traz as contagens junto, num round-trip

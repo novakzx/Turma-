@@ -18,7 +18,7 @@ export function ImagemPost({ caminho }: { caminho: string }) {
 
   if (isLoading || !url) {
     return (
-      <View className="h-48 w-full items-center justify-center rounded-lg bg-slate-200 dark:bg-slate-700">
+      <View className="aspect-square w-full items-center justify-center bg-slate-200 dark:bg-slate-700">
         <ActivityIndicator />
       </View>
     );
@@ -27,7 +27,7 @@ export function ImagemPost({ caminho }: { caminho: string }) {
   return (
     <Image
       source={{ uri: url }}
-      className="h-48 w-full rounded-lg"
+      className="aspect-square w-full"
       resizeMode="cover"
       accessibilityLabel="Imagem do post"
     />

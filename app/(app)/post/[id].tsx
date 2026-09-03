@@ -19,7 +19,8 @@ import {
 } from '@/features/feed/api';
 import { BotaoDenunciar } from '@/features/feed/BotaoDenunciar';
 import { ImagemPost } from '@/features/feed/ImagemPost';
-import { ICONE_TIPO_POST, ROTULO_TIPO_POST } from '@/features/feed/types';
+import { ROTULO_TIPO_POST } from '@/features/feed/types';
+import { FotoPerfil } from '@/features/perfil/FotoPerfil';
 
 function formatarData(iso: string) {
   return new Intl.DateTimeFormat('pt-PT', {
@@ -172,9 +173,21 @@ export default function DetalhePost() {
       ListHeaderComponent={
         <View className="gap-3 border-b border-slate-100 pb-4 dark:border-slate-800">
           <View className="flex-row items-center gap-3">
-            <View className="h-10 w-10 items-center justify-center rounded-full bg-primary/10 dark:bg-primary-dark/10">
-              <Ionicons name={ICONE_TIPO_POST[post.tipo]} size={20} color="#4F46E5" />
-            </View>
+            <Pressable
+              onPress={() =>
+                post.profiles?.id === profile?.id
+                  ? router.push('/perfil')
+                  : post.profiles?.id && router.push(`/perfil/${post.profiles.id}`)
+              }
+              accessibilityRole="button"
+              accessibilityLabel={`Perfil de ${post.profiles?.nome ?? 'Aluno'}`}
+            >
+              <FotoPerfil
+                caminho={post.profiles?.foto_url ?? null}
+                nome={post.profiles?.nome ?? '?'}
+                tamanho={40}
+              />
+            </Pressable>
             <View className="flex-1 gap-1">
               <Text className="text-base font-semibold text-slate-900 dark:text-slate-100">
                 {post.profiles?.nome ?? 'Aluno'}

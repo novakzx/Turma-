@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useMemo } from 'react';
-import { FlatList, Pressable, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, View } from 'react-native';
 
 import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
 import { useAuth } from '@/features/auth/AuthProvider';
@@ -64,6 +64,13 @@ export default function Feed() {
           data={postsQuery.data ?? []}
           keyExtractor={(item) => item.id}
           contentContainerClassName="pb-28"
+          refreshControl={
+            <RefreshControl
+              refreshing={postsQuery.isRefetching}
+              onRefresh={() => postsQuery.refetch()}
+              tintColor="#4F46E5"
+            />
+          }
           ListHeaderComponent={
             <>
               <StoriesBar />
