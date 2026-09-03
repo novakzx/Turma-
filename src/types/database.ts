@@ -411,6 +411,7 @@ export type Database = {
           autor_id: string | null;
           conteudo: string | null;
           criado_em: string;
+          data_evento: string | null;
           id: string;
           midia_url: string | null;
           tipo: Database['public']['Enums']['tipo_post'];
@@ -420,6 +421,7 @@ export type Database = {
           autor_id?: string | null;
           conteudo?: string | null;
           criado_em?: string;
+          data_evento?: string | null;
           id?: string;
           midia_url?: string | null;
           tipo?: Database['public']['Enums']['tipo_post'];
@@ -429,6 +431,7 @@ export type Database = {
           autor_id?: string | null;
           conteudo?: string | null;
           criado_em?: string;
+          data_evento?: string | null;
           id?: string;
           midia_url?: string | null;
           tipo?: Database['public']['Enums']['tipo_post'];

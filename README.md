@@ -105,10 +105,12 @@ app/
   (auth)/             # Login (index) e cadastro — grupo ativo sem sessão
   (onboarding)/       # Escolha de escola/turma — grupo ativo com sessão incompleta
   (app)/              # Área logada — grupo ativo com onboarding completo
-    (tabs)/           # Avisos, Estudo, Notas, Perfil
+    (tabs)/           # Avisos, Feed, Estudo, Notas, Perfil
     novo-aviso.tsx    # Modal — só professor/coordenacao chega aqui de verdade (RLS + UI)
+    novo-post.tsx     # Modal — criar post (texto/foto/evento/lembrete) na turma
+    post/[id].tsx     # Detalhe do post: comentários, denúncia, apagar (autor/staff)
 src/
-  features/           # Uma pasta por domínio: auth, onboarding, perfil, avisos, notificacoes, notas, estudo (feed/chat vêm nas próximas fases)
+  features/           # Uma pasta por domínio: auth, onboarding, perfil, avisos, notificacoes, notas, estudo, feed (chat comunitário vem na próxima fase)
   components/ui/      # Componentes visuais reutilizáveis, sem regra de negócio
   lib/                # Supabase client, TanStack Query client, global.css
   stores/             # Zustand — só estado client-side (filtros, rascunhos)
@@ -136,6 +138,7 @@ O público é majoritariamente menor de idade — isto é requisito de MVP, não
 - Funções auxiliares de RLS (`current_papel`, `is_staff`, etc.) moram no schema `private`, fora do que o PostgREST expõe como API pública — evita que virem endpoint (`/rest/v1/rpc/...`) chamável por qualquer um.
 - **Pendente de configuração manual** (não tem endpoint de API pra isso): ligar "Leaked Password Protection" em Studio → Authentication → Policies, pra bloquear senha de cadastro conhecida em vazamento (checagem via HaveIBeenPwned).
 - Chat com IA (`chat_ia_mensagens`) não tem policy de `INSERT` pra `authenticated` — só a Edge Function `chat-estudo`, com a service role key, grava lá. Isso impede um cliente forjar uma mensagem "assistente" (fingir que a IA disse algo que não disse).
+- Mídia de post (`posts-midia`) é um bucket **privado** do Storage, não público — link direto adivinhável exporia foto de post de menor de idade pra quem tiver a URL. O app sempre lê via `createSignedUrl` (validade de 1h); a policy de `SELECT` em `storage.objects` restringe ao primeiro segmento do caminho (`turma_id`) do próprio usuário, com leitura cross-turma só pra professor/coordenacao da mesma escola.
 
 ## Limitações conhecidas
 
@@ -151,13 +154,13 @@ O público é majoritariamente menor de idade — isto é requisito de MVP, não
 - [x] **Fase 1 — Conta e perfil**: cadastro/login (email+senha), onboarding de escola/turma, papel `aluno` por padrão.
 - [x] **Fase 2 — Avisos e clima**: mural em tempo real, push via Edge Function, integração Open-Meteo, aviso automático de trajeto.
 - [x] **Fase 3 — Estudo**: chat com IA por matéria (aguardando secret `ANTHROPIC_API_KEY`), calculadora de notas.
-- [ ] **Fase 4 — Feed da turma**: post, curtida, comentário, upload de imagem.
+- [x] **Fase 4 — Feed da turma**: post, curtida, comentário, upload de imagem.
 - [ ] **Fase 5 — Chat comunitário**: salas em tempo real, moderação.
 - [ ] **Fase 6 — Acabamento**: acessibilidade, estados vazio/erro, build EAS, preparação pra loja.
 
 ## Status atual
 
-Fase 3 completa e testada de ponta a ponta contra o projeto Supabase real. Calculadora de notas: lança avaliação com peso/nota, lança nota de uma pendente inline, e "quanto preciso tirar" calcula certo nos três casos (número normal, "já bateu", "impossível na escala"). Chat com IA: seletor de matéria + modo, mensagem chega na Edge Function, RLS decide o histórico certo, e — sem `ANTHROPIC_API_KEY` configurada ainda — a função responde 503 com uma mensagem clara em vez de travar, exatamente como planejado. Fase 4 (feed da turma) é o próximo passo.
+Fase 4 completa e testada de ponta a ponta contra o projeto Supabase real: criar post (texto, foto, evento com data, lembrete), curtir/descurtir, comentar, apagar post/comentário (autor ou staff) e denunciar post/comentário — tudo com os três estados de lista (carregando/vazio/com dado) e escopado à turma do aluno via RLS. Upload de foto testado de ponta a ponta contra o bucket privado `posts-midia` (upload real + URL assinada renderizando). Fase 3 segue como antes: calculadora de notas e chat com IA (aguardando `ANTHROPIC_API_KEY`). Fase 5 (chat comunitário) é o próximo passo.
 
 ### Dados de exemplo
 
