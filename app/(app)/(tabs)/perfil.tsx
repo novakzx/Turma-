@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
-import { Alert, ScrollView, Text, View } from 'react-native';
+import { Alert, Platform, ScrollView, Text, View } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
 import { signOut } from '@/features/auth/api';
@@ -12,6 +12,22 @@ import { contarConexoes } from '@/features/social/api';
 import { CabecalhoPerfil } from '@/features/social/CabecalhoPerfil';
 import { GridPosts } from '@/features/social/GridPosts';
 import { StoriesBar } from '@/features/social/StoriesBar';
+
+/** `window.confirm` no web, `Alert.alert` nativo — mesmo padrão de
+ * `gerenciar-materias.tsx`/`perfil/[id].tsx` (`Alert.alert` não tem UI
+ * no navegador: era exatamente por isso que "Sair da conta" parecia não
+ * fazer nada no web — o diálogo de confirmação nunca aparecia, então o
+ * botão de "Sair" dele nunca era clicado). */
+function confirmar(mensagem: string, aoConfirmar: () => void) {
+  if (Platform.OS === 'web') {
+    if (window.confirm(mensagem)) aoConfirmar();
+    return;
+  }
+  Alert.alert('Sair da conta', mensagem, [
+    { text: 'Cancelar', style: 'cancel' },
+    { text: 'Sair', style: 'destructive', onPress: aoConfirmar },
+  ]);
+}
 
 export default function Perfil() {
   const { profile } = useAuth();
@@ -44,10 +60,7 @@ export default function Perfil() {
   });
 
   function handleSair() {
-    Alert.alert('Sair da conta', 'Tem certeza que quer sair?', [
-      { text: 'Cancelar', style: 'cancel' },
-      { text: 'Sair', style: 'destructive', onPress: () => mutation.mutate() },
-    ]);
+    confirmar('Tem certeza que quer sair?', () => mutation.mutate());
   }
 
   return (
