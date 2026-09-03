@@ -133,6 +133,13 @@ export default function Perfil() {
       />
 
       <Button
+        label="Pedidos de entrada"
+        icon="mail-open-outline"
+        variant="secondary"
+        onPress={() => router.push('/pedidos-turma')}
+      />
+
+      <Button
         label="Configurações"
         icon="settings-outline"
         variant="secondary"

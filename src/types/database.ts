@@ -582,9 +582,52 @@ export type Database = {
           },
         ];
       };
+      turma_pedidos_entrada: {
+        Row: {
+          criado_em: string;
+          id: string;
+          profile_id: string;
+          respondido_em: string | null;
+          status: Database['public']['Enums']['status_pedido_turma'];
+          turma_id: string;
+        };
+        Insert: {
+          criado_em?: string;
+          id?: string;
+          profile_id: string;
+          respondido_em?: string | null;
+          status?: Database['public']['Enums']['status_pedido_turma'];
+          turma_id: string;
+        };
+        Update: {
+          criado_em?: string;
+          id?: string;
+          profile_id?: string;
+          respondido_em?: string | null;
+          status?: Database['public']['Enums']['status_pedido_turma'];
+          turma_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'turma_pedidos_entrada_profile_id_fkey';
+            columns: ['profile_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'turma_pedidos_entrada_turma_id_fkey';
+            columns: ['turma_id'];
+            isOneToOne: false;
+            referencedRelation: 'turmas';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       turmas: {
         Row: {
           criado_em: string;
+          criado_por: string | null;
           escola_id: string;
           id: string;
           nome: string;
@@ -592,6 +635,7 @@ export type Database = {
         };
         Insert: {
           criado_em?: string;
+          criado_por?: string | null;
           escola_id: string;
           id?: string;
           nome: string;
@@ -599,12 +643,20 @@ export type Database = {
         };
         Update: {
           criado_em?: string;
+          criado_por?: string | null;
           escola_id?: string;
           id?: string;
           nome?: string;
           serie_ano?: string;
         };
         Relationships: [
+          {
+            foreignKeyName: 'turmas_criado_por_fkey';
+            columns: ['criado_por'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
           {
             foreignKeyName: 'turmas_escola_id_fkey';
             columns: ['escola_id'];
@@ -619,6 +671,10 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      responder_pedido_entrada_turma: {
+        Args: { p_aprovar: boolean; p_pedido_id: string };
+        Returns: undefined;
+      };
       silenciar_usuario: {
         Args: { p_horas: number; p_perfil_id: string };
         Returns: undefined;
@@ -629,6 +685,7 @@ export type Database = {
       papel_mensagem_ia: 'usuario' | 'assistente';
       papel_usuario: 'aluno' | 'professor' | 'coordenacao';
       status_denuncia: 'pendente' | 'revisado' | 'resolvido';
+      status_pedido_turma: 'pendente' | 'aprovado' | 'recusado';
       tipo_aviso:
         | 'greve'
         | 'feriado'
@@ -766,6 +823,7 @@ export const Constants = {
       papel_mensagem_ia: ['usuario', 'assistente'],
       papel_usuario: ['aluno', 'professor', 'coordenacao'],
       status_denuncia: ['pendente', 'revisado', 'resolvido'],
+      status_pedido_turma: ['pendente', 'aprovado', 'recusado'],
       tipo_aviso: [
         'greve',
         'feriado',
