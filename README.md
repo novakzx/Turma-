@@ -83,6 +83,18 @@ O projeto já está configurado pra build gerenciado (`eas.json`, ícones e spla
 
 Ícones e splash já estão prontos (`assets/icon.png`, `android-icon-*.png`, `favicon.png`, `splash-icon*.png` — gerados programaticamente a partir da identidade visual do app, ver seção abaixo) — não precisa desenhar nada antes do primeiro build.
 
+### Deploy no Vercel (preview web)
+
+**Importante:** Turma+ é um app **mobile** (React Native + Expo) — o app "de verdade" roda em iOS/Android via Expo Go ou o build EAS acima, não no navegador. O que o Vercel hospeda aqui é o _export web_ do Expo Router (`npx expo export --platform web`, o mesmo target usado neste README pra testar no browser): uma versão SPA do app rodando no navegador, útil pra demo/preview rápido link-clicável, com as mesmas limitações já listadas em "Limitações conhecidas" (push notification, `Alert.prompt`, modo escuro no target web).
+
+Já está configurado (`vercel.json`: comando de build, `dist/` como saída, rewrite de SPA pra toda rota cair em `index.html`, senão `/feed` ou `/post/123` dão 404 num reload direto). Só falta importar o projeto:
+
+1. Em [vercel.com](https://vercel.com) → **Add New → Project** → importe `novakzx/Turma-` (o repositório já está no ar — ver seção principal do README/`git remote`).
+2. Nas variáveis de ambiente do projeto na Vercel, adicione `EXPO_PUBLIC_SUPABASE_URL` e `EXPO_PUBLIC_SUPABASE_ANON_KEY` (os mesmos valores do seu `.env` local — são públicas, protegidas por RLS, não segredo de verdade, mas o build não funciona sem elas). **Nunca** adicione `ANTHROPIC_API_KEY`/`SUPABASE_SERVICE_ROLE_KEY` aqui — essas só existem como secret de Edge Function, nunca no bundle do app (ver "Segurança e privacidade").
+3. Deploy. A Vercel detecta o `vercel.json` sozinha (`framework: null` — não é Next.js nem nenhum framework que ela reconheça automaticamente).
+
+Testado localmente antes de configurar isso: `npx expo export --platform web` gera `dist/` sem erro (bundle de ~3.3MB, dentro do esperado pra um app com Reanimated + vector-icons + Supabase).
+
 ### Scripts
 
 | Comando                           | O que faz                                                |
