@@ -132,6 +132,6 @@ O público é majoritariamente menor de idade — isto é requisito de MVP, não
 
 Fase 1 completa e testada de ponta a ponta contra um projeto Supabase real (cadastro → confirmação de e-mail → login → onboarding → home → logout), com `Stack.Protected` do Expo Router decidindo a rota certa a partir de sessão + perfil. Fase 2 é o próximo passo.
 
-### Contas de teste / dados de exemplo
+### Dados de exemplo
 
-O projeto de dev tem uma escola e duas turmas de exemplo (criadas via SQL, não pelo app — gerenciar escola/turma é responsabilidade do Studio, ver seção "Fora do escopo" do brief). Ajuste ou apague pelo Supabase Studio quando quiser.
+[`supabase/seed.sql`](supabase/seed.sql) popula **222 escolas reais dos distritos de Lisboa e Setúbal** (agrupamentos de escolas e escolas não agrupadas, fonte: rede DGAE/ME 2025/2026), cada uma com uma turma por ano do **5º ao 12º ano** (1776 turmas no total) — é o que a lista de onboarding mostra. Gerenciar escola/turma continua responsabilidade do Studio (ver seção "Fora do escopo" do brief); esse arquivo só evita começar com a lista vazia. A Supabase CLI roda esse arquivo sozinha depois das migrations em `supabase db reset`.
