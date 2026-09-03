@@ -45,8 +45,10 @@ create table public.escolas (
   endereco text,
   latitude double precision,
   longitude double precision,
-  -- Escala de nota configurável por escola (brief 6.3) — 0-10 é só o default.
-  nota_maxima numeric not null default 10 check (nota_maxima > 0),
+  -- Escala de nota configurável por escola (brief 6.3) — 20 é o default de
+  -- Portugal (ensino básico/secundário); outras escolas podem usar outra
+  -- escala (ex.: 0-10), por isso o valor não é hardcoded no app.
+  nota_maxima numeric not null default 20 check (nota_maxima > 0),
   -- Limites do aviso automático de trajeto (brief 6.1), usados pela Edge
   -- Function agendada da Fase 2. Ficam aqui pra cada escola poder ajustar.
   limite_chuva_percentual integer not null default 70 check (limite_chuva_percentual between 0 and 100),
@@ -366,9 +368,13 @@ create policy profiles_select on public.profiles
     or (public.is_staff() and escola_id = public.current_escola_id())
   );
 
+-- papel = 'aluno' aqui é obrigatório: sem isso, qualquer pessoa que se
+-- cadastra poderia inserir o próprio perfil já como 'professor' ou
+-- 'coordenacao'. Como não existe painel admin no MVP (brief 11), promover
+-- alguém a staff é uma ação manual via Supabase Studio/SQL, fora do RLS.
 create policy profiles_insert_self on public.profiles
   for insert to authenticated
-  with check (id = auth.uid());
+  with check (id = auth.uid() and papel = 'aluno');
 
 create policy profiles_update_self on public.profiles
   for update to authenticated
