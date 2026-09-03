@@ -6,7 +6,7 @@ import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-na
 
 import { Button } from '@/components/ui/Button';
 import { TextField } from '@/components/ui/TextField';
-import { signIn } from '@/features/auth/api';
+import { signIn, signInWithGoogle } from '@/features/auth/api';
 import { mensagemDeErro } from '@/features/auth/errors';
 
 type Erros = { nomeUsuario?: string; senha?: string; geral?: string };
@@ -18,6 +18,16 @@ export default function LoginScreen() {
 
   const mutation = useMutation({
     mutationFn: signIn,
+    onError: (error) => setErros({ geral: mensagemDeErro(error) }),
+  });
+
+  // No nativo, a volta pro app (deep link `turmamais://google-auth`) só
+  // resolve quando o usuário conclui/cancela no navegador in-app — sem
+  // sessão nova, não navega e não sobra em loading pra sempre; no web o
+  // redirect leva a página inteira embora daqui (não há "erro" pra
+  // mostrar quando dá certo).
+  const googleMutation = useMutation({
+    mutationFn: signInWithGoogle,
     onError: (error) => setErros({ geral: mensagemDeErro(error) }),
   });
 
@@ -95,6 +105,20 @@ export default function LoginScreen() {
           icon="person-add-outline"
           variant="secondary"
           onPress={() => router.push('/cadastro')}
+        />
+
+        <View className="flex-row items-center gap-3 py-1">
+          <View className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
+          <Text className="text-xs font-medium text-slate-500 dark:text-slate-400">ou</Text>
+          <View className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
+        </View>
+
+        <Button
+          label="Continuar com Google"
+          icon="logo-google"
+          variant="secondary"
+          onPress={() => googleMutation.mutate()}
+          loading={googleMutation.isPending}
         />
       </ScrollView>
     </KeyboardAvoidingView>

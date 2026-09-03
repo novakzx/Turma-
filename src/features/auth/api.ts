@@ -1,6 +1,21 @@
+import * as WebBrowser from 'expo-web-browser';
+import { Platform } from 'react-native';
+
 import { supabase } from '@/lib/supabase';
 
 import type { MetadadosCadastro, Profile } from './types';
+
+// Só importa de verdade no target web (fecha o popup de auth quando o
+// fluxo usa `WebBrowser.openAuthSessionAsync` — não é o nosso caso aqui,
+// já que no web a gente redireciona a página inteira, mas é inofensivo
+// chamar sempre, e é o padrão documentado pelo próprio Expo/Supabase).
+WebBrowser.maybeCompleteAuthSession();
+
+// Precisa bater com `scheme` em app.json — é o esquema de URL customizado
+// que o navegador in-app do login social usa pra voltar pro app nativo
+// depois que o usuário autoriza no Google.
+const ESQUEMA_APP = 'turmamais';
+const REDIRECT_NATIVO = `${ESQUEMA_APP}://google-auth`;
 
 /**
  * Idade + nome de usuário + os dois consentimentos (Termos de Uso e
@@ -87,6 +102,63 @@ export async function signIn(params: { nomeUsuario: string; senha: string }) {
   return data;
 }
 
+/**
+ * Login com Google — web e nativo são fluxos bem diferentes por baixo:
+ * - **Web**: `signInWithOAuth` já redireciona a página inteira pro
+ *   Google e de volta; o cliente detecta a sessão nova sozinho ao voltar
+ *   (`detectSessionInUrl`, ligado só no target web — ver
+ *   `src/lib/supabase.ts`), então não precisa fazer mais nada aqui além
+ *   de disparar o redirect.
+ * - **Nativo**: não existe "redirecionar a página" — abre o fluxo numa
+ *   aba de navegador dentro do app (`expo-web-browser`) e espera voltar
+ *   pro esquema customizado do app (`REDIRECT_NATIVO`); aí extrai os
+ *   tokens do fragmento da URL de retorno e ativa a sessão manualmente
+ *   com `setSession` (o mesmo padrão documentado pelo próprio Supabase
+ *   pra Expo — ver "Build a Social Auth App with Expo React Native").
+ *
+ * Cria a conta sozinho no primeiro login (Supabase Auth de propósito) —
+ * mas Google não dá nome de usuário, idade nem os dois consentimentos
+ * que este app exige; por isso o profile criado por `fetchOrCreateProfile`
+ * fica incompleto de propósito, e o app.tsx raiz redireciona pra
+ * `(completar-cadastro)` até esses campos serem preenchidos (ver
+ * `completarCadastroSocial` e `app/_layout.tsx`).
+ */
+export async function signInWithGoogle() {
+  if (Platform.OS === 'web') {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin },
+    });
+    if (error) throw error;
+    return;
+  }
+
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: REDIRECT_NATIVO, skipBrowserRedirect: true },
+  });
+  if (error) throw error;
+  if (!data.url) throw new Error('Não deu pra iniciar o login com Google.');
+
+  const resultado = await WebBrowser.openAuthSessionAsync(data.url, REDIRECT_NATIVO);
+  if (resultado.type !== 'success' || !('url' in resultado)) {
+    throw new Error('Login com Google cancelado.');
+  }
+
+  const params = new URLSearchParams(new URL(resultado.url).hash.slice(1));
+  const accessToken = params.get('access_token');
+  const refreshToken = params.get('refresh_token');
+  if (!accessToken || !refreshToken) {
+    throw new Error('Não deu pra concluir o login com Google.');
+  }
+
+  const { error: erroSessao } = await supabase.auth.setSession({
+    access_token: accessToken,
+    refresh_token: refreshToken,
+  });
+  if (erroSessao) throw erroSessao;
+}
+
 export async function signOut() {
   const { error } = await supabase.auth.signOut();
   if (error) throw error;
@@ -142,4 +214,33 @@ export async function fetchOrCreateProfile(
     .single();
   if (erroInsert) throw erroInsert;
   return criado;
+}
+
+/**
+ * Preenche o que o login social (Google/Apple) não dá de jeito nenhum:
+ * nome de usuário, idade, aceite dos Termos de Uso e o consentimento dos
+ * pais/responsáveis. `fetchOrCreateProfile` já criou a linha em
+ * `profiles` no primeiro login (sem esses campos); esta função só
+ * atualiza — por isso a migration `login_social_completar_cadastro`
+ * concede `UPDATE` nessas colunas além do `INSERT` de sempre.
+ */
+export async function completarCadastroSocial(
+  userId: string,
+  params: {
+    nomeUsuario: string;
+    idade: number;
+    aceitouTermos: boolean;
+    consentimentoResponsavel: boolean;
+  },
+) {
+  const { error } = await supabase
+    .from('profiles')
+    .update({
+      nome_usuario: params.nomeUsuario,
+      idade: params.idade,
+      consentimento_responsavel: params.consentimentoResponsavel,
+      termos_aceitos_em: params.aceitouTermos ? new Date().toISOString() : null,
+    })
+    .eq('id', userId);
+  if (error) throw error;
 }

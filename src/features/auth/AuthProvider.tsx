@@ -46,14 +46,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const userId = session?.user.id;
   const email = session?.user.email;
-  const metadata = session?.user.user_metadata as MetadadosCadastro | undefined;
+  // Login social (Google/Apple) não usa `MetadadosCadastro` nenhum — o
+  // Supabase preenche `user_metadata` sozinho com os campos padrão do
+  // provedor (`full_name`/`name`, não o nosso `nome` de cadastro normal).
+  // `nomeUsuario`/`idade`/os consentimentos ficam mesmo undefined nesse
+  // caso — só o formulário de `(completar-cadastro)` preenche depois.
+  const metadata = session?.user.user_metadata as
+    (MetadadosCadastro & { full_name?: string; name?: string }) | undefined;
+  const nomeSocial = metadata?.full_name ?? metadata?.name;
 
   const profileQuery = useQuery({
     queryKey: ['profile', userId],
     queryFn: () =>
       fetchOrCreateProfile(userId as string, {
         email: email ?? '',
-        nome: metadata?.nome,
+        nome: metadata?.nome ?? nomeSocial,
         nomeUsuario: metadata?.nomeUsuario,
         idade: metadata?.idade,
         aceitouTermos: metadata?.aceitouTermos,

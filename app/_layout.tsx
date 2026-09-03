@@ -16,11 +16,15 @@ import { carregarTemaPreferido } from '@/features/configuracoes/tema';
 import { queryClient } from '@/lib/queryClient';
 
 /**
- * Decide qual grupo de rotas mostrar com base em sessão + perfil:
- * sem sessão → (auth); com sessão mas sem escola/turma → (onboarding);
- * com sessão e onboarding completo → (app). `Stack.Protected` troca de
- * grupo sozinho quando `session`/`profile` mudam (login, logout, term de
- * onboarding) — nenhuma navegação manual é necessária nas telas.
+ * Decide qual grupo de rotas mostrar com base em sessão + perfil: sem
+ * sessão → (auth); com sessão mas sem nome de usuário/idade/termos
+ * (só acontece no primeiro login social — Google/Apple não dão esses
+ * dados, diferente do cadastro normal que já exige tudo antes de criar a
+ * conta) → (completar-cadastro); com sessão e cadastro completo mas sem
+ * escola/turma → (onboarding); com tudo completo → (app).
+ * `Stack.Protected` troca de grupo sozinho quando `session`/`profile`
+ * mudam (login, logout, fim de cadastro/onboarding) — nenhuma navegação
+ * manual é necessária nas telas.
  *
  * Nota (ver README > "Limitações conhecidas"): no preview web deste SDK,
  * `useColorScheme()` já lê "dark" do sistema corretamente (dá pra ver no
@@ -50,6 +54,8 @@ function RootNavigator() {
     );
   }
 
+  const cadastroCompleto =
+    !!profile?.nome_usuario && profile?.idade != null && !!profile?.termos_aceitos_em;
   const onboardingCompleto = !!profile?.escola_id && !!profile?.turma_id;
 
   return (
@@ -73,10 +79,13 @@ function RootNavigator() {
           <Stack.Protected guard={!session}>
             <Stack.Screen name="(auth)" options={{ headerShown: false }} />
           </Stack.Protected>
-          <Stack.Protected guard={!!session && !onboardingCompleto}>
+          <Stack.Protected guard={!!session && !cadastroCompleto}>
+            <Stack.Screen name="(completar-cadastro)" options={{ headerShown: false }} />
+          </Stack.Protected>
+          <Stack.Protected guard={!!session && cadastroCompleto && !onboardingCompleto}>
             <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
           </Stack.Protected>
-          <Stack.Protected guard={!!session && onboardingCompleto}>
+          <Stack.Protected guard={!!session && cadastroCompleto && onboardingCompleto}>
             <Stack.Screen name="(app)" options={{ headerShown: false }} />
           </Stack.Protected>
         </Stack>

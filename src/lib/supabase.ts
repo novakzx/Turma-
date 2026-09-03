@@ -1,6 +1,7 @@
 import 'react-native-url-polyfill/auto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
+import { Platform } from 'react-native';
 
 import type { Database } from '@/types/database';
 
@@ -36,6 +37,12 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     storage: AsyncStorage,
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: false,
+    // Só faz sentido no target web: depois do redirect de volta do Google
+    // (login social), o token vem no fragmento da URL (`#access_token=...`)
+    // e é isso que faz o cliente detectar sozinho a sessão nova sem
+    // precisar de código nenhum nosso. No nativo não existe barra de
+    // endereço pra isso — lá o fluxo usa `expo-web-browser` +
+    // `setSession()` manual (ver `signInWithGoogle` em `features/auth/api.ts`).
+    detectSessionInUrl: Platform.OS === 'web',
   },
 });
