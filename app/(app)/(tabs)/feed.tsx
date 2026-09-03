@@ -8,6 +8,7 @@ import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { curtir, descurtir, listarMeusLikes, listarPosts } from '@/features/feed/api';
 import { CartaoPost } from '@/features/feed/CartaoPost';
+import { StoriesBar } from '@/features/social/StoriesBar';
 
 export default function Feed() {
   const { profile } = useAuth();
@@ -50,25 +51,37 @@ export default function Feed() {
   return (
     <View className="flex-1 bg-background dark:bg-background-dark">
       {(postsQuery.data ?? []).length === 0 ? (
-        <EmptyState
-          icon="newspaper-outline"
-          titulo="Nenhum post na turma ainda"
-          descricao="Seja o primeiro a postar algo pra galera."
-        />
+        <>
+          <StoriesBar />
+          <EmptyState
+            icon="newspaper-outline"
+            titulo="Nenhum post na turma ainda"
+            descricao="Seja o primeiro a postar algo pra galera."
+          />
+        </>
       ) : (
         <FlatList
           data={postsQuery.data ?? []}
           keyExtractor={(item) => item.id}
-          contentContainerClassName="gap-3 p-4 pb-28"
+          contentContainerClassName="pb-28"
+          ListHeaderComponent={
+            <>
+              <StoriesBar />
+              <View className="h-1" />
+            </>
+          }
           renderItem={({ item, index }) => (
-            <CartaoPost
-              post={item}
-              index={index}
-              curtido={likesQuery.data?.has(item.id) ?? false}
-              onCurtir={() => curtirMutation.mutate(item.id)}
-              onDescurtir={() => descurtirMutation.mutate(item.id)}
-            />
+            <View className="px-4">
+              <CartaoPost
+                post={item}
+                index={index}
+                curtido={likesQuery.data?.has(item.id) ?? false}
+                onCurtir={() => curtirMutation.mutate(item.id)}
+                onDescurtir={() => descurtirMutation.mutate(item.id)}
+              />
+            </View>
           )}
+          ItemSeparatorComponent={() => <View className="h-3" />}
         />
       )}
 

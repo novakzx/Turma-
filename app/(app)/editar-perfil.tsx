@@ -138,6 +138,13 @@ export default function EditarPerfil() {
           onPress={handleSalvar}
           loading={mutation.isPending}
         />
+
+        <Button
+          label="Trocar de turma"
+          icon="school-outline"
+          variant="secondary"
+          onPress={() => router.push('/trocar-turma')}
+        />
       </ScrollView>
     </KeyboardAvoidingView>
   );

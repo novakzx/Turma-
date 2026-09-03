@@ -32,6 +32,14 @@ export default function AppLayout() {
       <Stack.Screen name="configuracoes" options={{ title: 'Configurações' }} />
       <Stack.Screen name="gerenciar-materias" options={{ title: 'Matérias' }} />
       <Stack.Screen name="pedidos-turma" options={{ title: 'Pedidos de entrada' }} />
+      <Stack.Screen name="trocar-turma" options={{ title: 'Trocar de turma' }} />
+      <Stack.Screen name="perfil/[id]" options={{ title: 'Perfil' }} />
+      <Stack.Screen name="conexoes/[id]" options={{ title: 'Conexões' }} />
+      <Stack.Screen name="nova-story" options={{ presentation: 'modal', title: 'Nova story' }} />
+      <Stack.Screen
+        name="story/[id]"
+        options={{ presentation: 'fullScreenModal', headerShown: false }}
+      />
     </Stack>
   );
 }

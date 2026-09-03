@@ -6,20 +6,12 @@ import { Alert, ScrollView, Text, View } from 'react-native';
 import { Button } from '@/components/ui/Button';
 import { signOut } from '@/features/auth/api';
 import { useAuth } from '@/features/auth/AuthProvider';
-import { FotoPerfil } from '@/features/perfil/FotoPerfil';
+import { listarPostsDoAutor } from '@/features/feed/api';
 import { buscarTurmaComEscola } from '@/features/perfil/api';
-
-const ROTULO_PAPEL = {
-  aluno: 'Aluno',
-  professor: 'Professor',
-  coordenacao: 'Coordenação',
-} as const;
-
-const ICONE_PAPEL = {
-  aluno: 'school-outline',
-  professor: 'briefcase-outline',
-  coordenacao: 'shield-checkmark-outline',
-} as const;
+import { contarConexoes } from '@/features/social/api';
+import { CabecalhoPerfil } from '@/features/social/CabecalhoPerfil';
+import { GridPosts } from '@/features/social/GridPosts';
+import { StoriesBar } from '@/features/social/StoriesBar';
 
 export default function Perfil() {
   const { profile } = useAuth();
@@ -30,6 +22,18 @@ export default function Perfil() {
     queryKey: ['turma-com-escola', profile?.turma_id],
     queryFn: () => buscarTurmaComEscola(profile?.turma_id as string),
     enabled: !!profile?.turma_id,
+  });
+
+  const contadoresQuery = useQuery({
+    queryKey: ['contadores-conexoes', profile?.id],
+    queryFn: () => contarConexoes(profile!.id),
+    enabled: !!profile,
+  });
+
+  const postsQuery = useQuery({
+    queryKey: ['posts-do-autor', profile?.id],
+    queryFn: () => listarPostsDoAutor(profile!.id),
+    enabled: !!profile,
   });
 
   const mutation = useMutation({
@@ -49,110 +53,100 @@ export default function Perfil() {
   return (
     <ScrollView
       className="flex-1 bg-background dark:bg-background-dark"
-      contentContainerClassName="gap-6 px-6 pb-28 pt-20"
+      contentContainerClassName="gap-6 pb-28 pt-16"
     >
-      <View className="items-center gap-3">
-        <FotoPerfil
-          caminho={profile?.foto_url ?? null}
+      <StoriesBar />
+
+      <View className="gap-6 px-6">
+        <CabecalhoPerfil
+          perfilId={profile?.id ?? ''}
           nome={profile?.nome ?? '...'}
-          tamanho={96}
+          nomeUsuario={profile?.nome_usuario ?? null}
+          fotoUrl={profile?.foto_url ?? null}
+          bio={profile?.bio ?? null}
+          papel={profile?.papel}
+          contadorPosts={postsQuery.data?.length ?? 0}
+          contadorSeguidores={contadoresQuery.data?.seguidores ?? 0}
+          contadorSeguindo={contadoresQuery.data?.seguindo ?? 0}
+          acoes={
+            <Button
+              label="Editar perfil"
+              icon="create-outline"
+              variant="secondary"
+              onPress={() => router.push('/editar-perfil')}
+            />
+          }
         />
-        <View className="items-center gap-1">
-          <Text className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-            {profile?.nome ?? '...'}
-          </Text>
-          {profile?.nome_usuario ? (
-            <Text className="text-sm text-slate-500 dark:text-slate-400">
-              @{profile.nome_usuario}
-            </Text>
-          ) : null}
-          {profile ? (
-            <View className="mt-1 flex-row items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 dark:bg-primary-dark/10">
-              <Ionicons name={ICONE_PAPEL[profile.papel]} size={14} color="#4F46E5" />
-              <Text className="text-xs font-semibold text-primary dark:text-primary-dark">
-                {ROTULO_PAPEL[profile.papel]}
-              </Text>
+
+        {turmaQuery.data ? (
+          <View className="gap-3 rounded-3xl border border-slate-100 bg-surface p-4 shadow-sm shadow-slate-900/5 dark:border-slate-800 dark:bg-surface-dark">
+            <View className="flex-row items-center gap-3">
+              <View className="h-10 w-10 items-center justify-center rounded-full bg-accent/10 dark:bg-accent-dark/10">
+                <Ionicons name="business-outline" size={20} color="#F59E0B" />
+              </View>
+              <View className="flex-1">
+                <Text className="text-xs text-slate-500 dark:text-slate-400">Escola</Text>
+                <Text className="text-base font-medium text-slate-900 dark:text-slate-100">
+                  {turmaQuery.data.escolas?.nome}
+                </Text>
+              </View>
             </View>
-          ) : null}
-          {profile?.bio ? (
-            <Text className="mt-2 text-center text-sm text-slate-600 dark:text-slate-400">
-              {profile.bio}
-            </Text>
-          ) : null}
-        </View>
+            <View className="flex-row items-center gap-3">
+              <View className="h-10 w-10 items-center justify-center rounded-full bg-primary/10 dark:bg-primary-dark/10">
+                <Ionicons name="people-outline" size={20} color="#4F46E5" />
+              </View>
+              <View className="flex-1">
+                <Text className="text-xs text-slate-500 dark:text-slate-400">Turma</Text>
+                <Text className="text-base font-medium text-slate-900 dark:text-slate-100">
+                  {turmaQuery.data.serie_ano} · {turmaQuery.data.nome}
+                </Text>
+              </View>
+            </View>
+          </View>
+        ) : null}
       </View>
 
-      <Button
-        label="Editar perfil"
-        icon="create-outline"
-        variant="secondary"
-        onPress={() => router.push('/editar-perfil')}
-      />
+      <GridPosts posts={postsQuery.data ?? []} />
 
-      {turmaQuery.data ? (
-        <View className="gap-3 rounded-3xl border border-slate-100 bg-surface p-4 shadow-sm shadow-slate-900/5 dark:border-slate-800 dark:bg-surface-dark">
-          <View className="flex-row items-center gap-3">
-            <View className="h-10 w-10 items-center justify-center rounded-full bg-accent/10 dark:bg-accent-dark/10">
-              <Ionicons name="business-outline" size={20} color="#F59E0B" />
-            </View>
-            <View className="flex-1">
-              <Text className="text-xs text-slate-500 dark:text-slate-400">Escola</Text>
-              <Text className="text-base font-medium text-slate-900 dark:text-slate-100">
-                {turmaQuery.data.escolas?.nome}
-              </Text>
-            </View>
-          </View>
-          <View className="flex-row items-center gap-3">
-            <View className="h-10 w-10 items-center justify-center rounded-full bg-primary/10 dark:bg-primary-dark/10">
-              <Ionicons name="people-outline" size={20} color="#4F46E5" />
-            </View>
-            <View className="flex-1">
-              <Text className="text-xs text-slate-500 dark:text-slate-400">Turma</Text>
-              <Text className="text-base font-medium text-slate-900 dark:text-slate-100">
-                {turmaQuery.data.serie_ano} · {turmaQuery.data.nome}
-              </Text>
-            </View>
-          </View>
-        </View>
-      ) : null}
+      <View className="gap-3 px-6">
+        {ehStaff ? (
+          <Button
+            label="Gerenciar matérias"
+            icon="library-outline"
+            variant="secondary"
+            onPress={() => router.push('/gerenciar-materias')}
+          />
+        ) : null}
 
-      {ehStaff ? (
         <Button
-          label="Gerenciar matérias"
-          icon="library-outline"
+          label="Minhas publicações"
+          icon="newspaper-outline"
           variant="secondary"
-          onPress={() => router.push('/gerenciar-materias')}
+          onPress={() => router.push('/minhas-publicacoes')}
         />
-      ) : null}
 
-      <Button
-        label="Minhas publicações"
-        icon="newspaper-outline"
-        variant="secondary"
-        onPress={() => router.push('/minhas-publicacoes')}
-      />
+        <Button
+          label="Pedidos de entrada"
+          icon="mail-open-outline"
+          variant="secondary"
+          onPress={() => router.push('/pedidos-turma')}
+        />
 
-      <Button
-        label="Pedidos de entrada"
-        icon="mail-open-outline"
-        variant="secondary"
-        onPress={() => router.push('/pedidos-turma')}
-      />
+        <Button
+          label="Configurações"
+          icon="settings-outline"
+          variant="secondary"
+          onPress={() => router.push('/configuracoes')}
+        />
 
-      <Button
-        label="Configurações"
-        icon="settings-outline"
-        variant="secondary"
-        onPress={() => router.push('/configuracoes')}
-      />
-
-      <Button
-        label="Sair da conta"
-        icon="log-out-outline"
-        variant="secondary"
-        onPress={handleSair}
-        loading={mutation.isPending}
-      />
+        <Button
+          label="Sair da conta"
+          icon="log-out-outline"
+          variant="secondary"
+          onPress={handleSair}
+          loading={mutation.isPending}
+        />
+      </View>
     </ScrollView>
   );
 }

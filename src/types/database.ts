@@ -581,6 +581,74 @@ export type Database = {
           },
         ];
       };
+      seguidores: {
+        Row: {
+          criado_em: string;
+          id: string;
+          seguido_id: string;
+          seguidor_id: string;
+        };
+        Insert: {
+          criado_em?: string;
+          id?: string;
+          seguido_id: string;
+          seguidor_id: string;
+        };
+        Update: {
+          criado_em?: string;
+          id?: string;
+          seguido_id?: string;
+          seguidor_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'seguidores_seguido_id_fkey';
+            columns: ['seguido_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'seguidores_seguidor_id_fkey';
+            columns: ['seguidor_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      stories: {
+        Row: {
+          autor_id: string;
+          criado_em: string;
+          expira_em: string;
+          id: string;
+          midia_url: string;
+        };
+        Insert: {
+          autor_id: string;
+          criado_em?: string;
+          expira_em?: string;
+          id?: string;
+          midia_url: string;
+        };
+        Update: {
+          autor_id?: string;
+          criado_em?: string;
+          expira_em?: string;
+          id?: string;
+          midia_url?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'stories_autor_id_fkey';
+            columns: ['autor_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       turma_pedidos_entrada: {
         Row: {
           criado_em: string;
