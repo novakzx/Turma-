@@ -109,14 +109,12 @@ export default function Perfil() {
       <GridPosts posts={postsQuery.data ?? []} />
 
       <View className="gap-3 px-6">
-        {ehStaff ? (
-          <Button
-            label="Gerenciar matérias"
-            icon="library-outline"
-            variant="secondary"
-            onPress={() => router.push('/gerenciar-materias')}
-          />
-        ) : null}
+        <Button
+          label={ehStaff ? 'Gerenciar matérias' : 'Matérias da turma'}
+          icon="library-outline"
+          variant="secondary"
+          onPress={() => router.push('/gerenciar-materias')}
+        />
 
         {ehStaff ? (
           <Button

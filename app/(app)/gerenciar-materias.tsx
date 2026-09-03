@@ -31,11 +31,13 @@ function confirmar(mensagem: string, aoConfirmar: () => void) {
 
 function LinhaMateria({
   materia,
+  podeEditar,
   onRenomear,
   onApagar,
   salvando,
 }: {
   materia: Materia;
+  podeEditar: boolean;
   onRenomear: (nome: string) => void;
   onApagar: () => void;
   salvando: boolean;
@@ -71,28 +73,37 @@ function LinhaMateria({
         <Ionicons name="book-outline" size={18} color="#4F46E5" />
       </View>
       <Text className="flex-1 text-base text-slate-900 dark:text-slate-100">{materia.nome}</Text>
-      <Pressable
-        onPress={() => setEditando(true)}
-        accessibilityRole="button"
-        accessibilityLabel={`Renomear ${materia.nome}`}
-        className="min-h-11 min-w-11 items-center justify-center"
-      >
-        <Ionicons name="create-outline" size={18} color="#4F46E5" />
-      </Pressable>
-      <Pressable
-        onPress={onApagar}
-        accessibilityRole="button"
-        accessibilityLabel={`Apagar ${materia.nome}`}
-        className="min-h-11 min-w-11 items-center justify-center"
-      >
-        <Ionicons name="trash-outline" size={18} color="#DC2626" />
-      </Pressable>
+      {podeEditar ? (
+        <>
+          <Pressable
+            onPress={() => setEditando(true)}
+            accessibilityRole="button"
+            accessibilityLabel={`Renomear ${materia.nome}`}
+            className="min-h-11 min-w-11 items-center justify-center"
+          >
+            <Ionicons name="create-outline" size={18} color="#4F46E5" />
+          </Pressable>
+          <Pressable
+            onPress={onApagar}
+            accessibilityRole="button"
+            accessibilityLabel={`Apagar ${materia.nome}`}
+            className="min-h-11 min-w-11 items-center justify-center"
+          >
+            <Ionicons name="trash-outline" size={18} color="#DC2626" />
+          </Pressable>
+        </>
+      ) : null}
     </View>
   );
 }
 
 export default function GerenciarMaterias() {
   const { profile } = useAuth();
+  // Fase 8 restringia isso a staff; pedido do usuário abriu "adicionar"
+  // pra qualquer aluno da turma (RLS: `materias_insert_aluno`) — renomear
+  // e apagar continuam staff-only (apagar é destrutivo pra turma inteira,
+  // ver comentário na migration `aluno_pode_adicionar_materia`).
+  const ehStaff = profile?.papel === 'professor' || profile?.papel === 'coordenacao';
   const queryClient = useQueryClient();
   const [criando, setCriando] = useState(false);
   const [novoNome, setNovoNome] = useState('');
@@ -170,6 +181,7 @@ export default function GerenciarMaterias() {
           <LinhaMateria
             key={materia.id}
             materia={materia}
+            podeEditar={ehStaff}
             salvando={renomearMutation.isPending && renomearMutation.variables?.id === materia.id}
             onRenomear={(nome) => renomearMutation.mutate({ id: materia.id, nome })}
             onApagar={() => handleApagar(materia)}
