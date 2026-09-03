@@ -3,6 +3,8 @@ import { Tabs, router } from 'expo-router';
 import { useColorScheme } from 'nativewind';
 import { Pressable } from 'react-native';
 
+import { ALTURA_BARRA_ABAS, useDistanciaFundoBarraAbas } from '@/lib/barraAbas';
+
 const ICONE_POR_ROTA: Record<string, keyof typeof Ionicons.glyphMap> = {
   index: 'megaphone',
   feed: 'newspaper',
@@ -23,6 +25,11 @@ const ICONE_POR_ROTA: Record<string, keyof typeof Ionicons.glyphMap> = {
 export default function TabsLayout() {
   const { colorScheme } = useColorScheme();
   const escuro = colorScheme === 'dark';
+  // Bug real relatado no iPhone: a margem de baixo era um `16` fixo, sem
+  // somar o inset de segurança do sistema (home indicator) — a barra
+  // acabava tampando o que estivesse colado na base da tela (ver
+  // `src/lib/barraAbas.ts` e o mesmo cálculo em `estudo.tsx`).
+  const distanciaFundo = useDistanciaFundoBarraAbas();
 
   return (
     <Tabs
@@ -37,8 +44,8 @@ export default function TabsLayout() {
           position: 'absolute',
           left: 16,
           right: 16,
-          bottom: 16,
-          height: 64,
+          bottom: distanciaFundo,
+          height: ALTURA_BARRA_ABAS,
           borderRadius: 32,
           borderTopWidth: 0,
           backgroundColor: escuro ? '#1E293B' : '#FFFFFF',

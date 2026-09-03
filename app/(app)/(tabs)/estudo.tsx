@@ -16,6 +16,7 @@ import {
   type ModoChatEstudo,
 } from '@/features/estudo/types';
 import { listarMateriasDaTurma } from '@/features/notas/api';
+import { useEspacoReservadoBarraAbas } from '@/lib/barraAbas';
 
 const MODOS: ModoChatEstudo[] = ['duvida', 'explicar', 'resumo', 'plano'];
 
@@ -76,6 +77,7 @@ export default function Estudo() {
   const [modo, setModo] = useState<ModoChatEstudo>('duvida');
   const [texto, setTexto] = useState('');
   const [erro, setErro] = useState<string | null>(null);
+  const espacoBarraAbas = useEspacoReservadoBarraAbas();
 
   const materiasQuery = useQuery({
     queryKey: ['materias', profile?.turma_id],
@@ -203,15 +205,19 @@ export default function Estudo() {
       )}
 
       {materiaId ? (
-        // `pb-24` (96px) em vez do `pb-6` que o resto do app usa: a barra
-        // de abas é flutuante (`position: absolute`, 64px de altura + 16px
-        // de margem do fundo — ver `(tabs)/_layout.tsx`), então qualquer
-        // conteúdo colado na base da tela (como esta linha de envio, a
-        // única entre as 6 abas que fica presa embaixo via flex) precisa
-        // reservar esse espaço, senão a barra fica visualmente por cima e
-        // o toque no botão "Enviar" nem chega a ele — achado testando de
-        // verdade o chat com a Gemini pela primeira vez com resposta real.
-        <View className="gap-2 border-t border-slate-100 p-3 pb-24 dark:border-slate-800">
+        // `paddingBottom` calculado (não um `pb-*` fixo do Tailwind) por
+        // causa de um bug real relatado no iPhone: a barra de abas é
+        // flutuante (`position: absolute`, `(tabs)/_layout.tsx`) e um
+        // valor fixo não soma o inset de segurança do sistema (home
+        // indicator no iPhone) — variava por aparelho, então um número
+        // "chutado" que funcionava no preview web não sobrava o
+        // suficiente num iPhone de verdade e a barra tampava o botão
+        // "Enviar" de novo. `useEspacoReservadoBarraAbas` (mesma fonte que
+        // posiciona a própria barra) resolve isso pros dois lugares juntos.
+        <View
+          className="gap-2 border-t border-slate-100 p-3 dark:border-slate-800"
+          style={{ paddingBottom: espacoBarraAbas }}
+        >
           {erro ? (
             <View className="flex-row items-center gap-1.5">
               <Ionicons name="alert-circle" size={14} color="#DC2626" />
