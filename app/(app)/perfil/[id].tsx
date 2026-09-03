@@ -1,11 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Redirect, useLocalSearchParams } from 'expo-router';
-import { ScrollView } from 'react-native';
+import { Redirect, router, useLocalSearchParams } from 'expo-router';
+import { Alert, Platform, ScrollView, View } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
 import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { listarPostsDoAutor } from '@/features/feed/api';
+import {
+  bloquearUsuario,
+  criarConversaDireta,
+  desbloquearUsuario,
+  euBloqueei,
+} from '@/features/mensagens/api';
 import { CabecalhoPerfil } from '@/features/social/CabecalhoPerfil';
 import { GridPosts } from '@/features/social/GridPosts';
 import {
@@ -15,6 +21,17 @@ import {
   estaSeguindo,
   seguir,
 } from '@/features/social/api';
+
+function confirmar(mensagem: string, aoConfirmar: () => void) {
+  if (Platform.OS === 'web') {
+    if (window.confirm(mensagem)) aoConfirmar();
+    return;
+  }
+  Alert.alert('Confirmar', mensagem, [
+    { text: 'Cancelar', style: 'cancel' },
+    { text: 'Bloquear', style: 'destructive', onPress: aoConfirmar },
+  ]);
+}
 
 /** Perfil de qualquer outro usuário (pedido "abrir perfil pra qualquer
  * usuário do app, de qualquer escola" — Fase 9/10). RLS de `profiles`
@@ -65,6 +82,29 @@ export default function PerfilPublico() {
     },
   });
 
+  const bloqueadoQuery = useQuery({
+    queryKey: ['eu-bloqueei', meuPerfil?.id, id],
+    queryFn: () => euBloqueei(meuPerfil!.id, id),
+    enabled: !!meuPerfil && meuPerfil.id !== id,
+  });
+
+  const bloquearMutation = useMutation({
+    mutationFn: () => bloquearUsuario(meuPerfil!.id, id),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ['eu-bloqueei', meuPerfil?.id, id] }),
+  });
+
+  const desbloquearMutation = useMutation({
+    mutationFn: () => desbloquearUsuario(meuPerfil!.id, id),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ['eu-bloqueei', meuPerfil?.id, id] }),
+  });
+
+  const mensagemMutation = useMutation({
+    mutationFn: () => criarConversaDireta(id),
+    onSuccess: (conversaId) => router.push(`/conversa/${conversaId}`),
+  });
+
   // É o próprio usuário — leva pra tela de perfil de verdade (com editar,
   // configurações etc.) em vez de duplicar a tela aqui.
   if (meuPerfil && meuPerfil.id === id) {
@@ -100,22 +140,51 @@ export default function PerfilPublico() {
         contadorSeguidores={contadoresQuery.data?.seguidores ?? 0}
         contadorSeguindo={contadoresQuery.data?.seguindo ?? 0}
         acoes={
-          seguindoQuery.data ? (
+          <View className="w-full gap-2">
+            <View className="flex-row gap-2">
+              <View className="flex-1">
+                {seguindoQuery.data ? (
+                  <Button
+                    label="Deixar de seguir"
+                    icon="person-remove-outline"
+                    variant="secondary"
+                    onPress={() => deixarDeSeguirMutation.mutate()}
+                    loading={deixarDeSeguirMutation.isPending}
+                  />
+                ) : (
+                  <Button
+                    label="Seguir"
+                    icon="person-add-outline"
+                    onPress={() => seguirMutation.mutate()}
+                    loading={seguirMutation.isPending}
+                  />
+                )}
+              </View>
+              <View className="flex-1">
+                <Button
+                  label="Mensagem"
+                  icon="chatbubble-outline"
+                  variant="secondary"
+                  onPress={() => mensagemMutation.mutate()}
+                  loading={mensagemMutation.isPending}
+                />
+              </View>
+            </View>
             <Button
-              label="Deixar de seguir"
-              icon="person-remove-outline"
+              label={bloqueadoQuery.data ? 'Desbloquear' : 'Bloquear'}
+              icon={bloqueadoQuery.data ? 'lock-open-outline' : 'ban-outline'}
               variant="secondary"
-              onPress={() => deixarDeSeguirMutation.mutate()}
-              loading={deixarDeSeguirMutation.isPending}
+              onPress={() =>
+                bloqueadoQuery.data
+                  ? desbloquearMutation.mutate()
+                  : confirmar(
+                      `Bloquear ${perfil.nome}? Vocês não vão poder trocar mensagens.`,
+                      () => bloquearMutation.mutate(),
+                    )
+              }
+              loading={bloquearMutation.isPending || desbloquearMutation.isPending}
             />
-          ) : (
-            <Button
-              label="Seguir"
-              icon="person-add-outline"
-              onPress={() => seguirMutation.mutate()}
-              loading={seguirMutation.isPending}
-            />
-          )
+          </View>
         }
       />
 

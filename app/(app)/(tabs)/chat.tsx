@@ -17,6 +17,9 @@ import {
   type Sala,
   type TipoSalaChat,
 } from '@/features/chat/types';
+import { listarMinhasConversas, listarPedidosDeMensagem } from '@/features/mensagens/api';
+import type { ConversaComResumo } from '@/features/mensagens/api';
+import { FotoPerfil } from '@/features/perfil/FotoPerfil';
 import { supabase } from '@/lib/supabase';
 
 function LinhaSala({ sala, index }: { sala: Sala; index: number }) {
@@ -55,9 +58,137 @@ function Secao({ titulo, salas, offset }: { titulo: string; salas: Sala[]; offse
   );
 }
 
+function BotaoAba({
+  label,
+  ativo,
+  onPress,
+}: {
+  label: string;
+  ativo: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityState={{ selected: ativo }}
+      className={`min-h-11 flex-1 items-center justify-center rounded-full px-4 py-2 ${
+        ativo ? 'bg-primary dark:bg-primary-dark' : 'bg-transparent'
+      }`}
+    >
+      <Text
+        className={`text-sm font-semibold ${ativo ? 'text-white' : 'text-slate-500 dark:text-slate-400'}`}
+      >
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
+function LinhaConversa({ conversa, index }: { conversa: ConversaComResumo; index: number }) {
+  const nome =
+    conversa.tipo === 'grupo'
+      ? (conversa.nome ?? 'Grupo')
+      : (conversa.outroParticipante?.nome ?? 'Alguém');
+  const foto = conversa.tipo === 'grupo' ? null : (conversa.outroParticipante?.foto_url ?? null);
+
+  return (
+    <EntradaAnimada index={index}>
+      <Pressable
+        onPress={() => router.push(`/conversa/${conversa.id}`)}
+        accessibilityRole="button"
+        accessibilityLabel={`Abrir conversa com ${nome}`}
+        className="min-h-11 flex-row items-center gap-3 rounded-3xl border border-slate-100 bg-surface p-3 shadow-sm shadow-slate-900/5 active:opacity-80 dark:border-slate-800 dark:bg-surface-dark"
+      >
+        {conversa.tipo === 'grupo' ? (
+          <View className="h-10 w-10 items-center justify-center rounded-full bg-accent/10 dark:bg-accent-dark/10">
+            <Ionicons name="people" size={20} color="#F59E0B" />
+          </View>
+        ) : (
+          <FotoPerfil caminho={foto} nome={nome} tamanho={40} />
+        )}
+        <View className="flex-1">
+          <Text className="text-base font-medium text-slate-900 dark:text-slate-100">{nome}</Text>
+          {conversa.ultimaMensagem ? (
+            <Text numberOfLines={1} className="text-xs text-slate-500 dark:text-slate-400">
+              {conversa.ultimaMensagem.conteudo}
+            </Text>
+          ) : null}
+        </View>
+        <Ionicons name="chevron-forward" size={18} color="#CBD5E1" />
+      </Pressable>
+    </EntradaAnimada>
+  );
+}
+
+function AbaMensagens() {
+  const { profile } = useAuth();
+  const [subaba, setSubaba] = useState<'conversas' | 'pedidos'>('conversas');
+
+  const conversasQuery = useQuery({
+    queryKey: ['minhas-conversas', profile?.id],
+    queryFn: () => listarMinhasConversas(profile!.id),
+    enabled: !!profile,
+  });
+
+  const pedidosQuery = useQuery({
+    queryKey: ['pedidos-mensagem', profile?.id],
+    queryFn: () => listarPedidosDeMensagem(profile!.id),
+    enabled: !!profile,
+  });
+
+  const lista = subaba === 'conversas' ? conversasQuery.data : pedidosQuery.data;
+  const carregando = subaba === 'conversas' ? conversasQuery.isLoading : pedidosQuery.isLoading;
+
+  return (
+    <View className="gap-4">
+      <View className="flex-row gap-1 rounded-full bg-slate-100 p-1 dark:bg-slate-800">
+        <BotaoAba
+          label="Conversas"
+          ativo={subaba === 'conversas'}
+          onPress={() => setSubaba('conversas')}
+        />
+        <BotaoAba
+          label={`Pedidos${pedidosQuery.data?.length ? ` (${pedidosQuery.data.length})` : ''}`}
+          ativo={subaba === 'pedidos'}
+          onPress={() => setSubaba('pedidos')}
+        />
+      </View>
+
+      <Button
+        label="Nova conversa"
+        icon="chatbubble-ellipses-outline"
+        variant="secondary"
+        onPress={() => router.push('/nova-conversa')}
+      />
+
+      {carregando ? (
+        <LoadingState />
+      ) : (lista ?? []).length === 0 ? (
+        <EmptyState
+          icon="chatbubble-outline"
+          titulo={subaba === 'conversas' ? 'Nenhuma conversa ainda' : 'Nenhum pedido de mensagem'}
+          descricao={
+            subaba === 'pedidos'
+              ? 'Mensagens de quem ainda não te segue aparecem aqui primeiro.'
+              : undefined
+          }
+        />
+      ) : (
+        <View className="gap-2">
+          {(lista ?? []).map((c, i) => (
+            <LinhaConversa key={c.id} conversa={c} index={i} />
+          ))}
+        </View>
+      )}
+    </View>
+  );
+}
+
 export default function Chat() {
   const { profile } = useAuth();
   const queryClient = useQueryClient();
+  const [secao, setSecao] = useState<'salas' | 'mensagens'>('salas');
   const [criandoAssunto, setCriandoAssunto] = useState(false);
   const [nomeAssunto, setNomeAssunto] = useState('');
   const [erro, setErro] = useState<string | null>(null);
@@ -104,16 +235,6 @@ export default function Chat() {
     criarMutation.mutate();
   }
 
-  if (salasQuery.isLoading) return <LoadingState />;
-  if (salasQuery.isError) {
-    return (
-      <EmptyState
-        titulo="Não deu pra carregar as salas"
-        onTentarNovo={() => salasQuery.refetch()}
-      />
-    );
-  }
-
   const semSalas =
     porTipo.turma.length === 0 && porTipo.materia.length === 0 && porTipo.assunto.length === 0;
 
@@ -122,66 +243,88 @@ export default function Chat() {
       className="flex-1 bg-background dark:bg-background-dark"
       contentContainerClassName="gap-5 p-4 pb-28"
     >
-      <Secao titulo={ROTULO_TIPO_SALA.turma} salas={porTipo.turma} offset={0} />
-      <Secao
-        titulo={`${ROTULO_TIPO_SALA.materia}s`}
-        salas={porTipo.materia}
-        offset={porTipo.turma.length}
-      />
-      <Secao
-        titulo={ROTULO_TIPO_SALA.assunto}
-        salas={porTipo.assunto}
-        offset={porTipo.turma.length + porTipo.materia.length}
-      />
-
-      {semSalas ? (
-        <EmptyState
-          icon="chatbubbles-outline"
-          titulo="Nenhuma sala por aqui ainda"
-          descricao="A sala da tua turma aparece assim que a turma tiver matérias cadastradas."
+      <View className="flex-row gap-1 rounded-full bg-slate-100 p-1 dark:bg-slate-800">
+        <BotaoAba label="Salas" ativo={secao === 'salas'} onPress={() => setSecao('salas')} />
+        <BotaoAba
+          label="Mensagens"
+          ativo={secao === 'mensagens'}
+          onPress={() => setSecao('mensagens')}
         />
-      ) : null}
-
-      <View className="gap-2 border-t border-slate-200 pt-4 dark:border-slate-800">
-        {criandoAssunto ? (
-          <View className="gap-2 rounded-3xl border border-slate-100 bg-surface p-3 shadow-sm shadow-slate-900/5 dark:border-slate-800 dark:bg-surface-dark">
-            <TextField
-              label="Nome do assunto (ex.: Dúvidas de matemática)"
-              icon="bulb-outline"
-              value={nomeAssunto}
-              onChangeText={setNomeAssunto}
-              error={erro ?? undefined}
-            />
-            <View className="flex-row gap-2">
-              <View className="flex-1">
-                <Button
-                  label="Cancelar"
-                  variant="secondary"
-                  onPress={() => {
-                    setCriandoAssunto(false);
-                    setErro(null);
-                  }}
-                />
-              </View>
-              <View className="flex-1">
-                <Button
-                  label="Criar sala"
-                  icon="checkmark"
-                  onPress={handleCriarAssunto}
-                  loading={criarMutation.isPending}
-                />
-              </View>
-            </View>
-          </View>
-        ) : (
-          <Button
-            label="Nova sala de assunto"
-            icon="add-circle-outline"
-            variant="secondary"
-            onPress={() => setCriandoAssunto(true)}
-          />
-        )}
       </View>
+
+      {secao === 'mensagens' ? (
+        <AbaMensagens />
+      ) : salasQuery.isLoading ? (
+        <LoadingState />
+      ) : salasQuery.isError ? (
+        <EmptyState
+          titulo="Não deu pra carregar as salas"
+          onTentarNovo={() => salasQuery.refetch()}
+        />
+      ) : (
+        <>
+          <Secao titulo={ROTULO_TIPO_SALA.turma} salas={porTipo.turma} offset={0} />
+          <Secao
+            titulo={`${ROTULO_TIPO_SALA.materia}s`}
+            salas={porTipo.materia}
+            offset={porTipo.turma.length}
+          />
+          <Secao
+            titulo={ROTULO_TIPO_SALA.assunto}
+            salas={porTipo.assunto}
+            offset={porTipo.turma.length + porTipo.materia.length}
+          />
+
+          {semSalas ? (
+            <EmptyState
+              icon="chatbubbles-outline"
+              titulo="Nenhuma sala por aqui ainda"
+              descricao="A sala da tua turma aparece assim que a turma tiver matérias cadastradas."
+            />
+          ) : null}
+
+          <View className="gap-2 border-t border-slate-200 pt-4 dark:border-slate-800">
+            {criandoAssunto ? (
+              <View className="gap-2 rounded-3xl border border-slate-100 bg-surface p-3 shadow-sm shadow-slate-900/5 dark:border-slate-800 dark:bg-surface-dark">
+                <TextField
+                  label="Nome do assunto (ex.: Dúvidas de matemática)"
+                  icon="bulb-outline"
+                  value={nomeAssunto}
+                  onChangeText={setNomeAssunto}
+                  error={erro ?? undefined}
+                />
+                <View className="flex-row gap-2">
+                  <View className="flex-1">
+                    <Button
+                      label="Cancelar"
+                      variant="secondary"
+                      onPress={() => {
+                        setCriandoAssunto(false);
+                        setErro(null);
+                      }}
+                    />
+                  </View>
+                  <View className="flex-1">
+                    <Button
+                      label="Criar sala"
+                      icon="checkmark"
+                      onPress={handleCriarAssunto}
+                      loading={criarMutation.isPending}
+                    />
+                  </View>
+                </View>
+              </View>
+            ) : (
+              <Button
+                label="Nova sala de assunto"
+                icon="add-circle-outline"
+                variant="secondary"
+                onPress={() => setCriandoAssunto(true)}
+              />
+            )}
+          </View>
+        </>
+      )}
     </ScrollView>
   );
 }

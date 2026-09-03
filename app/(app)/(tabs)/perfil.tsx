@@ -118,6 +118,15 @@ export default function Perfil() {
           />
         ) : null}
 
+        {ehStaff ? (
+          <Button
+            label="Denúncias"
+            icon="flag-outline"
+            variant="secondary"
+            onPress={() => router.push('/moderacao-denuncias')}
+          />
+        ) : null}
+
         <Button
           label="Minhas publicações"
           icon="newspaper-outline"

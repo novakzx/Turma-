@@ -40,6 +40,13 @@ export default function AppLayout() {
         name="story/[id]"
         options={{ presentation: 'fullScreenModal', headerShown: false }}
       />
+      <Stack.Screen name="conversa/[id]" options={{ title: 'Conversa' }} />
+      <Stack.Screen
+        name="nova-conversa"
+        options={{ presentation: 'modal', title: 'Nova conversa' }}
+      />
+      <Stack.Screen name="grupo-participantes/[id]" options={{ title: 'Participantes' }} />
+      <Stack.Screen name="moderacao-denuncias" options={{ title: 'Denúncias' }} />
     </Stack>
   );
 }

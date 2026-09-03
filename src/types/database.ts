@@ -117,6 +117,42 @@ export type Database = {
           },
         ];
       };
+      bloqueios: {
+        Row: {
+          bloqueado_id: string;
+          bloqueador_id: string;
+          criado_em: string;
+          id: string;
+        };
+        Insert: {
+          bloqueado_id: string;
+          bloqueador_id: string;
+          criado_em?: string;
+          id?: string;
+        };
+        Update: {
+          bloqueado_id?: string;
+          bloqueador_id?: string;
+          criado_em?: string;
+          id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'bloqueios_bloqueado_id_fkey';
+            columns: ['bloqueado_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'bloqueios_bloqueador_id_fkey';
+            columns: ['bloqueador_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       chat_ia_mensagens: {
         Row: {
           aluno_id: string;
@@ -155,6 +191,77 @@ export type Database = {
             columns: ['materia_id'];
             isOneToOne: false;
             referencedRelation: 'materias';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      conversas: {
+        Row: {
+          criado_em: string;
+          criado_por: string | null;
+          id: string;
+          nome: string | null;
+          tipo: Database['public']['Enums']['tipo_conversa'];
+        };
+        Insert: {
+          criado_em?: string;
+          criado_por?: string | null;
+          id?: string;
+          nome?: string | null;
+          tipo: Database['public']['Enums']['tipo_conversa'];
+        };
+        Update: {
+          criado_em?: string;
+          criado_por?: string | null;
+          id?: string;
+          nome?: string | null;
+          tipo?: Database['public']['Enums']['tipo_conversa'];
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'conversas_criado_por_fkey';
+            columns: ['criado_por'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      conversas_participantes: {
+        Row: {
+          conversa_id: string;
+          criado_em: string;
+          papel: Database['public']['Enums']['papel_participante'];
+          pedido_aceito: boolean;
+          profile_id: string;
+        };
+        Insert: {
+          conversa_id: string;
+          criado_em?: string;
+          papel?: Database['public']['Enums']['papel_participante'];
+          pedido_aceito?: boolean;
+          profile_id: string;
+        };
+        Update: {
+          conversa_id?: string;
+          criado_em?: string;
+          papel?: Database['public']['Enums']['papel_participante'];
+          pedido_aceito?: boolean;
+          profile_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'conversas_participantes_conversa_id_fkey';
+            columns: ['conversa_id'];
+            isOneToOne: false;
+            referencedRelation: 'conversas';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'conversas_participantes_profile_id_fkey';
+            columns: ['profile_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
             referencedColumns: ['id'];
           },
         ];
@@ -323,6 +430,48 @@ export type Database = {
             columns: ['sala_id'];
             isOneToOne: false;
             referencedRelation: 'salas_chat';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      mensagens_diretas: {
+        Row: {
+          apagada: boolean;
+          autor_id: string;
+          conteudo: string;
+          conversa_id: string;
+          criado_em: string;
+          id: string;
+        };
+        Insert: {
+          apagada?: boolean;
+          autor_id: string;
+          conteudo: string;
+          conversa_id: string;
+          criado_em?: string;
+          id?: string;
+        };
+        Update: {
+          apagada?: boolean;
+          autor_id?: string;
+          conteudo?: string;
+          conversa_id?: string;
+          criado_em?: string;
+          id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'mensagens_diretas_autor_id_fkey';
+            columns: ['autor_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'mensagens_diretas_conversa_id_fkey';
+            columns: ['conversa_id'];
+            isOneToOne: false;
+            referencedRelation: 'conversas';
             referencedColumns: ['id'];
           },
         ];
@@ -738,6 +887,15 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      adicionar_participante_grupo: {
+        Args: { p_conversa_id: string; p_novo_participante_id: string };
+        Returns: undefined;
+      };
+      criar_conversa_direta: { Args: { p_outro_id: string }; Returns: string };
+      criar_conversa_grupo: {
+        Args: { p_nome: string; p_participantes_ids: string[] };
+        Returns: string;
+      };
       responder_pedido_entrada_turma: {
         Args: { p_aprovar: boolean; p_pedido_id: string };
         Returns: undefined;
@@ -750,6 +908,7 @@ export type Database = {
     Enums: {
       origem_aviso: 'manual' | 'automatico';
       papel_mensagem_ia: 'usuario' | 'assistente';
+      papel_participante: 'membro' | 'admin';
       papel_usuario: 'aluno' | 'professor' | 'coordenacao';
       status_denuncia: 'pendente' | 'revisado' | 'resolvido';
       status_pedido_turma: 'pendente' | 'aprovado' | 'recusado';
@@ -762,7 +921,8 @@ export type Database = {
         | 'trabalho'
         | 'comunicado'
         | 'trajeto';
-      tipo_conteudo_denuncia: 'post' | 'comentario' | 'mensagem';
+      tipo_conteudo_denuncia: 'post' | 'comentario' | 'mensagem' | 'mensagem_direta';
+      tipo_conversa: 'direta' | 'grupo';
       tipo_post: 'texto' | 'foto' | 'evento' | 'lembrete';
       tipo_sala_chat: 'turma' | 'materia' | 'assunto';
     };
@@ -888,6 +1048,7 @@ export const Constants = {
     Enums: {
       origem_aviso: ['manual', 'automatico'],
       papel_mensagem_ia: ['usuario', 'assistente'],
+      papel_participante: ['membro', 'admin'],
       papel_usuario: ['aluno', 'professor', 'coordenacao'],
       status_denuncia: ['pendente', 'revisado', 'resolvido'],
       status_pedido_turma: ['pendente', 'aprovado', 'recusado'],
@@ -901,7 +1062,8 @@ export const Constants = {
         'comunicado',
         'trajeto',
       ],
-      tipo_conteudo_denuncia: ['post', 'comentario', 'mensagem'],
+      tipo_conteudo_denuncia: ['post', 'comentario', 'mensagem', 'mensagem_direta'],
+      tipo_conversa: ['direta', 'grupo'],
       tipo_post: ['texto', 'foto', 'evento', 'lembrete'],
       tipo_sala_chat: ['turma', 'materia', 'assunto'],
     },
