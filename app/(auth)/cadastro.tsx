@@ -36,9 +36,24 @@ export default function CadastroScreen() {
 
   const mutation = useMutation({
     mutationFn: signUp,
-    // Sem e-mail nenhum no cadastro (pedido do usuário), então não existe
-    // mais confirmação por e-mail — signUp sempre volta com sessão e o
-    // AuthProvider troca de tela sozinho (Stack.Protected).
+    // Sem e-mail nenhum no cadastro (pedido do usuário) — o normal é
+    // signUp voltar com sessão na hora e o AuthProvider trocar de tela
+    // sozinho (Stack.Protected), sem precisar de nada aqui. **Isso só
+    // funciona com "Confirm email" desligado no painel do Supabase**
+    // (Authentication → Sign In / Providers → Email) — religar esse
+    // toggle por engano já aconteceu mais de uma vez neste projeto. Sem
+    // esse guard, a tela ficava simplesmente parada sem nenhum aviso
+    // quando isso acontecia (a conta é criada mesmo assim, só nunca
+    // ganha sessão) — achado testando de verdade depois de relato do
+    // usuário ("tá dando erro ao se cadastrar").
+    onSuccess: (data) => {
+      if (!data.session) {
+        setErros({
+          geral:
+            'Não deu pra concluir o cadastro agora — tente de novo em alguns minutos. Se continuar assim, avise a coordenação (config. do servidor precisa de ajuste).',
+        });
+      }
+    },
     onError: (error) => setErros({ geral: mensagemDeErro(error) }),
   });
 
