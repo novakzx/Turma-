@@ -68,7 +68,7 @@ export default function Feed() {
             <RefreshControl
               refreshing={postsQuery.isRefetching}
               onRefresh={() => postsQuery.refetch()}
-              tintColor="#4F46E5"
+              tintColor="#8B5CF6"
             />
           }
           ListHeaderComponent={
@@ -96,7 +96,7 @@ export default function Feed() {
         onPress={() => router.push('/novo-post')}
         accessibilityRole="button"
         accessibilityLabel="Novo post"
-        className="absolute bottom-24 right-6 h-14 w-14 items-center justify-center rounded-full bg-primary shadow-lg shadow-primary/40 dark:bg-primary-dark"
+        className="absolute bottom-24 right-6 h-14 w-14 items-center justify-center rounded-full bg-primary shadow-sm dark:bg-primary-dark"
       >
         <Ionicons name="add" size={28} color="#FFFFFF" />
       </Pressable>

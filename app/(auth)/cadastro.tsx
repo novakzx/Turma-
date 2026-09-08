@@ -132,15 +132,15 @@ export default function CadastroScreen() {
     return (
       <View className="flex-1 items-center justify-center gap-4 bg-background px-8 dark:bg-background-dark">
         <View className="h-20 w-20 items-center justify-center rounded-full bg-primary/10 dark:bg-primary-dark/10">
-          <Ionicons name="mail-unread-outline" size={36} color="#4F46E5" />
+          <Ionicons name="mail-unread-outline" size={36} color="#8B5CF6" />
         </View>
         <Text className="text-center text-2xl font-bold text-primary dark:text-primary-dark">
           Confirme seu e-mail
         </Text>
-        <Text className="text-center text-base text-slate-600 dark:text-slate-400">
+        <Text className="text-center text-base text-slate-400">
           Mandamos um link de confirmação pra{' '}
-          <Text className="font-semibold text-slate-800 dark:text-slate-200">{email.trim()}</Text>.
-          Abre sua caixa de entrada (e o spam, só por garantia) e toca no link pra ativar sua conta.
+          <Text className="font-semibold text-slate-200">{email.trim()}</Text>. Abre sua caixa de
+          entrada (e o spam, só por garantia) e toca no link pra ativar sua conta.
         </Text>
         <View className="mt-2 w-full">
           <Button
@@ -164,7 +164,7 @@ export default function CadastroScreen() {
           <Text className="text-3xl font-bold text-primary dark:text-primary-dark">
             Criar conta
           </Text>
-          <Text className="text-base text-slate-600 dark:text-slate-400">
+          <Text className="text-base text-slate-400">
             É rápido — depois você escolhe sua escola e turma.
           </Text>
         </View>
@@ -249,7 +249,7 @@ export default function CadastroScreen() {
 
         {erros.geral ? (
           <View className="flex-row items-center gap-1.5">
-            <Ionicons name="alert-circle" size={14} color="#DC2626" />
+            <Ionicons name="alert-circle" size={14} color="#F87171" />
             <Text className="text-sm text-danger dark:text-danger-dark">{erros.geral}</Text>
           </View>
         ) : null}

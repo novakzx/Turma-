@@ -24,20 +24,17 @@ function CelulaGrid({ post }: { post: PostComContadores }) {
     >
       {post.midia_url ? (
         isLoading || !url ? (
-          <View className="flex-1 items-center justify-center rounded-md bg-slate-200 dark:bg-slate-700">
-            <ActivityIndicator size="small" color="#4F46E5" />
+          <View className="flex-1 items-center justify-center rounded-md bg-slate-700">
+            <ActivityIndicator size="small" color="#8B5CF6" />
           </View>
         ) : (
           <Image source={{ uri: url }} className="flex-1 rounded-md" resizeMode="cover" />
         )
       ) : (
-        <View className="flex-1 items-center justify-center gap-1 rounded-md bg-slate-100 p-2 dark:bg-slate-800">
+        <View className="flex-1 items-center justify-center gap-1 rounded-md bg-slate-800 p-2">
           <Ionicons name={ICONE_TIPO_POST[post.tipo]} size={22} color="#94A3B8" />
           {post.conteudo ? (
-            <Text
-              numberOfLines={2}
-              className="text-center text-[10px] text-slate-500 dark:text-slate-400"
-            >
+            <Text numberOfLines={2} className="text-center text-[10px] text-slate-400">
               {post.conteudo}
             </Text>
           ) : null}

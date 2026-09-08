@@ -65,19 +65,14 @@ function LinhaComentario({
   onApagar: () => void;
 }) {
   return (
-    <View className="gap-1 border-b border-slate-100 py-3 dark:border-slate-800">
+    <View className="gap-1 border-b border-slate-800 py-3">
       <View className="flex-row items-center justify-between">
-        <Text className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+        <Text className="text-sm font-semibold text-slate-100">
           {comentario.profiles?.nome ?? 'Aluno'}
         </Text>
-        <Text className="text-xs text-slate-500 dark:text-slate-400">
-          {formatarData(comentario.criado_em)}
-        </Text>
+        <Text className="text-xs text-slate-400">{formatarData(comentario.criado_em)}</Text>
       </View>
-      <TextoComMencoes
-        texto={comentario.conteudo}
-        className="text-sm text-slate-700 dark:text-slate-300"
-      />
+      <TextoComMencoes texto={comentario.conteudo} className="text-sm text-slate-300" />
       <View className="flex-row items-center gap-3">
         <BotaoDenunciar tipoConteudo="comentario" conteudoId={comentario.id} />
         {podeApagar ? (
@@ -87,7 +82,7 @@ function LinhaComentario({
             accessibilityLabel="Apagar comentário"
             className="min-h-11 min-w-11 flex-row items-center gap-1 px-2"
           >
-            <Ionicons name="trash-outline" size={14} color="#DC2626" />
+            <Ionicons name="trash-outline" size={14} color="#F87171" />
             <Text className="text-xs text-danger dark:text-danger-dark">Apagar</Text>
           </Pressable>
         ) : null}
@@ -177,7 +172,7 @@ export default function DetalhePost() {
       className="flex-1 bg-background dark:bg-background-dark"
       contentContainerClassName="gap-3 px-6 pb-10 pt-6"
       ListHeaderComponent={
-        <View className="gap-3 border-b border-slate-100 pb-4 dark:border-slate-800">
+        <View className="gap-3 border-b border-slate-800 pb-4">
           <View className="flex-row items-center gap-3">
             <Pressable
               onPress={() =>
@@ -195,10 +190,10 @@ export default function DetalhePost() {
               />
             </Pressable>
             <View className="flex-1 gap-1">
-              <Text className="text-base font-semibold text-slate-900 dark:text-slate-100">
+              <Text className="text-base font-semibold text-slate-100">
                 {post.profiles?.nome ?? 'Aluno'}
               </Text>
-              <Text className="text-xs text-slate-500 dark:text-slate-400">
+              <Text className="text-xs text-slate-400">
                 {formatarData(post.criado_em)} · {ROTULO_TIPO_POST[post.tipo]}
               </Text>
             </View>
@@ -213,14 +208,14 @@ export default function DetalhePost() {
                 accessibilityLabel="Apagar post"
                 className="min-h-11 min-w-11 items-center justify-center px-2"
               >
-                <Ionicons name="trash-outline" size={18} color="#DC2626" />
+                <Ionicons name="trash-outline" size={18} color="#F87171" />
               </Pressable>
             ) : null}
           </View>
 
           {post.tipo === 'evento' && post.data_evento ? (
-            <View className="flex-row items-center gap-1.5 self-start rounded-full bg-primary/10 px-3 py-1 dark:bg-primary-dark/10">
-              <Ionicons name="calendar" size={14} color="#4F46E5" />
+            <View className="flex-row items-center gap-1.5 self-start rounded-md bg-primary/10 px-3 py-1 dark:bg-primary-dark/10">
+              <Ionicons name="calendar" size={14} color="#8B5CF6" />
               <Text className="text-sm font-medium text-primary dark:text-primary-dark">
                 {formatarDataEvento(post.data_evento)}
               </Text>
@@ -229,10 +224,7 @@ export default function DetalhePost() {
 
           {post.conteudo ? (
             <View className="gap-2">
-              <TextoComMencoes
-                texto={post.conteudo}
-                className="text-base text-slate-800 dark:text-slate-200"
-              />
+              <TextoComMencoes texto={post.conteudo} className="text-base text-slate-200" />
               <BotaoTraduzir texto={post.conteudo} />
             </View>
           ) : null}
@@ -243,9 +235,7 @@ export default function DetalhePost() {
 
           <BotaoDenunciar tipoConteudo="post" conteudoId={post.id} />
 
-          <Text className="mt-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
-            Comentários
-          </Text>
+          <Text className="mt-2 text-sm font-semibold text-slate-300">Comentários</Text>
         </View>
       }
       data={comentariosQuery.data ?? []}
@@ -265,7 +255,7 @@ export default function DetalhePost() {
         ) : (
           <View className="flex-row items-center gap-1.5 py-4">
             <Ionicons name="chatbubble-outline" size={14} color="#94A3B8" />
-            <Text className="text-sm text-slate-500 dark:text-slate-400">
+            <Text className="text-sm text-slate-400">
               Ainda sem comentários. Sê o primeiro a comentar.
             </Text>
           </View>

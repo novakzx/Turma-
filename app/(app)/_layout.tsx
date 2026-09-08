@@ -23,9 +23,17 @@ export default function AppLayout() {
   return (
     <Stack
       screenOptions={{
-        headerStyle: { backgroundColor: escuro ? '#0F172A' : '#FFFFFF' },
-        headerTintColor: escuro ? '#F1F5F9' : '#0F172A',
-        contentStyle: { backgroundColor: escuro ? '#0F172A' : '#FFFFFF' },
+        // `headerShadowVisible: false` — sem isso o header nativo aplica
+        // uma borda/sombra inferior clara própria por padrão (pensada pra
+        // tema claro), que aparecia como linha branca sobre o fundo
+        // escuro (achado testando no preview mobile, relatado pelo
+        // usuário). `headerStyle` deste header não aceita
+        // `borderBottomWidth` direto (erro de tipo) — esta é a prop
+        // documentada do React Navigation pra isso.
+        headerShadowVisible: false,
+        headerStyle: { backgroundColor: escuro ? '#05060A' : '#0B0E14' },
+        headerTintColor: '#F8FAFC',
+        contentStyle: { backgroundColor: escuro ? '#05060A' : '#0B0E14' },
       }}
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

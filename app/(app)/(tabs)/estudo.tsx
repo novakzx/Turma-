@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { FlatList, KeyboardAvoidingView, Platform, Pressable, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/Button';
 import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
@@ -23,7 +24,6 @@ import {
 } from '@/features/estudo/types';
 import { criarFlashcard } from '@/features/flashcards/api';
 import { listarMateriasDaTurma } from '@/features/notas/api';
-import { useEspacoReservadoBarraAbas } from '@/lib/barraAbas';
 
 const MODOS: ModoChatEstudo[] = ['duvida', 'explicar', 'resumo', 'plano', 'prova'];
 
@@ -48,14 +48,12 @@ function ChipMateria({
       onPress={onPress}
       accessibilityRole="button"
       accessibilityState={{ selected: selecionada }}
-      className={`min-h-11 flex-row items-center justify-center gap-1.5 rounded-full border px-4 ${
-        selecionada
-          ? 'border-primary bg-primary/10 dark:border-primary-dark'
-          : 'border-slate-200 dark:border-slate-700'
+      className={`min-h-11 flex-row items-center justify-center gap-1.5 rounded-md border px-4 ${
+        selecionada ? 'border-primary bg-primary/10 dark:border-primary-dark' : 'border-slate-700'
       }`}
     >
-      <Ionicons name="book-outline" size={15} color={selecionada ? '#4F46E5' : '#94A3B8'} />
-      <Text className="text-sm text-slate-900 dark:text-slate-100">{nome}</Text>
+      <Ionicons name="book-outline" size={15} color={selecionada ? '#8B5CF6' : '#94A3B8'} />
+      <Text className="text-sm text-slate-100">{nome}</Text>
     </Pressable>
   );
 }
@@ -73,19 +71,17 @@ function CartaoEstatisticaSemanal({ alunoId }: { alunoId: string }) {
   const { totalPerguntas, materiasRevisadas, diaMaisAtivo } = query.data;
 
   return (
-    <View className="mx-4 mt-4 gap-3 rounded-3xl border border-slate-100 bg-surface p-4 shadow-sm shadow-slate-900/5 dark:border-slate-800 dark:bg-surface-dark">
+    <View className="mx-4 mt-4 gap-3 rounded-xl border border-slate-800 bg-surface p-4 dark:bg-surface-dark">
       <View className="flex-row items-center gap-2">
-        <Ionicons name="stats-chart" size={16} color="#4F46E5" />
-        <Text className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-          Sua semana de estudo
-        </Text>
+        <Ionicons name="stats-chart" size={16} color="#8B5CF6" />
+        <Text className="text-sm font-semibold text-slate-100">Sua semana de estudo</Text>
       </View>
       <View className="flex-row justify-around">
         <View className="items-center gap-0.5">
           <Text className="text-xl font-bold text-primary dark:text-primary-dark">
             {totalPerguntas}
           </Text>
-          <Text className="text-xs text-slate-500 dark:text-slate-400">
+          <Text className="text-xs text-slate-400">
             {totalPerguntas === 1 ? 'pergunta' : 'perguntas'}
           </Text>
         </View>
@@ -93,15 +89,15 @@ function CartaoEstatisticaSemanal({ alunoId }: { alunoId: string }) {
           <Text className="text-xl font-bold text-primary dark:text-primary-dark">
             {materiasRevisadas}
           </Text>
-          <Text className="text-xs text-slate-500 dark:text-slate-400">
+          <Text className="text-xs text-slate-400">
             {materiasRevisadas === 1 ? 'matéria revisada' : 'matérias revisadas'}
           </Text>
         </View>
       </View>
       {diaMaisAtivo ? (
-        <Text className="text-center text-xs text-slate-500 dark:text-slate-400">
+        <Text className="text-center text-xs text-slate-400">
           Seu dia mais ativo foi{' '}
-          <Text className="font-semibold text-slate-700 dark:text-slate-300">{diaMaisAtivo}</Text>.
+          <Text className="font-semibold text-slate-300">{diaMaisAtivo}</Text>.
         </Text>
       ) : null}
     </View>
@@ -148,37 +144,35 @@ function BolhaMensagem({
     >
       {!doAluno ? (
         <View className="h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent/10 dark:bg-accent-dark/10">
-          <Ionicons name="sparkles" size={14} color="#F59E0B" />
+          <Ionicons name="sparkles" size={14} color="#2DD4BF" />
         </View>
       ) : null}
       <View className="shrink gap-1.5">
         <View
-          className={`shrink rounded-2xl px-4 py-2.5 shadow-sm shadow-slate-900/5 ${
+          className={`shrink rounded-lg px-4 py-2.5 ${
             doAluno
               ? 'bg-primary dark:bg-primary-dark'
-              : 'border border-slate-100 bg-surface dark:border-slate-800 dark:bg-surface-dark'
+              : 'border border-slate-800 bg-surface dark:bg-surface-dark'
           }`}
         >
-          <Text className={doAluno ? 'text-white' : 'text-slate-900 dark:text-slate-100'}>
-            {enunciado}
-          </Text>
+          <Text className={doAluno ? 'text-white' : 'text-slate-100'}>{enunciado}</Text>
         </View>
 
         {gabarito ? (
           mostrarGabarito ? (
-            <View className="shrink rounded-2xl border border-accent/30 bg-accent/5 px-4 py-2.5 dark:border-accent-dark/30 dark:bg-accent-dark/10">
+            <View className="shrink rounded-lg border border-accent/30 bg-accent/5 px-4 py-2.5 dark:border-accent-dark/30 dark:bg-accent-dark/10">
               <Text className="mb-1 text-xs font-semibold uppercase tracking-wide text-accent dark:text-accent-dark">
                 Gabarito
               </Text>
-              <Text className="text-slate-900 dark:text-slate-100">{gabarito}</Text>
+              <Text className="text-slate-100">{gabarito}</Text>
             </View>
           ) : (
             <Pressable
               onPress={() => setMostrarGabarito(true)}
               accessibilityRole="button"
-              className="min-h-11 flex-row items-center gap-1 self-start rounded-full border border-accent/40 px-3 dark:border-accent-dark/40"
+              className="min-h-11 flex-row items-center gap-1 self-start rounded-md border border-accent/40 px-3 dark:border-accent-dark/40"
             >
-              <Ionicons name="key-outline" size={14} color="#F59E0B" />
+              <Ionicons name="key-outline" size={14} color="#2DD4BF" />
               <Text className="text-xs font-semibold text-accent dark:text-accent-dark">
                 Ver gabarito
               </Text>
@@ -194,12 +188,12 @@ function BolhaMensagem({
             onPress={() => flashcardMutation.mutate()}
             disabled={flashcardMutation.isPending || flashcardMutation.isSuccess}
             accessibilityRole="button"
-            className="min-h-11 flex-row items-center gap-1 self-start rounded-full border border-slate-200 px-3 dark:border-slate-700"
+            className="min-h-11 flex-row items-center gap-1 self-start rounded-md border border-slate-700 px-3"
           >
             <Ionicons
               name={flashcardMutation.isSuccess ? 'checkmark' : 'albums-outline'}
               size={14}
-              color="#4F46E5"
+              color="#8B5CF6"
             />
             <Text className="text-xs font-semibold text-primary dark:text-primary-dark">
               {flashcardMutation.isSuccess ? 'Flashcard criado' : 'Criar flashcard'}
@@ -219,7 +213,12 @@ export default function Estudo() {
   const [texto, setTexto] = useState('');
   const [erro, setErro] = useState<string | null>(null);
   const [segundosRestantesProva, setSegundosRestantesProva] = useState<number | null>(null);
-  const espacoBarraAbas = useEspacoReservadoBarraAbas();
+  // Barra de abas agora é docada (não mais flutuante/`position: absolute`
+  // — ver `(tabs)/_layout.tsx`), então o React Navigation já reserva o
+  // espaço dela sozinho: só falta somar o inset de segurança do rodapé,
+  // mesmo padrão já usado fora das abas (`sala/[id].tsx`, `conversa/
+  // [id].tsx`).
+  const insets = useSafeAreaInsets();
 
   // Cronômetro da prova simulada: um único interval por toda a vida do
   // componente (evita recriar/limpar a cada segundo) — o próprio setter
@@ -298,7 +297,7 @@ export default function Estudo() {
       className="flex-1 bg-background dark:bg-background-dark"
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View className="gap-2 border-b border-slate-100 p-3 dark:border-slate-800">
+      <View className="gap-2 border-b border-slate-800 p-3">
         <View className="flex-row items-center justify-between gap-2">
           <View className="flex-1 flex-row flex-wrap gap-2">
             {(materiasQuery.data ?? []).map((materia) => (
@@ -314,9 +313,9 @@ export default function Estudo() {
             onPress={() => router.push('/flashcards')}
             accessibilityRole="button"
             accessibilityLabel="Flashcards"
-            className="min-h-11 min-w-11 items-center justify-center rounded-full border border-slate-200 dark:border-slate-700"
+            className="min-h-11 min-w-11 items-center justify-center rounded-md border border-slate-700"
           >
-            <Ionicons name="albums-outline" size={18} color="#4F46E5" />
+            <Ionicons name="albums-outline" size={18} color="#8B5CF6" />
           </Pressable>
         </View>
         {materiaId ? (
@@ -327,25 +326,23 @@ export default function Estudo() {
                 onPress={() => setModo(opcao)}
                 accessibilityRole="button"
                 accessibilityState={{ selected: modo === opcao }}
-                className={`min-h-11 flex-row items-center justify-center gap-1 rounded-full border px-3 ${
+                className={`min-h-11 flex-row items-center justify-center gap-1 rounded-md border px-3 ${
                   modo === opcao
                     ? 'border-accent bg-accent/10 dark:border-accent-dark'
-                    : 'border-slate-200 dark:border-slate-700'
+                    : 'border-slate-700'
                 }`}
               >
                 <Ionicons
                   name={ICONE_MODO[opcao]}
                   size={14}
-                  color={modo === opcao ? '#F59E0B' : '#94A3B8'}
+                  color={modo === opcao ? '#2DD4BF' : '#94A3B8'}
                 />
-                <Text className="text-xs text-slate-900 dark:text-slate-100">
-                  {ROTULO_MODO[opcao]}
-                </Text>
+                <Text className="text-xs text-slate-100">{ROTULO_MODO[opcao]}</Text>
               </Pressable>
             ))}
             {modo === 'prova' && segundosRestantesProva !== null ? (
-              <View className="flex-row items-center gap-1 rounded-full bg-danger/10 px-3 py-1.5 dark:bg-danger-dark/10">
-                <Ionicons name="timer-outline" size={14} color="#DC2626" />
+              <View className="flex-row items-center gap-1 rounded-md bg-danger/10 px-3 py-1.5 dark:bg-danger-dark/10">
+                <Ionicons name="timer-outline" size={14} color="#F87171" />
                 <Text className="text-xs font-semibold text-danger dark:text-danger-dark">
                   {formatarTempo(segundosRestantesProva)}
                 </Text>
@@ -398,22 +395,17 @@ export default function Estudo() {
       )}
 
       {materiaId ? (
-        // `paddingBottom` calculado (não um `pb-*` fixo do Tailwind) por
-        // causa de um bug real relatado no iPhone: a barra de abas é
-        // flutuante (`position: absolute`, `(tabs)/_layout.tsx`) e um
-        // valor fixo não soma o inset de segurança do sistema (home
-        // indicator no iPhone) — variava por aparelho, então um número
-        // "chutado" que funcionava no preview web não sobrava o
-        // suficiente num iPhone de verdade e a barra tampava o botão
-        // "Enviar" de novo. `useEspacoReservadoBarraAbas` (mesma fonte que
-        // posiciona a própria barra) resolve isso pros dois lugares juntos.
+        // A barra de abas agora é docada (não mais flutuante) — o React
+        // Navigation já reserva o espaço dela sozinho, então só falta
+        // somar o inset de segurança do rodapé (home indicator no
+        // iPhone), mesmo padrão de `sala/[id].tsx`/`conversa/[id].tsx`.
         <View
-          className="gap-2 border-t border-slate-100 p-3 dark:border-slate-800"
-          style={{ paddingBottom: espacoBarraAbas }}
+          className="gap-2 border-t border-slate-800 p-3"
+          style={{ paddingBottom: insets.bottom + 12 }}
         >
           {erro ? (
             <View className="flex-row items-center gap-1.5">
-              <Ionicons name="alert-circle" size={14} color="#DC2626" />
+              <Ionicons name="alert-circle" size={14} color="#F87171" />
               <Text className="text-sm text-danger dark:text-danger-dark">{erro}</Text>
             </View>
           ) : null}

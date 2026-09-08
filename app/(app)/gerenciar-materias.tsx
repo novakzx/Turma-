@@ -53,7 +53,7 @@ function LinhaMateria({
 
   if (editando) {
     return (
-      <View className="gap-2 rounded-2xl border border-primary/30 bg-surface p-3 dark:border-primary-dark/30 dark:bg-surface-dark">
+      <View className="gap-2 rounded-lg border border-primary/30 bg-surface p-3 dark:border-primary-dark/30 dark:bg-surface-dark">
         <TextField label="Nome da matéria" value={nome} onChangeText={setNome} autoFocus />
         <View className="flex-row gap-2">
           <View className="flex-1">
@@ -68,11 +68,11 @@ function LinhaMateria({
   }
 
   return (
-    <View className="flex-row items-center gap-3 rounded-2xl border border-slate-100 bg-surface p-3 shadow-sm shadow-slate-900/5 dark:border-slate-800 dark:bg-surface-dark">
+    <View className="flex-row items-center gap-3 rounded-lg border border-slate-800 bg-surface p-3 dark:bg-surface-dark">
       <View className="h-10 w-10 items-center justify-center rounded-full bg-primary/10 dark:bg-primary-dark/10">
-        <Ionicons name="book-outline" size={18} color="#4F46E5" />
+        <Ionicons name="book-outline" size={18} color="#8B5CF6" />
       </View>
-      <Text className="flex-1 text-base text-slate-900 dark:text-slate-100">{materia.nome}</Text>
+      <Text className="flex-1 text-base text-slate-100">{materia.nome}</Text>
       {podeEditar ? (
         <>
           <Pressable
@@ -81,7 +81,7 @@ function LinhaMateria({
             accessibilityLabel={`Renomear ${materia.nome}`}
             className="min-h-11 min-w-11 items-center justify-center"
           >
-            <Ionicons name="create-outline" size={18} color="#4F46E5" />
+            <Ionicons name="create-outline" size={18} color="#8B5CF6" />
           </Pressable>
           <Pressable
             onPress={onApagar}
@@ -89,7 +89,7 @@ function LinhaMateria({
             accessibilityLabel={`Apagar ${materia.nome}`}
             className="min-h-11 min-w-11 items-center justify-center"
           >
-            <Ionicons name="trash-outline" size={18} color="#DC2626" />
+            <Ionicons name="trash-outline" size={18} color="#F87171" />
           </Pressable>
         </>
       ) : null}
@@ -189,9 +189,9 @@ export default function GerenciarMaterias() {
         ))
       )}
 
-      <View className="border-t border-slate-200 pt-4 dark:border-slate-800">
+      <View className="border-t border-slate-800 pt-4">
         {criando ? (
-          <View className="gap-2 rounded-2xl border border-slate-100 bg-surface p-3 shadow-sm shadow-slate-900/5 dark:border-slate-800 dark:bg-surface-dark">
+          <View className="gap-2 rounded-lg border border-slate-800 bg-surface p-3 dark:bg-surface-dark">
             <TextField
               label="Nome da matéria"
               icon="book-outline"

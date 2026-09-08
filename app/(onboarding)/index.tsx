@@ -10,14 +10,14 @@ export default function OnboardingScreen() {
       className="flex-1 bg-background dark:bg-background-dark"
     >
       <View className="mb-2 items-center gap-3">
-        <View className="h-16 w-16 items-center justify-center rounded-3xl bg-primary shadow-lg shadow-primary/40 dark:bg-primary-dark">
+        <View className="h-16 w-16 items-center justify-center rounded-xl bg-primary shadow-sm dark:bg-primary-dark">
           <Ionicons name="location" size={30} color="#FFFFFF" />
         </View>
         <View className="items-center gap-1">
           <Text className="text-center text-2xl font-bold text-primary dark:text-primary-dark">
             Escolha sua escola e turma
           </Text>
-          <Text className="text-center text-base text-slate-600 dark:text-slate-400">
+          <Text className="text-center text-base text-slate-400">
             Isso decide quais avisos e turmas você vê no app.
           </Text>
         </View>

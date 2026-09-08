@@ -127,9 +127,7 @@ export default function EditarPerfil() {
             style={{ minHeight: 80, textAlignVertical: 'top' }}
             placeholder="Conta um pouco sobre você..."
           />
-          <Text className="self-end text-xs text-slate-400 dark:text-slate-500">
-            {bio.length}/280
-          </Text>
+          <Text className="self-end text-xs text-slate-500">{bio.length}/280</Text>
         </View>
 
         {erros.geral ? (

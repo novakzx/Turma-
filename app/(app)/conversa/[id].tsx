@@ -1,7 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
-import { useColorScheme } from 'nativewind';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -106,7 +105,7 @@ function construirItensLista(mensagens: MensagemComAutor[]): ItemLista[] {
 function DivisorTempo({ label }: { label: string }) {
   return (
     <View className="my-3 items-center">
-      <Text className="text-xs font-medium text-slate-400 dark:text-slate-500">{label}</Text>
+      <Text className="text-xs font-medium text-slate-500">{label}</Text>
     </View>
   );
 }
@@ -129,7 +128,7 @@ function LinhaMensagem({
   if (mensagem.apagada) {
     return (
       <View className={`mt-3 max-w-[75%] ${souEu ? 'self-end' : 'self-start'}`}>
-        <Text className="text-xs italic text-slate-400 dark:text-slate-500">Mensagem apagada</Text>
+        <Text className="text-xs italic text-slate-500">Mensagem apagada</Text>
       </View>
     );
   }
@@ -147,15 +146,15 @@ function LinhaMensagem({
       className={`${primeiroDoGrupo ? 'mt-3' : 'mt-0.5'} max-w-[75%] gap-1 ${souEu ? 'items-end self-end' : 'items-start self-start'}`}
     >
       <View
-        className={`rounded-2xl px-4 py-2.5 ${cantoExterno}${
+        className={`rounded-lg px-4 py-2.5 ${cantoExterno}${
           souEu
             ? 'bg-primary dark:bg-primary-dark'
-            : 'border border-slate-100 bg-surface dark:border-slate-800 dark:bg-surface-dark'
+            : 'border border-slate-800 bg-surface dark:bg-surface-dark'
         }`}
       >
         <TextoComMencoes
           texto={mensagem.conteudo}
-          className={souEu ? 'text-white' : 'text-slate-900 dark:text-slate-100'}
+          className={souEu ? 'text-white' : 'text-slate-100'}
           mencaoClassName={souEu ? 'font-semibold text-white underline' : undefined}
         />
       </View>
@@ -171,7 +170,7 @@ function LinhaMensagem({
               accessibilityLabel="Apagar mensagem"
               className="min-h-11 min-w-11 items-center justify-center px-1"
             >
-              <Ionicons name="trash-outline" size={14} color="#DC2626" />
+              <Ionicons name="trash-outline" size={14} color="#F87171" />
             </Pressable>
           ) : null}
         </View>
@@ -194,12 +193,12 @@ function CabecalhoConversa({
   // Cor do texto vem em JS, não de classe `dark:` do Tailwind — conteúdo
   // dentro do header do React Navigation segue esse padrão em todo o app
   // (ver headerTintColor/ícones do headerRight em `(tabs)/_layout.tsx`),
-  // porque esse cabeçalho já é estilizado via `headerStyle` inline (que
-  // reage à preferência real de tema), enquanto uma classe `dark:` teria
-  // texto escuro sobre fundo escuro — achado testando de verdade: o nome
-  // simplesmente sumia, sem erro nenhum.
-  const { colorScheme } = useColorScheme();
-  const corTexto = colorScheme === 'dark' ? '#F1F5F9' : '#0F172A';
+  // porque esse cabeçalho já é estilizado via `headerStyle` inline. Fixo
+  // em claro de propósito (redesign "dark-first", pedido do usuário): o
+  // fundo do header é sempre escuro agora (ver tailwind.config.js), então
+  // não existe mais um caso "fundo claro" que precisasse de texto escuro
+  // aqui — antes disso, o `colorScheme` decidia entre os dois.
+  const corTexto = '#F8FAFC';
 
   return (
     <Pressable
@@ -213,7 +212,7 @@ function CabecalhoConversa({
     >
       {ehGrupo ? (
         <View className="h-8 w-8 items-center justify-center rounded-full bg-accent/10 dark:bg-accent-dark/10">
-          <Ionicons name="people" size={16} color="#F59E0B" />
+          <Ionicons name="people" size={16} color="#2DD4BF" />
         </View>
       ) : (
         <FotoPerfil caminho={foto ?? null} nome={nome} tamanho={32} />
@@ -363,7 +362,7 @@ export default function DetalheConversa() {
                   accessibilityLabel="Participantes do grupo"
                   className="min-h-11 min-w-11 items-center justify-center"
                 >
-                  <Ionicons name="people-outline" size={22} color="#4F46E5" />
+                  <Ionicons name="people-outline" size={22} color="#8B5CF6" />
                 </Pressable>
               )
             : undefined,
@@ -400,10 +399,10 @@ export default function DetalheConversa() {
 
       {ehPedidoPendente ? (
         <View
-          className="gap-2 border-t border-slate-100 p-4 dark:border-slate-800"
+          className="gap-2 border-t border-slate-800 p-4"
           style={{ paddingBottom: insets.bottom + 16 }}
         >
-          <Text className="text-sm text-slate-600 dark:text-slate-400">
+          <Text className="text-sm text-slate-400">
             Essa pessoa ainda não te segue — é um pedido de mensagem.
           </Text>
           <View className="flex-row gap-2">
@@ -427,7 +426,7 @@ export default function DetalheConversa() {
         </View>
       ) : (
         <View
-          className="gap-1.5 border-t border-slate-100 px-3 py-2 dark:border-slate-800"
+          className="gap-1.5 border-t border-slate-800 px-3 py-2"
           style={{ paddingBottom: insets.bottom + 8 }}
         >
           {erro ? (
@@ -439,7 +438,7 @@ export default function DetalheConversa() {
               destoante aqui). Acessibilidade mantida via
               `accessibilityLabel` direto no TextInput. */}
           <View className="flex-row items-end gap-2">
-            <View className="min-h-11 flex-1 flex-row items-center rounded-full border border-slate-200 bg-surface px-4 dark:border-slate-700 dark:bg-surface-dark">
+            <View className="min-h-11 flex-1 flex-row items-center rounded-md border border-slate-700 bg-surface px-4 dark:bg-surface-dark">
               <TextInput
                 value={texto}
                 onChangeText={setTexto}
@@ -447,7 +446,7 @@ export default function DetalheConversa() {
                 placeholderTextColor="#94A3B8"
                 multiline
                 accessibilityLabel="Mensagem"
-                className="max-h-28 flex-1 py-2.5 text-base text-slate-900 dark:text-slate-100"
+                className="max-h-28 flex-1 py-2.5 text-base text-slate-100"
               />
             </View>
             <Pressable
@@ -456,7 +455,7 @@ export default function DetalheConversa() {
               accessibilityRole="button"
               accessibilityLabel="Enviar mensagem"
               className={`h-11 w-11 items-center justify-center rounded-full ${
-                texto.trim() ? 'bg-primary dark:bg-primary-dark' : 'bg-slate-200 dark:bg-slate-700'
+                texto.trim() ? 'bg-primary dark:bg-primary-dark' : 'bg-slate-700'
               }`}
             >
               {enviarMutation.isPending ? (

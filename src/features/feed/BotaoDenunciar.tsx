@@ -43,7 +43,7 @@ export function BotaoDenunciar({
     return (
       <View className="flex-row items-center gap-1">
         <Ionicons name="checkmark-circle" size={14} color="#94A3B8" />
-        <Text className="text-xs text-slate-500 dark:text-slate-400">Denúncia enviada</Text>
+        <Text className="text-xs text-slate-400">Denúncia enviada</Text>
       </View>
     );
   }
@@ -57,7 +57,7 @@ export function BotaoDenunciar({
         className="min-h-11 min-w-11 flex-row items-center gap-1 px-2"
       >
         <Ionicons name="flag-outline" size={14} color="#94A3B8" />
-        <Text className="text-xs text-slate-500 dark:text-slate-400">Denunciar</Text>
+        <Text className="text-xs text-slate-400">Denunciar</Text>
       </Pressable>
     );
   }
@@ -79,7 +79,7 @@ export function BotaoDenunciar({
   }
 
   return (
-    <View className="w-full gap-2 rounded-2xl border border-slate-100 bg-surface p-3 dark:border-slate-800 dark:bg-surface-dark">
+    <View className="w-full gap-2 rounded-lg border border-slate-800 bg-surface p-3 dark:bg-surface-dark">
       <TextField
         label="Motivo da denúncia"
         icon="flag-outline"

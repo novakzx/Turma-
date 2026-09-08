@@ -31,9 +31,9 @@ function confirmar(mensagem: string, aoConfirmar: () => void) {
 }
 
 const BOTOES_QUALIDADE: { valor: QualidadeRevisao; rotulo: string; cor: string }[] = [
-  { valor: 'errei', rotulo: 'Errei', cor: '#DC2626' },
-  { valor: 'dificil', rotulo: 'Difícil', cor: '#F59E0B' },
-  { valor: 'facil', rotulo: 'Fácil', cor: '#16A34A' },
+  { valor: 'errei', rotulo: 'Errei', cor: '#F87171' },
+  { valor: 'dificil', rotulo: 'Difícil', cor: '#2DD4BF' },
+  { valor: 'facil', rotulo: 'Fácil', cor: '#22C55E' },
 ];
 
 /** Modo revisão: um cartão por vez, resposta escondida até tocar em
@@ -74,15 +74,13 @@ function ModoRevisao({ cartoes, onTerminou }: { cartoes: Flashcard[]; onTerminou
 
   return (
     <View className="flex-1 justify-center gap-4 p-4">
-      <Text className="text-center text-xs text-slate-500 dark:text-slate-400">
+      <Text className="text-center text-xs text-slate-400">
         Cartão {indice + 1} de {cartoes.length}
       </Text>
-      <View className="min-h-40 justify-center gap-3 rounded-3xl border border-slate-100 bg-surface p-6 shadow-sm shadow-slate-900/5 dark:border-slate-800 dark:bg-surface-dark">
-        <Text className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-          {cartao.pergunta}
-        </Text>
+      <View className="min-h-40 justify-center gap-3 rounded-xl border border-slate-800 bg-surface p-6 dark:bg-surface-dark">
+        <Text className="text-lg font-semibold text-slate-100">{cartao.pergunta}</Text>
         {mostrarResposta ? (
-          <Text className="text-base text-slate-600 dark:text-slate-400">{cartao.resposta}</Text>
+          <Text className="text-base text-slate-400">{cartao.resposta}</Text>
         ) : null}
       </View>
 
@@ -100,7 +98,7 @@ function ModoRevisao({ cartoes, onTerminou }: { cartoes: Flashcard[]; onTerminou
               onPress={() => revisarMutation.mutate({ cartao, qualidade: opcao.valor })}
               disabled={revisarMutation.isPending}
               accessibilityRole="button"
-              className="min-h-11 rounded-full px-5 py-2.5"
+              className="min-h-11 rounded-md px-5 py-2.5"
               style={{ backgroundColor: `${opcao.cor}1A` }}
             >
               <Text className="text-sm font-semibold" style={{ color: opcao.cor }}>
@@ -147,14 +145,12 @@ function ListaPorMateria({ materiaId }: { materiaId: string }) {
       {cartoesQuery.data.map((cartao) => (
         <View
           key={cartao.id}
-          className="gap-1 rounded-2xl border border-slate-100 bg-surface p-4 dark:border-slate-800 dark:bg-surface-dark"
+          className="gap-1 rounded-lg border border-slate-800 bg-surface p-4 dark:bg-surface-dark"
         >
-          <Text className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-            {cartao.pergunta}
-          </Text>
-          <Text className="text-sm text-slate-600 dark:text-slate-400">{cartao.resposta}</Text>
+          <Text className="text-sm font-semibold text-slate-100">{cartao.pergunta}</Text>
+          <Text className="text-sm text-slate-400">{cartao.resposta}</Text>
           <View className="flex-row items-center justify-between pt-1">
-            <Text className="text-xs text-slate-400 dark:text-slate-500">
+            <Text className="text-xs text-slate-500">
               Próxima revisão:{' '}
               {new Intl.DateTimeFormat('pt-PT').format(new Date(cartao.proxima_revisao))}
             </Text>
@@ -166,7 +162,7 @@ function ListaPorMateria({ materiaId }: { materiaId: string }) {
               accessibilityLabel="Apagar flashcard"
               className="min-h-11 min-w-11 items-center justify-center"
             >
-              <Ionicons name="trash-outline" size={16} color="#DC2626" />
+              <Ionicons name="trash-outline" size={16} color="#F87171" />
             </Pressable>
           </View>
         </View>
@@ -199,20 +195,20 @@ export default function Flashcards() {
 
   return (
     <View className="flex-1 bg-background dark:bg-background-dark">
-      <View className="flex-row gap-2 border-b border-slate-100 p-3 dark:border-slate-800">
+      <View className="flex-row gap-2 border-b border-slate-800 p-3">
         {(['revisar', 'todos'] as const).map((opcao) => (
           <Pressable
             key={opcao}
             onPress={() => setAba(opcao)}
             accessibilityRole="button"
             accessibilityState={{ selected: aba === opcao }}
-            className={`min-h-11 flex-1 items-center justify-center rounded-full border ${
+            className={`min-h-11 flex-1 items-center justify-center rounded-md border ${
               aba === opcao
                 ? 'border-primary bg-primary/10 dark:border-primary-dark'
-                : 'border-slate-200 dark:border-slate-700'
+                : 'border-slate-700'
             }`}
           >
-            <Text className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+            <Text className="text-sm font-semibold text-slate-100">
               {opcao === 'revisar' ? 'Revisar agora' : 'Meus cartões'}
             </Text>
           </Pressable>
@@ -243,15 +239,13 @@ export default function Flashcards() {
                     onPress={() => setMateriaSelecionada(materia.id)}
                     accessibilityRole="button"
                     accessibilityState={{ selected: materiaAtual === materia.id }}
-                    className={`min-h-11 items-center justify-center rounded-full border px-4 ${
+                    className={`min-h-11 items-center justify-center rounded-md border px-4 ${
                       materiaAtual === materia.id
                         ? 'border-primary bg-primary/10 dark:border-primary-dark'
-                        : 'border-slate-200 dark:border-slate-700'
+                        : 'border-slate-700'
                     }`}
                   >
-                    <Text className="text-sm text-slate-900 dark:text-slate-100">
-                      {materia.nome}
-                    </Text>
+                    <Text className="text-sm text-slate-100">{materia.nome}</Text>
                   </Pressable>
                 ))}
               </View>

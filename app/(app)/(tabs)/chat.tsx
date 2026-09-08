@@ -29,14 +29,12 @@ function LinhaSala({ sala, index }: { sala: Sala; index: number }) {
         onPress={() => router.push(`/sala/${sala.id}`)}
         accessibilityRole="button"
         accessibilityLabel={`Abrir sala ${sala.nome}`}
-        className="min-h-11 flex-row items-center gap-3 rounded-3xl border border-slate-100 bg-surface p-3 shadow-sm shadow-slate-900/5 active:opacity-80 dark:border-slate-800 dark:bg-surface-dark"
+        className="min-h-11 flex-row items-center gap-3 rounded-xl border border-slate-800 bg-surface p-3 active:opacity-80 dark:bg-surface-dark"
       >
         <View className="h-10 w-10 items-center justify-center rounded-full bg-primary/10 dark:bg-primary-dark/10">
-          <Ionicons name={ICONE_TIPO_SALA[sala.tipo]} size={20} color="#4F46E5" />
+          <Ionicons name={ICONE_TIPO_SALA[sala.tipo]} size={20} color="#8B5CF6" />
         </View>
-        <Text className="flex-1 text-base font-medium text-slate-900 dark:text-slate-100">
-          {sala.nome}
-        </Text>
+        <Text className="flex-1 text-base font-medium text-slate-100">{sala.nome}</Text>
         {sala.trancada ? <Ionicons name="lock-closed" size={16} color="#94A3B8" /> : null}
         <Ionicons name="chevron-forward" size={18} color="#CBD5E1" />
       </Pressable>
@@ -48,7 +46,7 @@ function Secao({ titulo, salas, offset }: { titulo: string; salas: Sala[]; offse
   if (salas.length === 0) return null;
   return (
     <View className="gap-2">
-      <Text className="text-sm font-semibold text-slate-700 dark:text-slate-300">{titulo}</Text>
+      <Text className="text-sm font-semibold text-slate-300">{titulo}</Text>
       <View className="gap-2">
         {salas.map((sala, i) => (
           <LinhaSala key={sala.id} sala={sala} index={offset + i} />
@@ -72,13 +70,11 @@ function BotaoAba({
       onPress={onPress}
       accessibilityRole="button"
       accessibilityState={{ selected: ativo }}
-      className={`min-h-11 flex-1 items-center justify-center rounded-full px-4 py-2 ${
+      className={`min-h-11 flex-1 items-center justify-center rounded-md px-4 py-2 ${
         ativo ? 'bg-primary dark:bg-primary-dark' : 'bg-transparent'
       }`}
     >
-      <Text
-        className={`text-sm font-semibold ${ativo ? 'text-white' : 'text-slate-500 dark:text-slate-400'}`}
-      >
+      <Text className={`text-sm font-semibold ${ativo ? 'text-white' : 'text-slate-400'}`}>
         {label}
       </Text>
     </Pressable>
@@ -114,23 +110,23 @@ function LinhaConversa({ conversa, index }: { conversa: ConversaComResumo; index
       >
         {conversa.tipo === 'grupo' ? (
           <View className="h-14 w-14 items-center justify-center rounded-full bg-accent/10 dark:bg-accent-dark/10">
-            <Ionicons name="people" size={26} color="#F59E0B" />
+            <Ionicons name="people" size={26} color="#2DD4BF" />
           </View>
         ) : (
           <FotoPerfil caminho={foto} nome={nome} tamanho={56} />
         )}
         <View className="flex-1">
-          <Text className="text-base font-semibold text-slate-900 dark:text-slate-100">{nome}</Text>
+          <Text className="text-base font-semibold text-slate-100">{nome}</Text>
           {conversa.ultimaMensagem ? (
-            <Text numberOfLines={1} className="text-sm text-slate-500 dark:text-slate-400">
+            <Text numberOfLines={1} className="text-sm text-slate-400">
               {conversa.ultimaMensagem.conteudo}
             </Text>
           ) : (
-            <Text className="text-sm text-slate-400 dark:text-slate-500">Sem mensagens ainda</Text>
+            <Text className="text-sm text-slate-500">Sem mensagens ainda</Text>
           )}
         </View>
         {conversa.ultimaMensagem ? (
-          <Text className="text-xs text-slate-400 dark:text-slate-500">
+          <Text className="text-xs text-slate-500">
             {formatarHoraLista(conversa.ultimaMensagem.criado_em)}
           </Text>
         ) : null}
@@ -160,7 +156,7 @@ function AbaMensagens() {
 
   return (
     <View className="gap-4">
-      <View className="flex-row gap-1 rounded-full bg-slate-100 p-1 dark:bg-slate-800">
+      <View className="flex-row gap-1 rounded-md bg-slate-800 p-1">
         <BotaoAba
           label="Conversas"
           ativo={subaba === 'conversas'}
@@ -261,7 +257,7 @@ export default function Chat() {
       className="flex-1 bg-background dark:bg-background-dark"
       contentContainerClassName="gap-5 p-4 pb-28"
     >
-      <View className="flex-row gap-1 rounded-full bg-slate-100 p-1 dark:bg-slate-800">
+      <View className="flex-row gap-1 rounded-md bg-slate-800 p-1">
         <BotaoAba label="Salas" ativo={secao === 'salas'} onPress={() => setSecao('salas')} />
         <BotaoAba
           label="Mensagens"
@@ -301,9 +297,9 @@ export default function Chat() {
             />
           ) : null}
 
-          <View className="gap-2 border-t border-slate-200 pt-4 dark:border-slate-800">
+          <View className="gap-2 border-t border-slate-800 pt-4">
             {criandoAssunto ? (
-              <View className="gap-2 rounded-3xl border border-slate-100 bg-surface p-3 shadow-sm shadow-slate-900/5 dark:border-slate-800 dark:bg-surface-dark">
+              <View className="gap-2 rounded-xl border border-slate-800 bg-surface p-3 dark:bg-surface-dark">
                 <TextField
                   label="Nome do assunto (ex.: Dúvidas de matemática)"
                   icon="bulb-outline"

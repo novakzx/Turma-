@@ -45,8 +45,8 @@ export function FotoPerfil({
 
   if (buscarAssinada && (isLoading || !url)) {
     return (
-      <View style={estilo} className="items-center justify-center bg-slate-200 dark:bg-slate-700">
-        <ActivityIndicator color="#4F46E5" />
+      <View style={estilo} className="items-center justify-center bg-slate-700">
+        <ActivityIndicator color="#8B5CF6" />
       </View>
     );
   }
@@ -65,7 +65,7 @@ export function FotoPerfil({
   return (
     <View
       style={estilo}
-      className="items-center justify-center bg-primary shadow-lg shadow-primary/30 dark:bg-primary-dark"
+      className="items-center justify-center bg-primary shadow-sm dark:bg-primary-dark"
     >
       <Text className="font-bold text-white" style={{ fontSize: tamanho * 0.36 }}>
         {iniciais(nome)}

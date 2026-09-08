@@ -1,3 +1,18 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Redesign "dark-first" (pedido do usuário): `html`/`body` no alvo web
+   nunca tiveram cor de fundo própria (React Native Web deixa isso pros
+   componentes `View`) — sem isso, qualquer canto que esses componentes
+   não cobrem de verdade (o "elástico" de overscroll no Safari/Chrome
+   mobile, ou um instante de resize) mostra o branco padrão do navegador
+   por trás, mesmo com todo o app pintado escuro por cima. Achado testando
+   de verdade no preview mobile (relatado pelo usuário: "lá embaixo o
+   bar navigation tá bugado"). Mesma cor do token `background` (ver
+   tailwind.config.js) — não dá pra referenciar a classe Tailwind aqui
+   (é CSS puro fora do NativeWind), por isso o hex repetido. */
+html,
+body {
+  background-color: #0b0e14;
+}

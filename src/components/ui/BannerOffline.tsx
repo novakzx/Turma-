@@ -24,7 +24,7 @@ export function BannerOffline() {
 
   return (
     <View className="flex-row items-center justify-center gap-1.5 bg-accent/15 px-3 py-1.5 dark:bg-accent-dark/15">
-      <Ionicons name="cloud-offline-outline" size={14} color="#F59E0B" />
+      <Ionicons name="cloud-offline-outline" size={14} color="#2DD4BF" />
       <Text className="text-xs font-medium text-accent dark:text-accent-dark">
         Sem conexão — mostrando o último dado salvo
       </Text>

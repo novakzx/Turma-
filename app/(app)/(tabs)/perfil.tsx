@@ -92,25 +92,25 @@ export default function Perfil() {
         />
 
         {turmaQuery.data ? (
-          <View className="gap-3 rounded-3xl border border-slate-100 bg-surface p-4 shadow-sm shadow-slate-900/5 dark:border-slate-800 dark:bg-surface-dark">
+          <View className="gap-3 rounded-xl border border-slate-800 bg-surface p-4 dark:bg-surface-dark">
             <View className="flex-row items-center gap-3">
               <View className="h-10 w-10 items-center justify-center rounded-full bg-accent/10 dark:bg-accent-dark/10">
-                <Ionicons name="business-outline" size={20} color="#F59E0B" />
+                <Ionicons name="business-outline" size={20} color="#2DD4BF" />
               </View>
               <View className="flex-1">
-                <Text className="text-xs text-slate-500 dark:text-slate-400">Escola</Text>
-                <Text className="text-base font-medium text-slate-900 dark:text-slate-100">
+                <Text className="text-xs text-slate-400">Escola</Text>
+                <Text className="text-base font-medium text-slate-100">
                   {turmaQuery.data.escolas?.nome}
                 </Text>
               </View>
             </View>
             <View className="flex-row items-center gap-3">
               <View className="h-10 w-10 items-center justify-center rounded-full bg-primary/10 dark:bg-primary-dark/10">
-                <Ionicons name="people-outline" size={20} color="#4F46E5" />
+                <Ionicons name="people-outline" size={20} color="#8B5CF6" />
               </View>
               <View className="flex-1">
-                <Text className="text-xs text-slate-500 dark:text-slate-400">Turma</Text>
-                <Text className="text-base font-medium text-slate-900 dark:text-slate-100">
+                <Text className="text-xs text-slate-400">Turma</Text>
+                <Text className="text-base font-medium text-slate-100">
                   {turmaQuery.data.serie_ano} · {turmaQuery.data.nome}
                 </Text>
               </View>

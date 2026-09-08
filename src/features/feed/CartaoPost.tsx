@@ -131,7 +131,7 @@ export function EnquetePost({ postId }: { postId: string }) {
   if (enqueteQuery.isLoading || !enqueteQuery.data) {
     return (
       <View className="items-center py-4">
-        <ActivityIndicator color="#4F46E5" />
+        <ActivityIndicator color="#8B5CF6" />
       </View>
     );
   }
@@ -155,35 +155,29 @@ export function EnquetePost({ postId }: { postId: string }) {
             accessibilityLabel={
               jaVotou ? `${opcao.texto} — ${percentual}% dos votos` : `Votar em "${opcao.texto}"`
             }
-            className="min-h-11 overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700"
+            className="min-h-11 overflow-hidden rounded-lg border border-slate-700"
           >
             {jaVotou ? (
               <View
                 className={`absolute bottom-0 left-0 top-0 ${
-                  escolhida
-                    ? 'bg-primary/20 dark:bg-primary-dark/30'
-                    : 'bg-slate-100 dark:bg-slate-800'
+                  escolhida ? 'bg-primary/20 dark:bg-primary-dark/30' : 'bg-slate-800'
                 }`}
                 style={{ width: `${percentual}%` }}
               />
             ) : null}
             <View className="flex-row items-center justify-between px-4 py-2.5">
               <View className="flex-1 flex-row items-center gap-1.5 pr-2">
-                {escolhida ? <Ionicons name="checkmark-circle" size={16} color="#4F46E5" /> : null}
-                <Text className="shrink text-sm text-slate-900 dark:text-slate-100">
-                  {opcao.texto}
-                </Text>
+                {escolhida ? <Ionicons name="checkmark-circle" size={16} color="#8B5CF6" /> : null}
+                <Text className="shrink text-sm text-slate-100">{opcao.texto}</Text>
               </View>
               {jaVotou ? (
-                <Text className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                  {percentual}%
-                </Text>
+                <Text className="text-xs font-semibold text-slate-400">{percentual}%</Text>
               ) : null}
             </View>
           </Pressable>
         );
       })}
-      <Text className="text-xs text-slate-500 dark:text-slate-400">
+      <Text className="text-xs text-slate-400">
         {totalVotos === 0
           ? 'Ninguém votou ainda'
           : `${totalVotos} ${totalVotos === 1 ? 'voto' : 'votos'}`}
@@ -227,7 +221,7 @@ export function CartaoPost({
   return (
     <EntradaAnimada
       index={index}
-      className="gap-2 overflow-hidden rounded-3xl border border-slate-100 bg-surface pb-3 shadow-sm shadow-slate-900/5 dark:border-slate-800 dark:bg-surface-dark"
+      className="gap-2 overflow-hidden rounded-xl border border-slate-800 bg-surface pb-3 dark:bg-surface-dark"
     >
       <Pressable
         onPress={irParaPerfilDoAutor}
@@ -240,17 +234,15 @@ export function CartaoPost({
           nome={post.profiles?.nome ?? '?'}
           tamanho={36}
         />
-        <Text className="flex-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
+        <Text className="flex-1 text-sm font-semibold text-slate-100">
           {post.profiles?.nome ?? 'Alguém da turma'}
         </Text>
-        <Text className="text-xs text-slate-500 dark:text-slate-400">
-          {formatarData(post.criado_em)}
-        </Text>
+        <Text className="text-xs text-slate-400">{formatarData(post.criado_em)}</Text>
       </Pressable>
 
       {post.tipo !== 'texto' ? (
-        <View className="mx-4 flex-row items-center gap-1.5 self-start rounded-full bg-accent/10 px-3 py-1 dark:bg-accent-dark/10">
-          <Ionicons name={ICONE_TIPO_POST[post.tipo]} size={14} color="#F59E0B" />
+        <View className="mx-4 flex-row items-center gap-1.5 self-start rounded-md bg-accent/10 px-3 py-1 dark:bg-accent-dark/10">
+          <Ionicons name={ICONE_TIPO_POST[post.tipo]} size={14} color="#2DD4BF" />
           <Text className="text-xs font-semibold uppercase tracking-wide text-accent dark:text-accent-dark">
             {ROTULO_TIPO_POST[post.tipo]}
             {post.tipo === 'evento' && post.data_evento
@@ -262,10 +254,7 @@ export function CartaoPost({
 
       {post.conteudo ? (
         <View className="gap-2 px-4">
-          <TextoComMencoes
-            texto={post.conteudo}
-            className="text-base text-slate-900 dark:text-slate-100"
-          />
+          <TextoComMencoes texto={post.conteudo} className="text-base text-slate-100" />
           <BotaoTraduzir texto={post.conteudo} />
         </View>
       ) : null}
@@ -285,7 +274,7 @@ export function CartaoPost({
           onPress={curtido ? onDescurtir : onCurtir}
           accessibilityRole="button"
           accessibilityLabel={curtido ? 'Descurtir' : 'Curtir'}
-          className="min-h-11 flex-row items-center gap-1 rounded-full px-3 py-2 active:bg-primary/5"
+          className="min-h-11 flex-row items-center gap-1 rounded-md px-3 py-2 active:bg-primary/5"
         >
           {/* Coração vermelho quando curtido — convenção quase universal
               (Instagram e afins), mais reconhecível de longe que a cor
@@ -293,13 +282,9 @@ export function CartaoPost({
           <Ionicons
             name={curtido ? 'heart' : 'heart-outline'}
             size={18}
-            color={curtido ? '#DC2626' : '#94A3B8'}
+            color={curtido ? '#F87171' : '#94A3B8'}
           />
-          <Text
-            className={
-              curtido ? 'text-danger dark:text-danger-dark' : 'text-slate-600 dark:text-slate-400'
-            }
-          >
+          <Text className={curtido ? 'text-danger dark:text-danger-dark' : 'text-slate-400'}>
             {totalCurtidas}
           </Text>
         </Pressable>
@@ -307,10 +292,10 @@ export function CartaoPost({
           onPress={() => router.push(`/post/${post.id}`)}
           accessibilityRole="button"
           accessibilityLabel="Ver comentários"
-          className="min-h-11 flex-row items-center gap-1 rounded-full px-3 py-2 active:bg-primary/5"
+          className="min-h-11 flex-row items-center gap-1 rounded-md px-3 py-2 active:bg-primary/5"
         >
           <Ionicons name="chatbubble-outline" size={17} color="#94A3B8" />
-          <Text className="text-slate-600 dark:text-slate-400">{totalComentarios}</Text>
+          <Text className="text-slate-400">{totalComentarios}</Text>
         </Pressable>
         <View className="flex-1" />
         <BotaoDenunciar tipoConteudo="post" conteudoId={post.id} />

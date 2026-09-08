@@ -47,7 +47,7 @@ function LinhaMensagem({
     // pra fim de auditoria de moderação, sem mostrar o conteúdo.
     return (
       <View className="gap-0.5 py-1.5">
-        <Text className="text-xs italic text-slate-400 dark:text-slate-500">
+        <Text className="text-xs italic text-slate-500">
           {mensagem.profiles?.nome ?? 'Aluno'} · mensagem apagada pela moderação
         </Text>
       </View>
@@ -57,20 +57,20 @@ function LinhaMensagem({
   return (
     <View className={`max-w-[85%] gap-1 py-1.5 ${ehPropria ? 'items-end self-end' : 'self-start'}`}>
       <View
-        className={`gap-1 rounded-2xl px-4 py-2.5 shadow-sm shadow-slate-900/5 ${
+        className={`gap-1 rounded-lg px-4 py-2.5 ${
           ehPropria
             ? 'bg-primary dark:bg-primary-dark'
-            : 'border border-slate-100 bg-surface dark:border-slate-800 dark:bg-surface-dark'
+            : 'border border-slate-800 bg-surface dark:bg-surface-dark'
         }`}
       >
         {!ehPropria ? (
-          <Text className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+          <Text className="text-xs font-semibold text-slate-400">
             {mensagem.profiles?.nome ?? 'Aluno'}
           </Text>
         ) : null}
         <TextoComMencoes
           texto={mensagem.conteudo}
-          className={`text-base ${ehPropria ? 'text-white' : 'text-slate-900 dark:text-slate-100'}`}
+          className={`text-base ${ehPropria ? 'text-white' : 'text-slate-100'}`}
           // Bolha própria já é `bg-primary` — destacar a menção na MESMA
           // cor primária ficaria ilegível (texto primary sobre fundo
           // primary); sublinhado + branco continua indicando "isto é
@@ -79,9 +79,7 @@ function LinhaMensagem({
         />
       </View>
       <View className="flex-row items-center gap-3 px-1">
-        <Text className="text-xs text-slate-400 dark:text-slate-500">
-          {formatarHora(mensagem.criado_em)}
-        </Text>
+        <Text className="text-xs text-slate-500">{formatarHora(mensagem.criado_em)}</Text>
         <BotaoDenunciar tipoConteudo="mensagem" conteudoId={mensagem.id} />
         {ehStaff && !ehPropria ? (
           <>
@@ -91,7 +89,7 @@ function LinhaMensagem({
               accessibilityLabel="Apagar mensagem"
               className="min-h-11 min-w-11 flex-row items-center gap-1 px-1"
             >
-              <Ionicons name="trash-outline" size={14} color="#DC2626" />
+              <Ionicons name="trash-outline" size={14} color="#F87171" />
               <Text className="text-xs text-danger dark:text-danger-dark">Apagar</Text>
             </Pressable>
             {mensagem.autor_id ? <BotaoSilenciar perfilId={mensagem.autor_id} /> : null}
@@ -190,14 +188,14 @@ export default function SalaChat() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       {ehStaff ? (
-        <View className="flex-row items-center justify-between border-b border-slate-100 px-4 py-2 dark:border-slate-800">
+        <View className="flex-row items-center justify-between border-b border-slate-800 px-4 py-2">
           <View className="flex-row items-center gap-1.5">
             <Ionicons
               name={sala.trancada ? 'lock-closed' : 'lock-open-outline'}
               size={16}
               color="#64748B"
             />
-            <Text className="text-sm text-slate-600 dark:text-slate-400">
+            <Text className="text-sm text-slate-400">
               {sala.trancada ? 'Sala trancada' : 'Sala aberta'}
             </Text>
           </View>
@@ -235,13 +233,13 @@ export default function SalaChat() {
       />
 
       <View
-        className="gap-1 border-t border-slate-100 p-3 dark:border-slate-800"
+        className="gap-1 border-t border-slate-800 p-3"
         style={{ paddingBottom: insets.bottom + 12 }}
       >
         {!podeEnviar ? (
           <View className="flex-row items-center gap-1.5 px-1">
             <Ionicons name="information-circle-outline" size={14} color="#94A3B8" />
-            <Text className="flex-1 text-xs text-slate-500 dark:text-slate-400">
+            <Text className="flex-1 text-xs text-slate-400">
               {sala.trancada
                 ? 'Esta sala foi trancada pela moderação — só leitura.'
                 : `Você está impedido de enviar mensagens até ${silenciadoAte ? new Intl.DateTimeFormat('pt-PT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(silenciadoAte) : ''}.`}

@@ -109,7 +109,7 @@ export default function CompletarCadastroScreen() {
           <Text className="text-3xl font-bold text-primary dark:text-primary-dark">
             Só mais um passo
           </Text>
-          <Text className="text-base text-slate-600 dark:text-slate-400">
+          <Text className="text-base text-slate-400">
             Sua conta {profile?.nome ? `de ${profile.nome} ` : ''}já existe — falta só completar o
             cadastro pra continuar.
           </Text>
@@ -153,7 +153,7 @@ export default function CompletarCadastroScreen() {
 
         {erros.geral ? (
           <View className="flex-row items-center gap-1.5">
-            <Ionicons name="alert-circle" size={14} color="#DC2626" />
+            <Ionicons name="alert-circle" size={14} color="#F87171" />
             <Text className="text-sm text-danger dark:text-danger-dark">{erros.geral}</Text>
           </View>
         ) : null}

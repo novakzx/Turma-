@@ -51,17 +51,13 @@ export default function Conexoes() {
               onPress={() => abrirPerfil(pessoa)}
               accessibilityRole="button"
               accessibilityLabel={pessoa.nome}
-              className="min-h-11 flex-row items-center gap-3 rounded-2xl px-2 py-2"
+              className="min-h-11 flex-row items-center gap-3 rounded-lg px-2 py-2"
             >
               <FotoPerfil caminho={pessoa.foto_url} nome={pessoa.nome} tamanho={44} />
               <View className="flex-1">
-                <Text className="text-base font-medium text-slate-900 dark:text-slate-100">
-                  {pessoa.nome}
-                </Text>
+                <Text className="text-base font-medium text-slate-100">{pessoa.nome}</Text>
                 {pessoa.nome_usuario ? (
-                  <Text className="text-xs text-slate-500 dark:text-slate-400">
-                    @{pessoa.nome_usuario}
-                  </Text>
+                  <Text className="text-xs text-slate-400">@{pessoa.nome_usuario}</Text>
                 ) : null}
               </View>
             </Pressable>

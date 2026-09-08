@@ -113,8 +113,8 @@ export function AvisosWeb() {
 
   if (carregouCookies && consentimentoCookies === null) {
     return (
-      <View className="gap-3 border-t border-slate-200 bg-surface p-4 pb-6 shadow-lg shadow-slate-900/10 dark:border-slate-700 dark:bg-surface-dark">
-        <Text className="text-sm text-slate-600 dark:text-slate-400">
+      <View className="gap-3 border-t border-slate-700 bg-surface p-4 pb-6 shadow-lg shadow-slate-900/10 dark:bg-surface-dark">
+        <Text className="text-sm text-slate-400">
           Usamos armazenamento local só pra manter você conectado e lembrar suas preferências (como
           o tema claro/escuro). Não usamos cookie de rastreamento nem de publicidade.
         </Text>
@@ -132,11 +132,11 @@ export function AvisosWeb() {
 
   if (podeMostrarInstalar || mostrarInstrucaoIOS) {
     return (
-      <View className="gap-3 border-t border-slate-200 bg-surface p-4 pb-6 shadow-lg shadow-slate-900/10 dark:border-slate-700 dark:bg-surface-dark">
-        <Text className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+      <View className="gap-3 border-t border-slate-700 bg-surface p-4 pb-6 shadow-lg shadow-slate-900/10 dark:bg-surface-dark">
+        <Text className="text-sm font-semibold text-slate-100">
           Adicione o Turma+ à tela inicial
         </Text>
-        <Text className="text-sm text-slate-600 dark:text-slate-400">
+        <Text className="text-sm text-slate-400">
           {mostrarInstrucaoIOS
             ? 'Toque no ícone de compartilhar do Safari e depois em "Adicionar à Tela de Início".'
             : 'Acesso mais rápido, direto da tela inicial do seu aparelho — como um app de verdade.'}

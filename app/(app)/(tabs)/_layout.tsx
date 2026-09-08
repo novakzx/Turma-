@@ -2,8 +2,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { Tabs, router } from 'expo-router';
 import { useColorScheme } from 'nativewind';
 import { Pressable } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { ALTURA_BARRA_ABAS, useDistanciaFundoBarraAbas } from '@/lib/barraAbas';
+import { useAlturaTotalBarraAbas } from '@/lib/barraAbas';
 
 const ICONE_POR_ROTA: Record<string, keyof typeof Ionicons.glyphMap> = {
   index: 'calendar',
@@ -15,46 +16,45 @@ const ICONE_POR_ROTA: Record<string, keyof typeof Ionicons.glyphMap> = {
 };
 
 /**
- * Barra de abas flutuante e arredondada (visual "empresa internacional"
- * pedido na Fase 6, no espírito de apps como Duolingo) — pílula com
- * sombra em vez da barra reta colada na borda inferior. Cor de
- * ícone/label segue o mesmo `useColorScheme()` do NativeWind usado no
- * resto do app (`app/_layout.tsx`), já que `tabBarStyle` é um style
- * object puro do react-navigation, fora do alcance do `className`.
+ * Barra de abas — redesenho "app profissional" (pedido do usuário):
+ * substitui a pílula flutuante com sombra da Fase 6 (estilo Duolingo/
+ * Instagram) por uma barra reta, docada na borda inferior de verdade,
+ * com uma linha de borda fina em vez de elevação/sombra — visual de
+ * dashboard corporativo. Cor de ícone/label segue o mesmo
+ * `useColorScheme()` do NativeWind usado no resto do app (`app/
+ * _layout.tsx`), já que `tabBarStyle` é um style object puro do
+ * react-navigation, fora do alcance do `className`.
  */
 export default function TabsLayout() {
   const { colorScheme } = useColorScheme();
   const escuro = colorScheme === 'dark';
-  // Bug real relatado no iPhone: a margem de baixo era um `16` fixo, sem
-  // somar o inset de segurança do sistema (home indicator) — a barra
-  // acabava tampando o que estivesse colado na base da tela (ver
-  // `src/lib/barraAbas.ts` e o mesmo cálculo em `estudo.tsx`).
-  const distanciaFundo = useDistanciaFundoBarraAbas();
+  const insets = useSafeAreaInsets();
+  const alturaTotal = useAlturaTotalBarraAbas();
 
   return (
     <Tabs
       screenOptions={{
-        headerStyle: { backgroundColor: escuro ? '#0F172A' : '#FFFFFF' },
-        headerTintColor: escuro ? '#F1F5F9' : '#0F172A',
-        tabBarActiveTintColor: escuro ? '#818CF8' : '#4F46E5',
-        tabBarInactiveTintColor: escuro ? '#64748B' : '#94A3B8',
+        // `headerShadowVisible: false` — sem isso, o header do React
+        // Navigation aplica uma borda/sombra inferior cinza-clara própria
+        // por padrão (pensada pra tema claro), que aparecia como uma
+        // linha branca por cima do fundo escuro (achado testando de
+        // verdade no preview mobile, relatado pelo usuário).
+        headerShadowVisible: false,
+        headerStyle: { backgroundColor: escuro ? '#05060A' : '#0B0E14' },
+        headerTintColor: '#F8FAFC',
+        tabBarActiveTintColor: '#A78BFA',
+        tabBarInactiveTintColor: '#64748B',
         tabBarShowLabel: true,
         tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
         tabBarStyle: {
-          position: 'absolute',
-          left: 16,
-          right: 16,
-          bottom: distanciaFundo,
-          height: ALTURA_BARRA_ABAS,
-          borderRadius: 32,
-          borderTopWidth: 0,
-          backgroundColor: escuro ? '#1E293B' : '#FFFFFF',
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: escuro ? 0.4 : 0.12,
-          shadowRadius: 16,
-          elevation: 8,
+          height: alturaTotal,
+          borderTopWidth: 1,
+          borderTopColor: escuro ? '#11141C' : '#171B26',
+          backgroundColor: escuro ? '#05060A' : '#0B0E14',
+          elevation: 0,
+          shadowOpacity: 0,
           paddingTop: 8,
+          paddingBottom: insets.bottom,
         },
       }}
     >
@@ -81,7 +81,7 @@ export default function TabsLayout() {
               accessibilityLabel="Pesquisar usuários"
               className="min-h-11 min-w-11 items-center justify-center px-2"
             >
-              <Ionicons name="search-outline" size={22} color={escuro ? '#818CF8' : '#4F46E5'} />
+              <Ionicons name="search-outline" size={22} color={escuro ? '#A78BFA' : '#8B5CF6'} />
             </Pressable>
           ),
         }}

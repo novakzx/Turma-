@@ -38,10 +38,7 @@ function BolinhaStory({
       ) : (
         <FotoPerfil caminho={fotoUrl} nome={nome} tamanho={TAMANHO_AVATAR + 8} />
       )}
-      <Text
-        numberOfLines={1}
-        className="w-16 text-center text-xs text-slate-600 dark:text-slate-400"
-      >
+      <Text numberOfLines={1} className="w-16 text-center text-xs text-slate-400">
         {nome.split(' ')[0]}
       </Text>
     </Pressable>
@@ -112,9 +109,7 @@ export function StoriesBar() {
             </View>
           ) : null}
         </Pressable>
-        <Text className="w-16 text-center text-xs text-slate-600 dark:text-slate-400">
-          Sua story
-        </Text>
+        <Text className="w-16 text-center text-xs text-slate-400">Sua story</Text>
       </View>
 
       {outrosAutores.map(([autorId, stories]) => (

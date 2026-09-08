@@ -34,9 +34,9 @@ const ROTULO_TIPO: Record<EventoCalendario['tipo'], string> = {
 };
 
 const COR_TIPO: Record<EventoCalendario['tipo'], string> = {
-  nacional: '#4F46E5',
-  letivo: '#F59E0B',
-  avaliacao: '#DC2626',
+  nacional: '#8B5CF6',
+  letivo: '#2DD4BF',
+  avaliacao: '#F87171',
 };
 
 const ICONE_TIPO: Record<EventoCalendario['tipo'], keyof typeof Ionicons.glyphMap> = {
@@ -50,7 +50,7 @@ function CartaoEvento({ item, index }: { item: EventoCalendario; index: number }
   return (
     <EntradaAnimada
       index={index}
-      className="gap-2 rounded-3xl border border-slate-100 bg-surface p-4 shadow-sm shadow-slate-900/5 dark:border-slate-800 dark:bg-surface-dark"
+      className="gap-2 rounded-xl border border-slate-800 bg-surface p-4 dark:bg-surface-dark"
     >
       <View className="flex-row items-center gap-3">
         <View
@@ -66,20 +66,16 @@ function CartaoEvento({ item, index }: { item: EventoCalendario; index: number }
           >
             {ROTULO_TIPO[item.tipo]}
           </Text>
-          <Text className="text-base font-semibold text-slate-900 dark:text-slate-100">
-            {item.titulo}
-          </Text>
+          <Text className="text-base font-semibold text-slate-100">{item.titulo}</Text>
         </View>
       </View>
-      <Text className="text-sm text-slate-600 dark:text-slate-400">{formatarPeriodo(item)}</Text>
+      <Text className="text-sm text-slate-400">{formatarPeriodo(item)}</Text>
       {item.regresso ? (
-        <Text className="text-xs text-slate-500 dark:text-slate-500">
+        <Text className="text-xs text-slate-500">
           Regresso às aulas: {FORMATO_DATA.format(new Date(item.regresso))}
         </Text>
       ) : null}
-      {item.descricao ? (
-        <Text className="text-sm text-slate-600 dark:text-slate-400">{item.descricao}</Text>
-      ) : null}
+      {item.descricao ? <Text className="text-sm text-slate-400">{item.descricao}</Text> : null}
     </EntradaAnimada>
   );
 }
@@ -102,7 +98,7 @@ function CabecalhoDestaque() {
       : `${FORMATO_DATA.format(new Date(dataAlvo))} – ${FORMATO_DATA.format(new Date(proximo.fim))}`;
 
   return (
-    <View className="mb-1 gap-1 rounded-3xl bg-primary p-5 shadow-md shadow-primary/30 dark:bg-primary-dark">
+    <View className="mb-1 gap-1 rounded-xl bg-primary p-5 shadow-sm dark:bg-primary-dark">
       <Text className="text-xs font-semibold uppercase tracking-wide text-white/80">
         Próximo — {quando}
       </Text>
@@ -153,17 +149,15 @@ export default function CalendarioFeriados() {
         ListHeaderComponent={
           <View className="mb-1 gap-3">
             <View className="flex-row items-center justify-between">
-              <Text className="text-sm text-slate-500 dark:text-slate-400">
-                Ano letivo {ANO_LETIVO}
-              </Text>
+              <Text className="text-sm text-slate-400">Ano letivo {ANO_LETIVO}</Text>
               <Pressable
                 onPress={() => exportarMutation.mutate()}
                 disabled={exportarMutation.isPending}
                 accessibilityRole="button"
                 accessibilityLabel="Exportar calendário"
-                className="min-h-11 flex-row items-center gap-1.5 rounded-full border border-slate-200 px-3 dark:border-slate-700"
+                className="min-h-11 flex-row items-center gap-1.5 rounded-md border border-slate-700 px-3"
               >
-                <Ionicons name="download-outline" size={14} color="#4F46E5" />
+                <Ionicons name="download-outline" size={14} color="#8B5CF6" />
                 <Text className="text-xs font-semibold text-primary dark:text-primary-dark">
                   {exportarMutation.isPending ? 'Exportando...' : 'Exportar'}
                 </Text>

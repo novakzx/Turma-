@@ -105,16 +105,14 @@ export default function NovaConversa() {
         {modoGrupo ? 'Criar grupo' : 'Nova conversa'}
       </Text>
 
-      <View className="flex-row gap-1 rounded-full bg-slate-100 p-1 dark:bg-slate-800">
+      <View className="flex-row gap-1 rounded-md bg-slate-800 p-1">
         <Pressable
           onPress={() => setModoGrupo(false)}
           accessibilityRole="button"
           accessibilityState={{ selected: !modoGrupo }}
-          className={`min-h-11 flex-1 items-center justify-center rounded-full px-4 py-2 ${!modoGrupo ? 'bg-primary dark:bg-primary-dark' : ''}`}
+          className={`min-h-11 flex-1 items-center justify-center rounded-md px-4 py-2 ${!modoGrupo ? 'bg-primary dark:bg-primary-dark' : ''}`}
         >
-          <Text
-            className={`text-sm font-semibold ${!modoGrupo ? 'text-white' : 'text-slate-500 dark:text-slate-400'}`}
-          >
+          <Text className={`text-sm font-semibold ${!modoGrupo ? 'text-white' : 'text-slate-400'}`}>
             Direta
           </Text>
         </Pressable>
@@ -122,11 +120,9 @@ export default function NovaConversa() {
           onPress={() => setModoGrupo(true)}
           accessibilityRole="button"
           accessibilityState={{ selected: modoGrupo }}
-          className={`min-h-11 flex-1 items-center justify-center rounded-full px-4 py-2 ${modoGrupo ? 'bg-primary dark:bg-primary-dark' : ''}`}
+          className={`min-h-11 flex-1 items-center justify-center rounded-md px-4 py-2 ${modoGrupo ? 'bg-primary dark:bg-primary-dark' : ''}`}
         >
-          <Text
-            className={`text-sm font-semibold ${modoGrupo ? 'text-white' : 'text-slate-500 dark:text-slate-400'}`}
-          >
+          <Text className={`text-sm font-semibold ${modoGrupo ? 'text-white' : 'text-slate-400'}`}>
             Grupo
           </Text>
         </Pressable>
@@ -172,18 +168,16 @@ export default function NovaConversa() {
                 }
                 accessibilityRole="button"
                 accessibilityState={{ selected: selecionado }}
-                className={`min-h-11 flex-row items-center gap-3 rounded-2xl border p-3 ${
+                className={`min-h-11 flex-row items-center gap-3 rounded-lg border p-3 ${
                   selecionado
                     ? 'border-primary bg-primary/10 dark:border-primary-dark'
-                    : 'border-slate-100 dark:border-slate-800'
+                    : 'border-slate-800'
                 }`}
               >
                 <FotoPerfil caminho={pessoa.foto_url} nome={pessoa.nome} tamanho={40} />
-                <Text className="flex-1 text-base text-slate-900 dark:text-slate-100">
-                  {pessoa.nome}
-                </Text>
+                <Text className="flex-1 text-base text-slate-100">{pessoa.nome}</Text>
                 {modoGrupo && selecionado ? (
-                  <Ionicons name="checkmark-circle" size={20} color="#4F46E5" />
+                  <Ionicons name="checkmark-circle" size={20} color="#8B5CF6" />
                 ) : null}
               </Pressable>
             );

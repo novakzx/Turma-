@@ -11,30 +11,48 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Paleta Turma+ — ver README.md > "Identidade visual" para o racional.
+        // Paleta Turma+ v3 (redesign "dark-first / fintech", pedido do
+        // usuário — referência explícita Nubank/Revolut, não o dashboard
+        // claro tipo Stripe/Linear da v2). Achado importante que moldou
+        // esta escolha: no alvo **web** desta versão do NativeWind, as
+        // classes `dark:` nunca chegam a ativar de verdade (bug
+        // documentado em `app/_layout.tsx` — a classe "dark" não é
+        // aplicada no `<html>`, mesmo com `useColorScheme()` lendo o
+        // valor certo). Ou seja: pra um visual "escuro por padrão" de
+        // verdade funcionar no navegador (o alvo que este projeto testa
+        // e publica hoje), o escuro não podia depender de `dark:` —
+        // tinha que SER o valor padrão (`DEFAULT`). Por isso `background`/
+        // `surface` DEFAULT já são escuros aqui, e toda classe solta
+        // `text-slate-900`/`border-slate-100`/`bg-white` etc. (pensada
+        // pra fundo claro) foi trocada em todo o app pelo par que antes
+        // só existia dentro de `dark:` (ver commit) — no nativo
+        // (iOS/Android, onde `dark:` funciona de verdade), a variante
+        // `dark` de cada token abaixo é só uma leve variação da mesma
+        // paleta escura, não um tema claro alternativo: este app não
+        // tem "modo claro" de propósito, do mesmo jeito que Nubank não tem.
         primary: {
-          DEFAULT: '#4F46E5',
-          dark: '#818CF8',
+          DEFAULT: '#8B5CF6',
+          dark: '#A78BFA',
         },
         accent: {
-          DEFAULT: '#F59E0B',
-          dark: '#FBBF24',
+          DEFAULT: '#2DD4BF',
+          dark: '#5EEAD4',
         },
         success: {
-          DEFAULT: '#16A34A',
+          DEFAULT: '#22C55E',
           dark: '#4ADE80',
         },
         danger: {
-          DEFAULT: '#DC2626',
-          dark: '#F87171',
+          DEFAULT: '#F87171',
+          dark: '#FCA5A5',
         },
         background: {
-          DEFAULT: '#FFFFFF',
-          dark: '#0F172A',
+          DEFAULT: '#0B0E14',
+          dark: '#05060A',
         },
         surface: {
-          DEFAULT: '#F8FAFC',
-          dark: '#1E293B',
+          DEFAULT: '#171B26',
+          dark: '#11141C',
         },
       },
     },

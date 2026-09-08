@@ -34,8 +34,8 @@ function Contador({
       accessibilityLabel={`${numero} ${label}`}
       className="min-w-16 items-center gap-0.5 px-2 py-1"
     >
-      <Text className="text-lg font-bold text-slate-900 dark:text-slate-100">{numero}</Text>
-      <Text className="text-xs text-slate-500 dark:text-slate-400">{label}</Text>
+      <Text className="text-lg font-bold text-slate-100">{numero}</Text>
+      <Text className="text-xs text-slate-400">{label}</Text>
     </Pressable>
   );
 }
@@ -74,21 +74,17 @@ export function CabecalhoPerfil({
     <View className="items-center gap-3">
       <FotoPerfil caminho={fotoUrl} nome={nome} tamanho={96} />
       <View className="items-center gap-1">
-        <Text className="text-2xl font-bold text-slate-900 dark:text-slate-100">{nome}</Text>
-        {nomeUsuario ? (
-          <Text className="text-sm text-slate-500 dark:text-slate-400">@{nomeUsuario}</Text>
-        ) : null}
+        <Text className="text-2xl font-bold text-slate-100">{nome}</Text>
+        {nomeUsuario ? <Text className="text-sm text-slate-400">@{nomeUsuario}</Text> : null}
         {papel ? (
-          <View className="mt-1 flex-row items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 dark:bg-primary-dark/10">
-            <Ionicons name={ICONE_PAPEL[papel]} size={14} color="#4F46E5" />
+          <View className="mt-1 flex-row items-center gap-1.5 rounded-md bg-primary/10 px-3 py-1 dark:bg-primary-dark/10">
+            <Ionicons name={ICONE_PAPEL[papel]} size={14} color="#8B5CF6" />
             <Text className="text-xs font-semibold text-primary dark:text-primary-dark">
               {ROTULO_PAPEL[papel]}
             </Text>
           </View>
         ) : null}
-        {bio ? (
-          <Text className="mt-2 text-center text-sm text-slate-600 dark:text-slate-400">{bio}</Text>
-        ) : null}
+        {bio ? <Text className="mt-2 text-center text-sm text-slate-400">{bio}</Text> : null}
       </View>
 
       <View className="flex-row items-center justify-center">

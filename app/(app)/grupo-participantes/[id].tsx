@@ -91,7 +91,7 @@ export default function GrupoParticipantes() {
       className="flex-1 bg-background dark:bg-background-dark"
       contentContainerClassName="gap-4 px-6 pb-10 pt-6"
     >
-      <Text className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+      <Text className="text-lg font-semibold text-slate-100">
         {participantesQuery.data?.length} participante
         {participantesQuery.data?.length === 1 ? '' : 's'}
       </Text>
@@ -100,19 +100,17 @@ export default function GrupoParticipantes() {
         {(participantesQuery.data ?? []).map((p) => (
           <View
             key={p.profile_id}
-            className="flex-row items-center gap-3 rounded-2xl border border-slate-100 p-3 dark:border-slate-800"
+            className="flex-row items-center gap-3 rounded-lg border border-slate-800 p-3"
           >
             <FotoPerfil
               caminho={p.profiles?.foto_url ?? null}
               nome={p.profiles?.nome ?? '?'}
               tamanho={40}
             />
-            <Text className="flex-1 text-base text-slate-900 dark:text-slate-100">
-              {p.profiles?.nome ?? 'Alguém'}
-            </Text>
+            <Text className="flex-1 text-base text-slate-100">{p.profiles?.nome ?? 'Alguém'}</Text>
             {p.papel === 'admin' ? (
-              <View className="flex-row items-center gap-1 rounded-full bg-primary/10 px-2 py-1 dark:bg-primary-dark/10">
-                <Ionicons name="shield-checkmark-outline" size={12} color="#4F46E5" />
+              <View className="flex-row items-center gap-1 rounded-md bg-primary/10 px-2 py-1 dark:bg-primary-dark/10">
+                <Ionicons name="shield-checkmark-outline" size={12} color="#8B5CF6" />
                 <Text className="text-xs font-semibold text-primary dark:text-primary-dark">
                   Admin
                 </Text>
@@ -125,11 +123,11 @@ export default function GrupoParticipantes() {
       {souAdmin ? (
         adicionando ? (
           <View className="gap-2">
-            <Text className="text-sm font-medium text-slate-700 dark:text-slate-300">
+            <Text className="text-sm font-medium text-slate-300">
               Adicionar quem eu sigo ou me segue
             </Text>
             {candidatos.length === 0 ? (
-              <Text className="text-sm text-slate-500 dark:text-slate-400">
+              <Text className="text-sm text-slate-400">
                 Ninguém disponível pra adicionar agora.
               </Text>
             ) : (
@@ -139,11 +137,11 @@ export default function GrupoParticipantes() {
                   onPress={() => adicionarMutation.mutate(c.id)}
                   accessibilityRole="button"
                   accessibilityLabel={`Adicionar ${c.nome}`}
-                  className="min-h-11 flex-row items-center gap-3 rounded-2xl border border-slate-100 p-3 dark:border-slate-800"
+                  className="min-h-11 flex-row items-center gap-3 rounded-lg border border-slate-800 p-3"
                 >
                   <FotoPerfil caminho={c.foto_url} nome={c.nome} tamanho={36} />
-                  <Text className="flex-1 text-slate-900 dark:text-slate-100">{c.nome}</Text>
-                  <Ionicons name="add-circle-outline" size={22} color="#4F46E5" />
+                  <Text className="flex-1 text-slate-100">{c.nome}</Text>
+                  <Ionicons name="add-circle-outline" size={22} color="#8B5CF6" />
                 </Pressable>
               ))
             )}

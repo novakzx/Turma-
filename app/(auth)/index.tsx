@@ -43,14 +43,12 @@ export default function LoginScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View className="mb-6 items-center gap-3">
-          <View className="h-20 w-20 items-center justify-center rounded-3xl bg-primary shadow-lg shadow-primary/40 dark:bg-primary-dark">
+          <View className="h-20 w-20 items-center justify-center rounded-xl bg-primary shadow-sm dark:bg-primary-dark">
             <Ionicons name="school" size={36} color="#FFFFFF" />
           </View>
           <View className="items-center gap-1">
             <Text className="text-3xl font-bold text-primary dark:text-primary-dark">Turma+</Text>
-            <Text className="text-base text-slate-600 dark:text-slate-400">
-              Entra com seu usuário e senha.
-            </Text>
+            <Text className="text-base text-slate-400">Entra com seu usuário e senha.</Text>
           </View>
         </View>
 
@@ -79,7 +77,7 @@ export default function LoginScreen() {
 
         {erros.geral ? (
           <View className="flex-row items-center gap-1.5">
-            <Ionicons name="alert-circle" size={14} color="#DC2626" />
+            <Ionicons name="alert-circle" size={14} color="#F87171" />
             <Text className="text-sm text-danger dark:text-danger-dark">{erros.geral}</Text>
           </View>
         ) : null}

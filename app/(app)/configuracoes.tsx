@@ -44,8 +44,8 @@ const OPCOES_TEMA: {
 
 function Secao({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
-    <View className="gap-3 rounded-3xl border border-slate-100 bg-surface p-4 shadow-sm shadow-slate-900/5 dark:border-slate-800 dark:bg-surface-dark">
-      <Text className="text-sm font-semibold text-slate-700 dark:text-slate-300">{titulo}</Text>
+    <View className="gap-3 rounded-xl border border-slate-800 bg-surface p-4 dark:bg-surface-dark">
+      <Text className="text-sm font-semibold text-slate-300">{titulo}</Text>
       {children}
     </View>
   );
@@ -71,19 +71,19 @@ function CartaoAcaoExpansivel({
       <Pressable
         onPress={onAbrir}
         accessibilityRole="button"
-        className="min-h-11 flex-row items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3 dark:border-slate-700"
+        className="min-h-11 flex-row items-center gap-3 rounded-lg border border-slate-700 px-4 py-3"
       >
-        <Ionicons name={icone} size={18} color="#4F46E5" />
-        <Text className="flex-1 text-base text-slate-900 dark:text-slate-100">{rotulo}</Text>
+        <Ionicons name={icone} size={18} color="#8B5CF6" />
+        <Text className="flex-1 text-base text-slate-100">{rotulo}</Text>
         <Ionicons name="chevron-forward" size={18} color="#CBD5E1" />
       </Pressable>
     );
   }
 
   return (
-    <View className="gap-2 rounded-2xl border border-primary/30 p-3 dark:border-primary-dark/30">
+    <View className="gap-2 rounded-lg border border-primary/30 p-3 dark:border-primary-dark/30">
       <View className="flex-row items-center justify-between">
-        <Text className="text-sm font-semibold text-slate-700 dark:text-slate-300">{rotulo}</Text>
+        <Text className="text-sm font-semibold text-slate-300">{rotulo}</Text>
         <Pressable onPress={onFechar} accessibilityRole="button" accessibilityLabel="Fechar">
           <Ionicons name="close" size={18} color="#94A3B8" />
         </Pressable>
@@ -179,15 +179,15 @@ export default function Configuracoes() {
                 key={opcao.valor}
                 onPress={() => handleTrocarTema(opcao.valor)}
                 accessibilityRole="button"
-                className="min-h-11 flex-row items-center gap-1.5 rounded-full border border-slate-200 px-4 dark:border-slate-700"
+                className="min-h-11 flex-row items-center gap-1.5 rounded-md border border-slate-700 px-4"
               >
-                <Ionicons name={opcao.icone} size={16} color="#4F46E5" />
-                <Text className="text-sm text-slate-900 dark:text-slate-100">{opcao.rotulo}</Text>
+                <Ionicons name={opcao.icone} size={16} color="#8B5CF6" />
+                <Text className="text-sm text-slate-100">{opcao.rotulo}</Text>
               </Pressable>
             );
           })}
         </View>
-        <Text className="text-xs text-slate-500 dark:text-slate-400">
+        <Text className="text-xs text-slate-400">
           Tema atual: {colorScheme === 'dark' ? 'escuro' : 'claro'}
         </Text>
       </Secao>
@@ -198,13 +198,13 @@ export default function Configuracoes() {
             <Ionicons
               name={profile?.publico ? 'globe-outline' : 'lock-closed-outline'}
               size={20}
-              color="#4F46E5"
+              color="#8B5CF6"
             />
             <View className="flex-1">
-              <Text className="text-base text-slate-900 dark:text-slate-100">
+              <Text className="text-base text-slate-100">
                 Conta {profile?.publico ? 'pública' : 'privada'}
               </Text>
-              <Text className="text-xs text-slate-500 dark:text-slate-400">
+              <Text className="text-xs text-slate-400">
                 {profile?.publico
                   ? 'Qualquer pessoa pode ver seu perfil e te seguir.'
                   : 'Só quem você aprovar pode ver seu perfil.'}
@@ -265,7 +265,7 @@ export default function Configuracoes() {
           onPress={() => exportarMutation.mutate()}
           loading={exportarMutation.isPending}
         />
-        <Text className="text-xs text-slate-500 dark:text-slate-400">
+        <Text className="text-xs text-slate-400">
           Baixa um arquivo com tudo que você postou, comentou e conversou na Turma+.
         </Text>
         <Button
@@ -275,14 +275,14 @@ export default function Configuracoes() {
           onPress={() => confirmarExclusaoConta(() => excluirContaMutation.mutate())}
           loading={excluirContaMutation.isPending}
         />
-        <Text className="text-xs text-slate-500 dark:text-slate-400">
+        <Text className="text-xs text-slate-400">
           Apaga sua conta e todo o seu histórico permanentemente. Não tem como desfazer.
         </Text>
       </Secao>
 
       {sucesso ? (
-        <View className="flex-row items-center gap-1.5 rounded-2xl bg-success/10 p-3 dark:bg-success-dark/10">
-          <Ionicons name="checkmark-circle" size={18} color="#16A34A" />
+        <View className="flex-row items-center gap-1.5 rounded-lg bg-success/10 p-3 dark:bg-success-dark/10">
+          <Ionicons name="checkmark-circle" size={18} color="#22C55E" />
           <Text className="flex-1 text-sm text-success dark:text-success-dark">{sucesso}</Text>
         </View>
       ) : null}

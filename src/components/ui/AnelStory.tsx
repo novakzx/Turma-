@@ -1,14 +1,12 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { useColorScheme } from 'nativewind';
 import { View, type ViewStyle } from 'react-native';
 
-/** Anel gradiente ao redor do avatar — o sinal visual clássico de
- * "tem story nova" (Instagram/WhatsApp), em vez de uma borda sólida de
- * uma cor só. Técnica padrão pra isso em RN: um círculo com gradiente
- * do tamanho do avatar + a borda, um círculo sólido da cor do fundo
- * por cima (o "respiro" entre o anel e a foto) e o avatar por cima de
- * tudo — sem essa camada do meio o gradiente encostaria direto na
- * foto, sem o respiro que dá a aparência de anel de verdade. */
+/** Anel sólido ao redor do avatar quando há story ativa — redesenho "app
+ * profissional" (pedido do usuário): o anel gradiente multicolor
+ * (Instagram/WhatsApp) virou uma borda sólida na cor primária, mesma
+ * linguagem visual sóbria do resto do app. Mantém o "respiro" entre o
+ * anel e a foto (um círculo da cor do fundo por baixo do avatar) — sem
+ * essa camada o anel encostaria direto na foto. */
 export function AnelStory({
   tamanho,
   espessura = 3,
@@ -20,26 +18,24 @@ export function AnelStory({
 }) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
-  // Cores da marca (primary/accent/danger, ver tailwind.config.js) em
-  // vez das cores exatas do Instagram — o anel fica com a mesma
-  // linguagem visual do resto do app, só que em gradiente.
-  const cores = isDark
-    ? (['#818CF8', '#FBBF24', '#F87171'] as const)
-    : (['#4F46E5', '#F59E0B', '#DC2626'] as const);
-  const fundoRespiro = isDark ? '#0F172A' : '#FFFFFF';
+  const corAnel = isDark ? '#A78BFA' : '#8B5CF6';
+  const fundoRespiro = isDark ? '#05060A' : '#0B0E14';
   const tamanhoRespiro = tamanho + espessura;
-  const tamanhoGradiente = tamanhoRespiro + espessura;
+  const tamanhoAnel = tamanhoRespiro + espessura;
 
   const centralizado: ViewStyle = { alignItems: 'center', justifyContent: 'center' };
 
   return (
-    <LinearGradient
-      colors={cores}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
+    <View
       style={[
         centralizado,
-        { width: tamanhoGradiente, height: tamanhoGradiente, borderRadius: tamanhoGradiente / 2 },
+        {
+          width: tamanhoAnel,
+          height: tamanhoAnel,
+          borderRadius: tamanhoAnel / 2,
+          borderWidth: espessura,
+          borderColor: corAnel,
+        },
       ]}
     >
       <View
@@ -55,6 +51,6 @@ export function AnelStory({
       >
         {children}
       </View>
-    </LinearGradient>
+    </View>
   );
 }

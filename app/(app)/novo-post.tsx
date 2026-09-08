@@ -145,20 +145,18 @@ export default function NovoPost() {
               onPress={() => setTipo(opcao)}
               accessibilityRole="button"
               accessibilityState={{ selected: tipo === opcao }}
-              className={`min-h-11 flex-row items-center justify-center gap-1.5 rounded-full border px-4 ${
+              className={`min-h-11 flex-row items-center justify-center gap-1.5 rounded-md border px-4 ${
                 tipo === opcao
                   ? 'border-primary bg-primary/10 dark:border-primary-dark'
-                  : 'border-slate-200 dark:border-slate-700'
+                  : 'border-slate-700'
               }`}
             >
               <Ionicons
                 name={ICONE_TIPO_POST[opcao]}
                 size={15}
-                color={tipo === opcao ? '#4F46E5' : '#94A3B8'}
+                color={tipo === opcao ? '#8B5CF6' : '#94A3B8'}
               />
-              <Text className="text-sm text-slate-900 dark:text-slate-100">
-                {ROTULO_TIPO_POST[opcao]}
-              </Text>
+              <Text className="text-sm text-slate-100">{ROTULO_TIPO_POST[opcao]}</Text>
             </Pressable>
           ))}
         </View>
@@ -229,7 +227,7 @@ export default function NovoPost() {
             {imagemUri ? (
               <Image
                 source={{ uri: imagemUri }}
-                className="h-48 w-full rounded-2xl"
+                className="h-48 w-full rounded-lg"
                 resizeMode="cover"
               />
             ) : null}
@@ -244,7 +242,7 @@ export default function NovoPost() {
 
         {erro ? (
           <View className="flex-row items-center gap-1.5">
-            <Ionicons name="alert-circle" size={14} color="#DC2626" />
+            <Ionicons name="alert-circle" size={14} color="#F87171" />
             <Text className="text-sm text-danger dark:text-danger-dark">{erro}</Text>
           </View>
         ) : null}
