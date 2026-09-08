@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/Button';
 import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
+import { ImagemChat } from '@/components/ui/ImagemChat';
 import { TextField } from '@/components/ui/TextField';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { mensagemDeErro } from '@/features/auth/errors';
@@ -23,6 +24,7 @@ import {
   buscarEstatisticaSemanal,
   enviarMensagemChat,
   listarHistoricoChat,
+  obterUrlAssinadaApresentacao,
 } from '@/features/estudo/api';
 import {
   analisarApresentacao,
@@ -121,7 +123,7 @@ function CartaoEstatisticaSemanal({ alunoId }: { alunoId: string }) {
 /** Um slide da apresentação (modo `apresentacao`) — título + pontos em
  * bullet, num cartão separado por slide em vez de um bloco de texto só,
  * pra ficar claro que é conteúdo estruturado pra usar numa aula/trabalho. */
-function CartaoSlide({ numero, titulo, pontos }: Slide & { numero: number }) {
+function CartaoSlide({ numero, titulo, pontos, imagemCaminho }: Slide & { numero: number }) {
   return (
     <View className="shrink gap-1.5 rounded-lg border border-slate-800 bg-surface p-3 dark:bg-surface-dark">
       <View className="flex-row items-center gap-1.5">
@@ -130,6 +132,15 @@ function CartaoSlide({ numero, titulo, pontos }: Slide & { numero: number }) {
         </View>
         <Text className="flex-1 font-semibold text-slate-100">{titulo}</Text>
       </View>
+      {imagemCaminho ? (
+        <View className="items-center self-center">
+          <ImagemChat
+            caminho={imagemCaminho}
+            obterUrl={obterUrlAssinadaApresentacao}
+            label={`Imagem gerada pro slide "${titulo}"`}
+          />
+        </View>
+      ) : null}
       {pontos.map((ponto, indice) => (
         <View key={indice} className="flex-row gap-1.5 pl-1">
           <Text className="text-slate-400">•</Text>
@@ -190,14 +201,7 @@ function BolhaMensagem({
       ) : null}
       <View className="shrink gap-1.5">
         {slides ? (
-          slides.map((slide, indice) => (
-            <CartaoSlide
-              key={indice}
-              numero={indice + 1}
-              titulo={slide.titulo}
-              pontos={slide.pontos}
-            />
-          ))
+          slides.map((slide, indice) => <CartaoSlide key={indice} numero={indice + 1} {...slide} />)
         ) : (
           <View
             className={`shrink rounded-lg px-4 py-2.5 ${

@@ -77,8 +77,8 @@ describe('analisarApresentacao', () => {
       '### Slide 2: Desenvolvimento\n' +
       '- Outro ponto\n';
     expect(analisarApresentacao(texto)).toEqual([
-      { titulo: 'Introdução', pontos: ['Ponto um', 'Ponto dois'] },
-      { titulo: 'Desenvolvimento', pontos: ['Outro ponto'] },
+      { titulo: 'Introdução', pontos: ['Ponto um', 'Ponto dois'], imagemCaminho: null },
+      { titulo: 'Desenvolvimento', pontos: ['Outro ponto'], imagemCaminho: null },
     ]);
   });
 
@@ -89,14 +89,27 @@ describe('analisarApresentacao', () => {
   it('ignora linha que não começa com "- " (não vira ponto)', () => {
     const texto = '### Slide 1: Título\nUma frase solta que não é bullet.\n- Ponto de verdade\n';
     expect(analisarApresentacao(texto)).toEqual([
-      { titulo: 'Título', pontos: ['Ponto de verdade'] },
+      { titulo: 'Título', pontos: ['Ponto de verdade'], imagemCaminho: null },
     ]);
   });
 
   it('último slide pega o conteúdo até o fim do texto', () => {
     const texto = '### Slide 1: Só um\n- Ponto A\n- Ponto B';
     expect(analisarApresentacao(texto)).toEqual([
-      { titulo: 'Só um', pontos: ['Ponto A', 'Ponto B'] },
+      { titulo: 'Só um', pontos: ['Ponto A', 'Ponto B'], imagemCaminho: null },
+    ]);
+  });
+
+  it('extrai o caminho da imagem quando presente', () => {
+    const texto =
+      '### Slide 1: Título\n' +
+      '- Ponto um\n' +
+      '![slide-imagem](aluno-1/123-0.png)\n' +
+      '### Slide 2: Outro\n' +
+      '- Ponto dois\n';
+    expect(analisarApresentacao(texto)).toEqual([
+      { titulo: 'Título', pontos: ['Ponto um'], imagemCaminho: 'aluno-1/123-0.png' },
+      { titulo: 'Outro', pontos: ['Ponto dois'], imagemCaminho: null },
     ]);
   });
 });

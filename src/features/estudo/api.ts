@@ -34,10 +34,13 @@ export async function buscarEstatisticaSemanal(alunoId: string): Promise<Estatis
 
 // A Cloudflare Workers AI (provedor de IA atual, ver `chat-estudo/
 // index.ts`) responde em poucos segundos na maioria das vezes, mas o
-// primeiro uso de um modelo "frio" pode demorar bem mais — 30s é
-// generoso o bastante pra cobrir isso sem deixar o botão "Enviar"
-// parecendo travado pra sempre se algo realmente engasgar.
-const TIMEOUT_CHAT_MS = 30_000;
+// primeiro uso de um modelo "frio" pode demorar bem mais. Subido de 30s
+// pra 45s quando o modo "apresentacao" ganhou geração de imagem por
+// slide (a Edge Function gera todas em paralelo, mas ainda soma um
+// tempo real de rede/modelo em cima do texto) — 45s é generoso o
+// bastante pra cobrir isso sem deixar o botão "Enviar" parecendo
+// travado pra sempre se algo realmente engasgar.
+const TIMEOUT_CHAT_MS = 45_000;
 
 /**
  * A Edge Function é quem fala com a IA e grava as duas mensagens
@@ -55,4 +58,19 @@ export async function enviarMensagemChat(params: {
   });
   if (error) throw new Error(await mensagemDoErroDaFuncao(error));
   return data;
+}
+
+const BUCKET_APRESENTACAO_MIDIA = 'apresentacoes-midia';
+
+/** URL assinada (1h, mesmo padrão de `ImagemChat`/`ImagemPost`) pra
+ * imagem gerada por IA de um slide (`Slide.imagemCaminho`, ver
+ * `regras.ts`). Bucket privado — só o próprio aluno dono da conversa
+ * consegue gerar a URL (RLS restringe pelo id dele no path, ver
+ * migration `apresentacoes_midia`). */
+export async function obterUrlAssinadaApresentacao(caminho: string): Promise<string> {
+  const { data, error } = await supabase.storage
+    .from(BUCKET_APRESENTACAO_MIDIA)
+    .createSignedUrl(caminho, 60 * 60);
+  if (error) throw error;
+  return data.signedUrl;
 }

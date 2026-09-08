@@ -116,3 +116,59 @@ export function montarPromptSistema(params: { nomeMateria: string; modo: ModoCha
       );
   }
 }
+
+/** Mesmo regex de `REGEX_SLIDE` em `src/features/estudo/types.ts` —
+ * duplicado de propósito (Deno fica fora do tsconfig do app, ver
+ * comentário no topo deste arquivo). Usado só pra achar os títulos e as
+ * posições dos slides no texto gerado, pra gerar uma imagem por slide e
+ * depois costurar a referência de volta no texto (`inserirImagensNosSlides`). */
+const REGEX_SLIDE_HEADER = /^### Slide \d+:\s*(.+)$/gm;
+
+/** Extrai só os títulos dos slides, na ordem em que aparecem — usado
+ * pra decidir quantas imagens gerar e com que prompt, antes de tocar
+ * no texto de volta. `null` (não `[]`) quando a resposta não seguiu o
+ * formato de slide nenhum, mesmo critério de `analisarApresentacao`. */
+export function extrairTitulosSlides(texto: string): string[] | null {
+  const titulos = [...texto.matchAll(REGEX_SLIDE_HEADER)].map((m) => m[1].trim());
+  return titulos.length > 0 ? titulos : null;
+}
+
+/**
+ * Prompt de imagem por slide (pedido do usuário: "não tem como ele
+ * fazer as fotos da apresentação e não só o texto?"). Em inglês de
+ * propósito — os modelos de imagem do Workers AI (Stable Diffusion/
+ * Flux) são treinados majoritariamente em inglês e respondem melhor a
+ * prompt em inglês mesmo quando o título do slide está em português (o
+ * título vira só um "ponto de referência" visual dentro do prompt, não
+ * precisa ser entendido gramaticalmente). "no text, no words" é
+ * deliberado: modelo de imagem gerando texto dentro da imagem quase
+ * sempre sai ilegível/errado — melhor nem tentar.
+ */
+export function montarPromptImagemSlide(nomeMateria: string, tituloSlide: string): string {
+  return (
+    `Simple flat educational illustration for a school presentation about ${nomeMateria}, ` +
+    `depicting: ${tituloSlide}. Clean, colorful, minimalist, no text, no words, no letters in the image.`
+  );
+}
+
+/** Reconstrói o texto original inserindo `![slide-imagem](caminho)`
+ * logo depois do conteúdo de cada slide (antes do próximo cabeçalho, ou
+ * do fim do texto no último) — é essa linha que `analisarApresentacao`
+ * (app) usa pra saber o caminho da imagem de cada slide. `imagens[i]`
+ * pode ser `null` (geração daquele slide falhou) — nesse caso o slide
+ * simplesmente não ganha linha de imagem nenhuma, sem quebrar o resto. */
+export function inserirImagensNosSlides(texto: string, imagens: (string | null)[]): string {
+  const cabecalhos = [...texto.matchAll(REGEX_SLIDE_HEADER)];
+  if (cabecalhos.length === 0) return texto;
+
+  let resultado = '';
+  let cursor = 0;
+  cabecalhos.forEach((cabecalho, indice) => {
+    const fimTrecho = cabecalhos[indice + 1]?.index ?? texto.length;
+    const trecho = texto.slice(cursor, fimTrecho);
+    const imagem = imagens[indice];
+    resultado += imagem ? `${trecho.trimEnd()}\n![slide-imagem](${imagem})\n` : trecho;
+    cursor = fimTrecho;
+  });
+  return resultado;
+}

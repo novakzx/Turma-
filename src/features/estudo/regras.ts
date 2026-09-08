@@ -90,17 +90,27 @@ export function formatarTempo(totalSegundos: number): string {
   return `${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
 }
 
-export type Slide = { titulo: string; pontos: string[] };
+export type Slide = { titulo: string; pontos: string[]; imagemCaminho: string | null };
+
+/** Linha que a Edge Function insere logo depois dos pontos de um slide
+ * quando consegue gerar a imagem dele (ver `chat-estudo/index.ts` —
+ * `inserirImagensNosSlides`); formato markdown-like só por familiaridade
+ * visual, não é markdown de verdade nem renderizado como tal em nenhum
+ * outro lugar. Ausente quando a geração de imagem falhou pra aquele
+ * slide (ou pra tudo) — nesse caso `imagemCaminho` fica `null` e a UI
+ * mostra só o texto, sem imagem, pro slide em questão. */
+const REGEX_IMAGEM_SLIDE = /^!\[slide-imagem\]\((.+)\)$/m;
 
 /**
  * Apresentação de slides (pedido do usuário): quebra a resposta da IA
  * (modo `apresentacao`) numa lista de slides de verdade — a UI mostra
- * cada um como um cartão (título + pontos), em vez de um bloco de texto
- * corrido. Confia no formato exato pedido no prompt de sistema (`###
- * Slide N: <título>` seguido de linhas `- <ponto>`); resposta que não
- * seguiu esse formato (modelo "esqueceu", ou é texto antigo de antes
- * deste modo existir) devolve `null` — a UI então mostra o texto cru
- * como fallback, igual `separarGabarito` faz quando não acha o marcador.
+ * cada um como um cartão (título + imagem + pontos), em vez de um bloco
+ * de texto corrido. Confia no formato exato pedido no prompt de sistema
+ * (`### Slide N: <título>` seguido de linhas `- <ponto>`); resposta que
+ * não seguiu esse formato (modelo "esqueceu", ou é texto antigo de
+ * antes deste modo existir) devolve `null` — a UI então mostra o texto
+ * cru como fallback, igual `separarGabarito` faz quando não acha o
+ * marcador.
  */
 export function analisarApresentacao(texto: string): Slide[] | null {
   const cabecalhos = [...texto.matchAll(REGEX_SLIDE)];
@@ -109,12 +119,17 @@ export function analisarApresentacao(texto: string): Slide[] | null {
   return cabecalhos.map((cabecalho, indice) => {
     const inicioCorpo = cabecalho.index + cabecalho[0].length;
     const fimCorpo = cabecalhos[indice + 1]?.index ?? texto.length;
-    const pontos = texto
-      .slice(inicioCorpo, fimCorpo)
+    const corpo = texto.slice(inicioCorpo, fimCorpo);
+    const pontos = corpo
       .split('\n')
       .map((linha) => linha.trim())
       .filter((linha) => linha.startsWith('- '))
       .map((linha) => linha.slice(2).trim());
-    return { titulo: cabecalho[1].trim(), pontos };
+    const imagem = corpo.match(REGEX_IMAGEM_SLIDE);
+    return {
+      titulo: cabecalho[1].trim(),
+      pontos,
+      imagemCaminho: imagem ? imagem[1].trim() : null,
+    };
   });
 }

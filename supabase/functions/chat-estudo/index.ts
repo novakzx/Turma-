@@ -9,6 +9,9 @@ import { createClient } from 'jsr:@supabase/supabase-js@2';
 
 import {
   escolherModelo,
+  extrairTitulosSlides,
+  inserirImagensNosSlides,
+  montarPromptImagemSlide,
   montarPromptSistema,
   type ModoChatEstudo,
 } from '../_shared/regrasEstudo.ts';
@@ -69,6 +72,108 @@ function respostaJson(corpo: unknown, status = 200, origin: string | null = null
     status,
     headers: { ...corsHeaders(origin), 'Content-Type': 'application/json' },
   });
+}
+
+const BUCKET_APRESENTACAO_MIDIA = 'apresentacoes-midia';
+
+/** Gera 1 imagem via Cloudflare Workers AI (`flux-1-schnell`, modelo
+ * rápido — é o que faz gerar 6-8 imagens em paralelo terminar em
+ * segundos, não minutos). Endpoint nativo `/ai/run/{modelo}` (diferente
+ * do `/ai/v1/chat/completions` usado pro texto, que é o compatível com
+ * OpenAI) — devolve a imagem como bytes crus (`Content-Type: image/*`)
+ * OU embrulhada em JSON (`{result:{image: base64}}`, o wrapper padrão
+ * de toda API v4 da Cloudflare) dependendo do caminho interno que a
+ * requisição pega; tratado os dois formatos aqui em vez de assumir só
+ * um, já que a documentação pública não deixa isso 100% claro e o
+ * comportamento real só se confirma testando ao vivo. `null` em
+ * qualquer falha (nunca lança) — geração de imagem é um extra, não pode
+ * derrubar a apresentação inteira por causa de um slide só. */
+async function chamarCloudflareImagem(
+  prompt: string,
+): Promise<{ bytes: Uint8Array; contentType: string } | null> {
+  try {
+    const resposta = await fetch(
+      `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/ai/run/@cf/black-forest-labs/flux-1-schnell`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${CF_API_TOKEN}`,
+        },
+        body: JSON.stringify({ prompt }),
+      },
+    );
+    if (!resposta.ok) {
+      console.error(
+        'chat-estudo: geração de imagem de slide recusada',
+        resposta.status,
+        await resposta.text(),
+      );
+      return null;
+    }
+
+    const contentType = resposta.headers.get('content-type') ?? '';
+    if (contentType.startsWith('image/')) {
+      return { bytes: new Uint8Array(await resposta.arrayBuffer()), contentType };
+    }
+
+    const dados = await resposta.json();
+    const base64 = dados?.result?.image as string | undefined;
+    if (!base64) {
+      console.error('chat-estudo: resposta de imagem sem campo esperado', JSON.stringify(dados));
+      return null;
+    }
+    const binario = atob(base64);
+    const bytes = new Uint8Array(binario.length);
+    for (let i = 0; i < binario.length; i++) bytes[i] = binario.charCodeAt(i);
+    return { bytes, contentType: 'image/jpeg' };
+  } catch (err) {
+    console.error('chat-estudo: erro gerando imagem de slide', err);
+    return null;
+  }
+}
+
+/** Gera uma imagem por slide (em paralelo), sobe cada uma pro bucket
+ * `apresentacoes-midia` (path começando pelo id do aluno — RLS de
+ * SELECT restringe por isso, ver migration `apresentacoes_midia`) e
+ * devolve o texto original com `![slide-imagem](caminho)` inserido
+ * depois do conteúdo de cada slide que deu certo (`inserirImagensNosSlides`).
+ * Slide sem imagem (geração ou upload falhou) só não ganha essa linha —
+ * `analisarApresentacao` no app já trata isso como "sem imagem", não
+ * como erro. Se o texto não tiver nenhum slide no formato esperado
+ * (`extrairTitulosSlides` devolve `null`), devolve o texto sem mexer. */
+async function gerarImagensDosSlides(params: {
+  admin: ReturnType<typeof createClient>;
+  userId: string;
+  nomeMateria: string;
+  textoResposta: string;
+}): Promise<string> {
+  const titulos = extrairTitulosSlides(params.textoResposta);
+  if (!titulos) return params.textoResposta;
+
+  const resultados = await Promise.all(
+    titulos.map((titulo) =>
+      chamarCloudflareImagem(montarPromptImagemSlide(params.nomeMateria, titulo)),
+    ),
+  );
+
+  const caminhos = await Promise.all(
+    resultados.map(async (resultado, indice) => {
+      if (!resultado) return null;
+      const extensao = resultado.contentType.includes('png') ? 'png' : 'jpg';
+      const caminho = `${params.userId}/${Date.now()}-${indice}.${extensao}`;
+      const { error } = await params.admin.storage
+        .from(BUCKET_APRESENTACAO_MIDIA)
+        .upload(caminho, resultado.bytes, { contentType: resultado.contentType });
+      if (error) {
+        console.error('chat-estudo: falha ao subir imagem de slide', error);
+        return null;
+      }
+      return caminho;
+    }),
+  );
+
+  return inserirImagensNosSlides(params.textoResposta, caminhos);
 }
 
 Deno.serve(async (req) => {
@@ -235,17 +340,37 @@ Deno.serve(async (req) => {
       return respostaJson({ error: 'A IA não conseguiu responder dessa vez.' }, 502, origin);
     }
 
+    const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+
+    // Modo "apresentacao" (pedido do usuário: "não tem como ele fazer as
+    // fotos da apresentação e não só o texto?") — gera uma imagem por
+    // slide em paralelo (Promise.all, não sequencial: sequencial pra
+    // 6-8 slides levaria dezenas de segundos; em paralelo, o tempo real
+    // é próximo do de uma imagem só). Falha de um slide não derruba os
+    // outros nem a resposta inteira — cada geração/upload é isolada em
+    // try/catch (dentro de `chamarCloudflareImagem`) e devolve `null`
+    // nesse caso; `inserirImagensNosSlides` simplesmente não escreve
+    // linha de imagem pro(s) slide(s) que falharam.
+    const textoFinal =
+      modo === 'apresentacao'
+        ? await gerarImagensDosSlides({
+            admin,
+            userId: user.id,
+            nomeMateria: materia.nome,
+            textoResposta,
+          })
+        : textoResposta;
+
     // Persiste os dois lados com a service role — não existe policy de
     // INSERT pra `authenticated` nessa tabela de propósito (evita um
     // cliente forjar uma mensagem "assistente").
-    const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
     const { error: insertError } = await admin.from('chat_ia_mensagens').insert([
       { aluno_id: user.id, materia_id: materiaId, papel: 'usuario', conteudo: mensagem },
-      { aluno_id: user.id, materia_id: materiaId, papel: 'assistente', conteudo: textoResposta },
+      { aluno_id: user.id, materia_id: materiaId, papel: 'assistente', conteudo: textoFinal },
     ]);
     if (insertError) console.error('chat-estudo: falha ao salvar histórico', insertError);
 
-    return respostaJson({ resposta: textoResposta, modelo }, 200, origin);
+    return respostaJson({ resposta: textoFinal, modelo }, 200, origin);
   } catch (err) {
     // Detalhe de verdade só no log -- nunca na resposta (evita vazar
     // stack trace/mensagem interna pra quem chamou).
