@@ -736,6 +736,7 @@ export type Database = {
           foto_url: string | null;
           id: string;
           idade: number | null;
+          link: string | null;
           nome: string;
           nome_usuario: string | null;
           numero_cartao_estudante: string | null;
@@ -756,6 +757,7 @@ export type Database = {
           foto_url?: string | null;
           id: string;
           idade?: number | null;
+          link?: string | null;
           nome: string;
           nome_usuario?: string | null;
           numero_cartao_estudante?: string | null;
@@ -776,6 +778,7 @@ export type Database = {
           foto_url?: string | null;
           id?: string;
           idade?: number | null;
+          link?: string | null;
           nome?: string;
           nome_usuario?: string | null;
           numero_cartao_estudante?: string | null;
@@ -930,6 +933,32 @@ export type Database = {
           {
             foreignKeyName: 'stories_autor_id_fkey';
             columns: ['autor_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      traducoes_uso: {
+        Row: {
+          aluno_id: string;
+          criado_em: string;
+          id: number;
+        };
+        Insert: {
+          aluno_id: string;
+          criado_em?: string;
+          id?: number;
+        };
+        Update: {
+          aluno_id?: string;
+          criado_em?: string;
+          id?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'traducoes_uso_aluno_id_fkey';
+            columns: ['aluno_id'];
             isOneToOne: false;
             referencedRelation: 'profiles';
             referencedColumns: ['id'];

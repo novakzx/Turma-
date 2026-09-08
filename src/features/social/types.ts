@@ -12,6 +12,7 @@ export type PerfilResumo = {
 
 export type PerfilPublico = PerfilResumo & {
   bio: string | null;
+  link: string | null;
   papel: Tables<'profiles'>['papel'];
   publico: boolean;
   turma_id: string | null;

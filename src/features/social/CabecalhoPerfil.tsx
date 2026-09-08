@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import type { ReactNode } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Linking, Pressable, Text, View } from 'react-native';
 
 import { FotoPerfil } from '@/features/perfil/FotoPerfil';
+import { formatarLinkExibicao } from '@/features/perfil/link';
 
 const ROTULO_PAPEL = {
   aluno: 'Aluno',
@@ -53,6 +54,7 @@ export function CabecalhoPerfil({
   nomeUsuario,
   fotoUrl,
   bio,
+  link,
   papel,
   contadorPosts,
   contadorSeguidores,
@@ -64,6 +66,7 @@ export function CabecalhoPerfil({
   nomeUsuario: string | null;
   fotoUrl: string | null;
   bio: string | null;
+  link?: string | null;
   papel?: keyof typeof ROTULO_PAPEL;
   contadorPosts: number;
   contadorSeguidores: number;
@@ -85,6 +88,18 @@ export function CabecalhoPerfil({
           </View>
         ) : null}
         {bio ? <Text className="mt-2 text-center text-sm text-slate-400">{bio}</Text> : null}
+        {link && /^https?:\/\//i.test(link) ? (
+          <Pressable
+            onPress={() => Linking.openURL(link)}
+            accessibilityRole="link"
+            className="mt-1 min-h-11 flex-row items-center gap-1 px-2"
+          >
+            <Ionicons name="link-outline" size={14} color="#2DD4BF" />
+            <Text className="text-sm font-medium text-accent dark:text-accent-dark">
+              {formatarLinkExibicao(link)}
+            </Text>
+          </Pressable>
+        ) : null}
       </View>
 
       <View className="flex-row items-center justify-center">

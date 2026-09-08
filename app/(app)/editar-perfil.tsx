@@ -10,6 +10,7 @@ import { mensagemDeErro } from '@/features/auth/errors';
 import { escolherImagem } from '@/features/feed/api';
 import { FotoPerfil } from '@/features/perfil/FotoPerfil';
 import { atualizarPerfil, fazerUploadFotoPerfil } from '@/features/perfil/api';
+import { normalizarLinkPerfil } from '@/features/perfil/link';
 
 const REGEX_NOME_USUARIO = /^[a-z0-9_]{3,20}$/;
 
@@ -20,11 +21,17 @@ export default function EditarPerfil() {
   const [nome, setNome] = useState(profile?.nome ?? '');
   const [nomeUsuario, setNomeUsuario] = useState(profile?.nome_usuario ?? '');
   const [bio, setBio] = useState(profile?.bio ?? '');
+  const [link, setLink] = useState(profile?.link ?? '');
   const [fotoUriLocal, setFotoUriLocal] = useState<string | null>(null);
-  const [erros, setErros] = useState<{ nome?: string; nomeUsuario?: string; geral?: string }>({});
+  const [erros, setErros] = useState<{
+    nome?: string;
+    nomeUsuario?: string;
+    link?: string;
+    geral?: string;
+  }>({});
 
   const mutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async ({ linkNormalizado }: { linkNormalizado: string }) => {
       if (!profile) throw new Error('Sem perfil carregado.');
 
       const fotoUrl = fotoUriLocal
@@ -36,6 +43,7 @@ export default function EditarPerfil() {
         nome: nome.trim(),
         nomeUsuario: nomeUsuario.trim() || null,
         bio: bio.trim() || null,
+        link: linkNormalizado || null,
         fotoUrl,
       });
     },
@@ -62,11 +70,15 @@ export default function EditarPerfil() {
     if (usuarioLimpo && !REGEX_NOME_USUARIO.test(usuarioLimpo)) {
       novosErros.nomeUsuario = 'Só letras minúsculas, número e "_", de 3 a 20 caracteres.';
     }
+    const resultadoLink = normalizarLinkPerfil(link);
+    if (!resultadoLink.ok) novosErros.link = resultadoLink.erro;
+
     setErros(novosErros);
-    if (Object.keys(novosErros).length > 0) return;
+    if (Object.keys(novosErros).length > 0 || !resultadoLink.ok) return;
 
     setNomeUsuario(usuarioLimpo);
-    mutation.mutate();
+    setLink(resultadoLink.link);
+    mutation.mutate({ linkNormalizado: resultadoLink.link });
   }
 
   return (
@@ -129,6 +141,18 @@ export default function EditarPerfil() {
           />
           <Text className="self-end text-xs text-slate-500">{bio.length}/280</Text>
         </View>
+
+        <TextField
+          label="Link (opcional)"
+          icon="link-outline"
+          value={link}
+          onChangeText={setLink}
+          error={erros.link}
+          placeholder="ex.: instagram.com/seu-usuario"
+          keyboardType="url"
+          autoCapitalize="none"
+          autoCorrect={false}
+        />
 
         {erros.geral ? (
           <Text className="text-sm text-danger dark:text-danger-dark">{erros.geral}</Text>

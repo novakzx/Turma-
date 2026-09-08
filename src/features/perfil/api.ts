@@ -23,6 +23,7 @@ export async function atualizarPerfil(params: {
   nome: string;
   nomeUsuario: string | null;
   bio: string | null;
+  link: string | null;
   fotoUrl?: string | null;
 }) {
   const { error } = await supabase
@@ -31,6 +32,7 @@ export async function atualizarPerfil(params: {
       nome: params.nome,
       nome_usuario: params.nomeUsuario,
       bio: params.bio,
+      link: params.link,
       ...(params.fotoUrl !== undefined ? { foto_url: params.fotoUrl } : {}),
     })
     .eq('id', params.id);

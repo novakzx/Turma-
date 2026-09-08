@@ -135,6 +135,7 @@ export default function PerfilPublico() {
         nomeUsuario={perfil.nome_usuario}
         fotoUrl={perfil.foto_url}
         bio={perfil.bio}
+        link={perfil.link}
         papel={perfil.papel}
         contadorPosts={postsQuery.data?.length ?? 0}
         contadorSeguidores={contadoresQuery.data?.seguidores ?? 0}

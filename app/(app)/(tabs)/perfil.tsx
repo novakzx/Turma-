@@ -77,6 +77,7 @@ export default function Perfil() {
           nomeUsuario={profile?.nome_usuario ?? null}
           fotoUrl={profile?.foto_url ?? null}
           bio={profile?.bio ?? null}
+          link={profile?.link ?? null}
           papel={profile?.papel}
           contadorPosts={postsQuery.data?.length ?? 0}
           contadorSeguidores={contadoresQuery.data?.seguidores ?? 0}
