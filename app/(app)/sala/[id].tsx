@@ -104,12 +104,12 @@ export default function SalaChat() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { profile } = useAuth();
   const queryClient = useQueryClient();
-  // Sem barra de abas flutuante aqui (é uma tela empilhada, não uma aba),
-  // então a caixa de mensagem cola direto no fundo real da tela — sem
-  // somar `insets.bottom`, num iPhone de verdade ela fica colada/quase
-  // encoberta pela barra de gestos (home indicator), igual o bug já
-  // corrigido na barra de abas (ver src/lib/barraAbas.ts) — mesma causa,
-  // tela diferente.
+  // Tela empilhada, sem barra de abas — a caixa de mensagem cola direto
+  // no fundo real da tela, então precisa somar `insets.bottom` à mão
+  // (senão fica colada/quase encoberta pela barra de gestos do sistema
+  // num iPhone de verdade). A barra de abas em si não precisa mais desse
+  // cálculo manual — `(tabs)/_layout.tsx` deixa a altura por conta do
+  // `@react-navigation/bottom-tabs`, que já soma esse inset sozinho.
   const insets = useSafeAreaInsets();
   const listRef = useRef<FlatList<MensagemComAutor>>(null);
   const [texto, setTexto] = useState('');

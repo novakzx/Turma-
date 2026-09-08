@@ -234,11 +234,12 @@ export default function DetalheConversa() {
   const queryClient = useQueryClient();
   const [texto, setTexto] = useState('');
   const [erro, setErro] = useState<string | null>(null);
-  // Tela empilhada (sem a barra de abas flutuante) — a caixa de mensagem
-  // cola direto no fundo real da tela, então precisa somar o inset de
-  // segurança do sistema (home indicator no iPhone) à mão, senão fica
-  // colada/quase encoberta nele — mesma causa do bug já corrigido na
-  // barra de abas (ver src/lib/barraAbas.ts), tela diferente.
+  // Tela empilhada (sem barra de abas) — a caixa de mensagem cola direto
+  // no fundo real da tela, então precisa somar o inset de segurança do
+  // sistema (home indicator no iPhone) à mão, senão fica colada/quase
+  // encoberta nele. A barra de abas em si não precisa mais desse cálculo
+  // manual — `(tabs)/_layout.tsx` deixa a altura por conta do
+  // `@react-navigation/bottom-tabs`, que já soma esse inset sozinho.
   const insets = useSafeAreaInsets();
 
   const conversaQuery = useQuery({

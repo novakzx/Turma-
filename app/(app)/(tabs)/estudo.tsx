@@ -2,7 +2,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { FlatList, KeyboardAvoidingView, Platform, Pressable, Text, View } from 'react-native';
+import {
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/Button';
@@ -297,9 +305,19 @@ export default function Estudo() {
       className="flex-1 bg-background dark:bg-background-dark"
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View className="gap-2 border-b border-slate-800 p-3">
-        <View className="flex-row items-center justify-between gap-2">
-          <View className="flex-1 flex-row flex-wrap gap-2">
+      <View className="gap-2 border-b border-slate-800 py-3">
+        <View className="flex-row items-center gap-2 pl-3 pr-3">
+          {/* Rolagem horizontal em vez de quebrar linha (`flex-wrap`) —
+              pedido do usuário: com as 2 fileiras de chip (matéria + modo)
+              quebrando linha, a tela ficava "poluída" antes de qualquer
+              conversa aparecer. Uma fileira só, rolável, cabe em qualquer
+              largura de tela sem empurrar o chat pra baixo. */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerClassName="items-center gap-2"
+            className="flex-1"
+          >
             {(materiasQuery.data ?? []).map((materia) => (
               <ChipMateria
                 key={materia.id}
@@ -308,7 +326,7 @@ export default function Estudo() {
                 onPress={() => setMateriaId(materia.id)}
               />
             ))}
-          </View>
+          </ScrollView>
           <Pressable
             onPress={() => router.push('/flashcards')}
             accessibilityRole="button"
@@ -319,7 +337,11 @@ export default function Estudo() {
           </Pressable>
         </View>
         {materiaId ? (
-          <View className="flex-row flex-wrap items-center gap-2">
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerClassName="items-center gap-2 pl-3 pr-3"
+          >
             {MODOS.map((opcao) => (
               <Pressable
                 key={opcao}
@@ -348,7 +370,7 @@ export default function Estudo() {
                 </Text>
               </View>
             ) : null}
-          </View>
+          </ScrollView>
         ) : null}
       </View>
 

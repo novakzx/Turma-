@@ -23,20 +23,47 @@ const path = require('node:path');
 // roda esse script a partir da raiz do repo, então dá no mesmo.
 const CAMINHO_INDEX = path.join(process.cwd(), 'dist', 'index.html');
 
+// `theme-color` casado com o fundo escuro do redesign "dark-first" (era
+// o indigo antigo, `#4F46E5`, de antes do app inteiro virar escuro por
+// padrão) — sem isso a barra de status/chrome do navegador no celular
+// ficava roxa/clara destoando do resto do app.
 const TAGS = `
-    <meta name="theme-color" content="#4F46E5" />
+    <meta name="theme-color" content="#0B0E14" />
     <link rel="manifest" href="/manifest.json" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Turma+" />
   </head>`;
 
-const html = fs.readFileSync(CAMINHO_INDEX, 'utf8');
+let html = fs.readFileSync(CAMINHO_INDEX, 'utf8');
+
+// `viewport-fit=cover` (achado testando no celular de verdade — usuário
+// relatou a barra de abas "entrando nas extremidades da tela"): sem isso,
+// o Safari/Chrome no iPhone não expõe `env(safe-area-inset-bottom)`
+// nenhum pro CSS — `useSafeAreaInsets()` (react-native-safe-area-context)
+// depende exatamente desse valor no alvo web, então sem essa diretiva ele
+// sempre lê zero, e a barra de abas (calculada achando que não existe
+// nenhum recorte/home indicator embaixo) fica colada bem na borda física
+// da tela, sem a folga de segurança que um iPhone de verdade precisa.
+// Expo gera o `<meta name="viewport">` sozinho no export; substitui em
+// vez de injetar um segundo (dois `viewport` no mesmo HTML — o navegador
+// só respeita o primeiro, então só *substituir* resolve de verdade).
+const VIEWPORT_REGEX = /<meta name="viewport"[^>]*>/;
+if (VIEWPORT_REGEX.test(html)) {
+  html = html.replace(
+    VIEWPORT_REGEX,
+    '<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover" />',
+  );
+} else {
+  console.error('injetar-tags-pwa: tag <meta name="viewport"> não encontrada — abortando.');
+  process.exit(1);
+}
 
 if (html.includes('apple-mobile-web-app-title')) {
-  console.warn('injetar-tags-pwa: tags já presentes, nada a fazer.');
+  console.warn('injetar-tags-pwa: tags de cabeçalho já presentes, só o viewport foi atualizado.');
+  fs.writeFileSync(CAMINHO_INDEX, html);
   process.exit(0);
 }
 
@@ -46,4 +73,4 @@ if (!html.includes('</head>')) {
 }
 
 fs.writeFileSync(CAMINHO_INDEX, html.replace('</head>', TAGS));
-console.warn('injetar-tags-pwa: tags de PWA injetadas em dist/index.html.');
+console.warn('injetar-tags-pwa: tags de PWA + viewport-fit=cover injetados em dist/index.html.');
