@@ -17,3 +17,7 @@ export const ICONE_TIPO_SALA: Record<TipoSalaChat, keyof typeof Ionicons.glyphMa
   materia: 'book',
   assunto: 'bulb',
 };
+
+/** `midia_tipo` não é um enum de banco (é só um `text` com CHECK, ver
+ * migration `midia_nos_chats`) — o tipo aqui é decoração, não gerado. */
+export type TipoMidiaMensagem = 'imagem' | 'audio';

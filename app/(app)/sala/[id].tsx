@@ -5,9 +5,11 @@ import { useEffect, useRef, useState } from 'react';
 import { FlatList, KeyboardAvoidingView, Platform, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { BolhaAudio } from '@/components/ui/BolhaAudio';
 import { Button } from '@/components/ui/Button';
+import { CaixaMensagem } from '@/components/ui/CaixaMensagem';
 import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
-import { TextField } from '@/components/ui/TextField';
+import { ImagemChat } from '@/components/ui/ImagemChat';
 import { TextoComMencoes } from '@/components/ui/TextoComMencoes';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { mensagemDeErro } from '@/features/auth/errors';
@@ -17,7 +19,9 @@ import {
   buscarSala,
   definirSalaTrancada,
   enviarMensagem,
+  fazerUploadMidiaSala,
   listarMensagens,
+  obterUrlAssinadaSala,
   type MensagemComAutor,
 } from '@/features/chat/api';
 import { BotaoSilenciar } from '@/features/chat/BotaoSilenciar';
@@ -68,15 +72,27 @@ function LinhaMensagem({
             {mensagem.profiles?.nome ?? 'Aluno'}
           </Text>
         ) : null}
-        <TextoComMencoes
-          texto={mensagem.conteudo}
-          className={`text-base ${ehPropria ? 'text-white' : 'text-slate-100'}`}
-          // Bolha própria já é `bg-primary` — destacar a menção na MESMA
-          // cor primária ficaria ilegível (texto primary sobre fundo
-          // primary); sublinhado + branco continua indicando "isto é
-          // clicável" sem sumir no fundo.
-          mencaoClassName={ehPropria ? 'font-semibold text-white underline' : undefined}
-        />
+        {mensagem.midia_tipo === 'imagem' && mensagem.midia_url ? (
+          <ImagemChat caminho={mensagem.midia_url} obterUrl={obterUrlAssinadaSala} />
+        ) : mensagem.midia_tipo === 'audio' && mensagem.midia_url ? (
+          <BolhaAudio
+            caminho={mensagem.midia_url}
+            obterUrl={obterUrlAssinadaSala}
+            corIcone={ehPropria ? '#FFFFFF' : '#8B5CF6'}
+            corTexto={ehPropria ? 'text-white' : 'text-slate-100'}
+          />
+        ) : null}
+        {mensagem.conteudo ? (
+          <TextoComMencoes
+            texto={mensagem.conteudo}
+            className={`text-base ${ehPropria ? 'text-white' : 'text-slate-100'}`}
+            // Bolha própria já é `bg-primary` — destacar a menção na MESMA
+            // cor primária ficaria ilegível (texto primary sobre fundo
+            // primary); sublinhado + branco continua indicando "isto é
+            // clicável" sem sumir no fundo.
+            mencaoClassName={ehPropria ? 'font-semibold text-white underline' : undefined}
+          />
+        ) : null}
       </View>
       <View className="flex-row items-center gap-3 px-1">
         <Text className="text-xs text-slate-500">{formatarHora(mensagem.criado_em)}</Text>
@@ -112,7 +128,6 @@ export default function SalaChat() {
   // `@react-navigation/bottom-tabs`, que já soma esse inset sozinho.
   const insets = useSafeAreaInsets();
   const listRef = useRef<FlatList<MensagemComAutor>>(null);
-  const [texto, setTexto] = useState('');
   const [erro, setErro] = useState<string | null>(null);
 
   const salaQuery = useQuery({
@@ -144,12 +159,40 @@ export default function SalaChat() {
   }, [mensagensQuery.data?.length]);
 
   const enviarMutation = useMutation({
-    mutationFn: () =>
-      enviarMensagem({ salaId: id as string, autorId: profile!.id, conteudo: texto.trim() }),
-    onSuccess: () => {
-      setTexto('');
-      queryClient.invalidateQueries({ queryKey: ['mensagens', id] });
+    mutationFn: (params: {
+      conteudo?: string;
+      midiaUrl?: string;
+      midiaTipo?: 'imagem' | 'audio';
+    }) => enviarMensagem({ salaId: id as string, autorId: profile!.id, ...params }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['mensagens', id] }),
+    onError: (error) => setErro(mensagemDeErro(error)),
+  });
+
+  const enviarImagemMutation = useMutation({
+    mutationFn: async (uriLocal: string) => {
+      const caminho = await fazerUploadMidiaSala(id as string, uriLocal, 'image');
+      await enviarMensagem({
+        salaId: id as string,
+        autorId: profile!.id,
+        midiaUrl: caminho,
+        midiaTipo: 'imagem',
+      });
     },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['mensagens', id] }),
+    onError: (error) => setErro(mensagemDeErro(error)),
+  });
+
+  const enviarAudioMutation = useMutation({
+    mutationFn: async (uriLocal: string) => {
+      const caminho = await fazerUploadMidiaSala(id as string, uriLocal, 'audio');
+      await enviarMensagem({
+        salaId: id as string,
+        autorId: profile!.id,
+        midiaUrl: caminho,
+        midiaTipo: 'audio',
+      });
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['mensagens', id] }),
     onError: (error) => setErro(mensagemDeErro(error)),
   });
 
@@ -175,12 +218,6 @@ export default function SalaChat() {
   const silenciadoAte = profile?.silenciado_ate ? new Date(profile.silenciado_ate) : null;
   const estaSilenciado = !!silenciadoAte && silenciadoAte > new Date();
   const podeEnviar = !sala.trancada && !estaSilenciado;
-
-  function handleEnviar() {
-    if (!texto.trim()) return;
-    setErro(null);
-    enviarMutation.mutate();
-  }
 
   return (
     <KeyboardAvoidingView
@@ -232,38 +269,24 @@ export default function SalaChat() {
         }
       />
 
-      <View
-        className="gap-1 border-t border-slate-800 p-3"
-        style={{ paddingBottom: insets.bottom + 12 }}
-      >
-        {!podeEnviar ? (
-          <View className="flex-row items-center gap-1.5 px-1">
-            <Ionicons name="information-circle-outline" size={14} color="#94A3B8" />
-            <Text className="flex-1 text-xs text-slate-400">
-              {sala.trancada
-                ? 'Esta sala foi trancada pela moderação — só leitura.'
-                : `Você está impedido de enviar mensagens até ${silenciadoAte ? new Intl.DateTimeFormat('pt-PT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(silenciadoAte) : ''}.`}
-            </Text>
-          </View>
-        ) : (
-          <View className="flex-row items-end gap-2">
-            <View className="flex-1">
-              <TextField
-                label="Mensagem"
-                value={texto}
-                onChangeText={setTexto}
-                placeholder="Escreve uma mensagem..."
-                error={erro ?? undefined}
-              />
-            </View>
-            <Button
-              label="Enviar"
-              icon="send"
-              onPress={handleEnviar}
-              loading={enviarMutation.isPending}
-            />
-          </View>
-        )}
+      <View style={{ paddingBottom: insets.bottom }}>
+        {erro ? (
+          <Text className="px-4 pt-2 text-sm text-danger dark:text-danger-dark">{erro}</Text>
+        ) : null}
+        <CaixaMensagem
+          onEnviarTexto={(texto) => enviarMutation.mutate({ conteudo: texto })}
+          onEnviarImagem={(uri) => enviarImagemMutation.mutate(uri)}
+          onEnviarAudio={(uri) => enviarAudioMutation.mutate(uri)}
+          onErro={setErro}
+          enviando={enviarMutation.isPending}
+          placeholder="Escreve uma mensagem..."
+          desabilitado={!podeEnviar}
+          mensagemDesabilitado={
+            sala.trancada
+              ? 'Esta sala foi trancada pela moderação — só leitura.'
+              : `Você está impedido de enviar mensagens até ${silenciadoAte ? new Intl.DateTimeFormat('pt-PT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(silenciadoAte) : ''}.`
+          }
+        />
       </View>
     </KeyboardAvoidingView>
   );

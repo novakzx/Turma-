@@ -2,20 +2,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { FlatList, KeyboardAvoidingView, Platform, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { BolhaAudio } from '@/components/ui/BolhaAudio';
 import { Button } from '@/components/ui/Button';
+import { CaixaMensagem } from '@/components/ui/CaixaMensagem';
 import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
+import { ImagemChat } from '@/components/ui/ImagemChat';
 import { TextoComMencoes } from '@/components/ui/TextoComMencoes';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { mensagemDeErro } from '@/features/auth/errors';
@@ -26,8 +20,10 @@ import {
   assinarMensagensDiretas,
   buscarConversa,
   enviarMensagemDireta,
+  fazerUploadMidiaConversa,
   listarMensagens,
   listarParticipantes,
+  obterUrlAssinadaConversa,
   recusarOuSair,
   type MensagemComAutor,
 } from '@/features/mensagens/api';
@@ -146,17 +142,29 @@ function LinhaMensagem({
       className={`${primeiroDoGrupo ? 'mt-3' : 'mt-0.5'} max-w-[75%] gap-1 ${souEu ? 'items-end self-end' : 'items-start self-start'}`}
     >
       <View
-        className={`rounded-lg px-4 py-2.5 ${cantoExterno}${
+        className={`overflow-hidden rounded-lg ${mensagem.midia_tipo === 'imagem' ? 'p-1' : 'px-4 py-2.5'} ${cantoExterno}${
           souEu
             ? 'bg-primary dark:bg-primary-dark'
             : 'border border-slate-800 bg-surface dark:bg-surface-dark'
         }`}
       >
-        <TextoComMencoes
-          texto={mensagem.conteudo}
-          className={souEu ? 'text-white' : 'text-slate-100'}
-          mencaoClassName={souEu ? 'font-semibold text-white underline' : undefined}
-        />
+        {mensagem.midia_tipo === 'imagem' && mensagem.midia_url ? (
+          <ImagemChat caminho={mensagem.midia_url} obterUrl={obterUrlAssinadaConversa} />
+        ) : mensagem.midia_tipo === 'audio' && mensagem.midia_url ? (
+          <BolhaAudio
+            caminho={mensagem.midia_url}
+            obterUrl={obterUrlAssinadaConversa}
+            corIcone={souEu ? '#FFFFFF' : '#8B5CF6'}
+            corTexto={souEu ? 'text-white' : 'text-slate-100'}
+          />
+        ) : null}
+        {mensagem.conteudo ? (
+          <TextoComMencoes
+            texto={mensagem.conteudo}
+            className={souEu ? 'text-white' : 'text-slate-100'}
+            mencaoClassName={souEu ? 'font-semibold text-white underline' : undefined}
+          />
+        ) : null}
       </View>
       {!souEu || podeApagar ? (
         <View className="flex-row items-center gap-2 px-1">
@@ -232,7 +240,6 @@ export default function DetalheConversa() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { profile } = useAuth();
   const queryClient = useQueryClient();
-  const [texto, setTexto] = useState('');
   const [erro, setErro] = useState<string | null>(null);
   // Tela empilhada (sem barra de abas) — a caixa de mensagem cola direto
   // no fundo real da tela, então precisa somar o inset de segurança do
@@ -274,15 +281,49 @@ export default function DetalheConversa() {
     queryClient.invalidateQueries({ queryKey: ['mensagens-diretas', id] });
     queryClient.invalidateQueries({ queryKey: ['minhas-conversas'] });
     queryClient.invalidateQueries({ queryKey: ['pedidos-mensagem'] });
+    // Faltava isto: sem invalidar `participantes`, `ehPedidoPendente`
+    // (calculado a partir de `participantesQuery.data`) nunca atualizava
+    // depois de aceitar/recusar — o próprio update no banco funcionava
+    // certo, mas o botão "Aceitar" continuava aparecendo pra sempre,
+    // dando a impressão de que não tinha feito nada.
+    queryClient.invalidateQueries({ queryKey: ['participantes', id] });
   }
 
   const enviarMutation = useMutation({
-    mutationFn: () =>
-      enviarMensagemDireta({ conversaId: id, autorId: profile!.id, conteudo: texto.trim() }),
-    onSuccess: () => {
-      setTexto('');
-      invalidarTudo();
+    mutationFn: (params: {
+      conteudo?: string;
+      midiaUrl?: string;
+      midiaTipo?: 'imagem' | 'audio';
+    }) => enviarMensagemDireta({ conversaId: id, autorId: profile!.id, ...params }),
+    onSuccess: invalidarTudo,
+    onError: (error) => setErro(mensagemDeErro(error)),
+  });
+
+  const enviarImagemMutation = useMutation({
+    mutationFn: async (uriLocal: string) => {
+      const caminho = await fazerUploadMidiaConversa(id, uriLocal, 'image');
+      await enviarMensagemDireta({
+        conversaId: id,
+        autorId: profile!.id,
+        midiaUrl: caminho,
+        midiaTipo: 'imagem',
+      });
     },
+    onSuccess: invalidarTudo,
+    onError: (error) => setErro(mensagemDeErro(error)),
+  });
+
+  const enviarAudioMutation = useMutation({
+    mutationFn: async (uriLocal: string) => {
+      const caminho = await fazerUploadMidiaConversa(id, uriLocal, 'audio');
+      await enviarMensagemDireta({
+        conversaId: id,
+        autorId: profile!.id,
+        midiaUrl: caminho,
+        midiaTipo: 'audio',
+      });
+    },
+    onSuccess: invalidarTudo,
     onError: (error) => setErro(mensagemDeErro(error)),
   });
 
@@ -325,12 +366,6 @@ export default function DetalheConversa() {
   const titulo = ehGrupo
     ? (conversa.nome ?? 'Grupo')
     : (outroParticipante?.profiles?.nome ?? 'Conversa');
-
-  function handleEnviar() {
-    if (!texto.trim()) return;
-    setErro(null);
-    enviarMutation.mutate();
-  }
 
   const itensLista = construirItensLista(mensagensQuery.data ?? []);
 
@@ -426,46 +461,17 @@ export default function DetalheConversa() {
           </View>
         </View>
       ) : (
-        <View
-          className="gap-1.5 border-t border-slate-800 px-3 py-2"
-          style={{ paddingBottom: insets.bottom + 8 }}
-        >
+        <View style={{ paddingBottom: insets.bottom }}>
           {erro ? (
-            <Text className="px-2 text-sm text-danger dark:text-danger-dark">{erro}</Text>
+            <Text className="px-4 pt-2 text-sm text-danger dark:text-danger-dark">{erro}</Text>
           ) : null}
-          {/* Campo em pílula, sem label visível — o estilo minimalista do
-              Instagram ("Mensagem...") em vez do TextField padrão do app
-              (que sempre mostra um label acima, certo pra formulário mas
-              destoante aqui). Acessibilidade mantida via
-              `accessibilityLabel` direto no TextInput. */}
-          <View className="flex-row items-end gap-2">
-            <View className="min-h-11 flex-1 flex-row items-center rounded-md border border-slate-700 bg-surface px-4 dark:bg-surface-dark">
-              <TextInput
-                value={texto}
-                onChangeText={setTexto}
-                placeholder="Mensagem..."
-                placeholderTextColor="#94A3B8"
-                multiline
-                accessibilityLabel="Mensagem"
-                className="max-h-28 flex-1 py-2.5 text-base text-slate-100"
-              />
-            </View>
-            <Pressable
-              onPress={handleEnviar}
-              disabled={enviarMutation.isPending || !texto.trim()}
-              accessibilityRole="button"
-              accessibilityLabel="Enviar mensagem"
-              className={`h-11 w-11 items-center justify-center rounded-full ${
-                texto.trim() ? 'bg-primary dark:bg-primary-dark' : 'bg-slate-700'
-              }`}
-            >
-              {enviarMutation.isPending ? (
-                <ActivityIndicator color="#FFFFFF" size="small" />
-              ) : (
-                <Ionicons name="send" size={18} color={texto.trim() ? '#FFFFFF' : '#94A3B8'} />
-              )}
-            </Pressable>
-          </View>
+          <CaixaMensagem
+            onEnviarTexto={(texto) => enviarMutation.mutate({ conteudo: texto })}
+            onEnviarImagem={(uri) => enviarImagemMutation.mutate(uri)}
+            onEnviarAudio={(uri) => enviarAudioMutation.mutate(uri)}
+            onErro={setErro}
+            enviando={enviarMutation.isPending}
+          />
         </View>
       )}
     </KeyboardAvoidingView>

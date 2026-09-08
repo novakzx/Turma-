@@ -118,9 +118,24 @@ function LinhaConversa({ conversa, index }: { conversa: ConversaComResumo; index
         <View className="flex-1">
           <Text className="text-base font-semibold text-slate-100">{nome}</Text>
           {conversa.ultimaMensagem ? (
-            <Text numberOfLines={1} className="text-sm text-slate-400">
-              {conversa.ultimaMensagem.conteudo}
-            </Text>
+            conversa.ultimaMensagem.conteudo ? (
+              <Text numberOfLines={1} className="text-sm text-slate-400">
+                {conversa.ultimaMensagem.conteudo}
+              </Text>
+            ) : (
+              <View className="flex-row items-center gap-1">
+                <Ionicons
+                  name={
+                    conversa.ultimaMensagem.midia_tipo === 'audio' ? 'mic-outline' : 'image-outline'
+                  }
+                  size={13}
+                  color="#94A3B8"
+                />
+                <Text className="text-sm text-slate-400">
+                  {conversa.ultimaMensagem.midia_tipo === 'audio' ? 'Áudio' : 'Foto'}
+                </Text>
+              </View>
+            )
           ) : (
             <Text className="text-sm text-slate-500">Sem mensagens ainda</Text>
           )}

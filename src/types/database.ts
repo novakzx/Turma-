@@ -447,25 +447,31 @@ export type Database = {
         Row: {
           apagada: boolean;
           autor_id: string | null;
-          conteudo: string;
+          conteudo: string | null;
           criado_em: string;
           id: string;
+          midia_tipo: string | null;
+          midia_url: string | null;
           sala_id: string;
         };
         Insert: {
           apagada?: boolean;
           autor_id?: string | null;
-          conteudo: string;
+          conteudo?: string | null;
           criado_em?: string;
           id?: string;
+          midia_tipo?: string | null;
+          midia_url?: string | null;
           sala_id: string;
         };
         Update: {
           apagada?: boolean;
           autor_id?: string | null;
-          conteudo?: string;
+          conteudo?: string | null;
           criado_em?: string;
           id?: string;
+          midia_tipo?: string | null;
+          midia_url?: string | null;
           sala_id?: string;
         };
         Relationships: [
@@ -489,26 +495,32 @@ export type Database = {
         Row: {
           apagada: boolean;
           autor_id: string;
-          conteudo: string;
+          conteudo: string | null;
           conversa_id: string;
           criado_em: string;
           id: string;
+          midia_tipo: string | null;
+          midia_url: string | null;
         };
         Insert: {
           apagada?: boolean;
           autor_id: string;
-          conteudo: string;
+          conteudo?: string | null;
           conversa_id: string;
           criado_em?: string;
           id?: string;
+          midia_tipo?: string | null;
+          midia_url?: string | null;
         };
         Update: {
           apagada?: boolean;
           autor_id?: string;
-          conteudo?: string;
+          conteudo?: string | null;
           conversa_id?: string;
           criado_em?: string;
           id?: string;
+          midia_tipo?: string | null;
+          midia_url?: string | null;
         };
         Relationships: [
           {

@@ -3,14 +3,19 @@ import type { RealtimeChannel } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import type { PerfilResumo } from '@/features/social/types';
 
-import type { Conversa, MensagemDireta, PapelParticipante } from './types';
+import type { Conversa, MensagemDireta, PapelParticipante, TipoMidiaMensagem } from './types';
 
 const SELECT_PERFIL_RESUMO = 'id, nome, nome_usuario, foto_url';
+const BUCKET_MIDIA = 'conversas-midia';
 
 export type ConversaComResumo = Conversa & {
   /** Só preenchido pra `tipo === 'direta'` — o outro participante. */
   outroParticipante: PerfilResumo | null;
-  ultimaMensagem: { conteudo: string; criado_em: string } | null;
+  ultimaMensagem: {
+    conteudo: string | null;
+    midia_tipo: TipoMidiaMensagem | null;
+    criado_em: string;
+  } | null;
 };
 
 /** Minhas conversas aceitas (não-pendentes) — inbox principal, estilo
@@ -62,7 +67,7 @@ async function preencherResumo(conversa: Conversa, meuId: string): Promise<Conve
       : Promise.resolve({ data: null, error: null }),
     supabase
       .from('mensagens_diretas')
-      .select('conteudo, criado_em')
+      .select('conteudo, midia_tipo, criado_em')
       .eq('conversa_id', conversa.id)
       .order('criado_em', { ascending: false })
       .limit(1)
@@ -73,7 +78,7 @@ async function preencherResumo(conversa: Conversa, meuId: string): Promise<Conve
     ...conversa,
     outroParticipante:
       (outro?.data as unknown as { profiles: PerfilResumo } | null)?.profiles ?? null,
-    ultimaMensagem: ultima?.data ?? null,
+    ultimaMensagem: (ultima?.data as unknown as ConversaComResumo['ultimaMensagem']) ?? null,
   };
 }
 
@@ -163,14 +168,51 @@ export async function listarMensagens(conversaId: string): Promise<MensagemComAu
 export async function enviarMensagemDireta(params: {
   conversaId: string;
   autorId: string;
-  conteudo: string;
+  conteudo?: string;
+  midiaUrl?: string;
+  midiaTipo?: TipoMidiaMensagem;
 }) {
   const { error } = await supabase.from('mensagens_diretas').insert({
     conversa_id: params.conversaId,
     autor_id: params.autorId,
-    conteudo: params.conteudo,
+    conteudo: params.conteudo ?? null,
+    midia_url: params.midiaUrl ?? null,
+    midia_tipo: params.midiaTipo ?? null,
   });
   if (error) throw error;
+}
+
+/** Upload de foto/áudio pra dentro de uma conversa (pedido do usuário) —
+ * path começa com o id da conversa, a policy do bucket espelha a de
+ * `mensagens_diretas` (`private.sou_participante`, ver migration
+ * `midia_nos_chats`). Content-type detectado pela resposta do
+ * `fetch(uriLocal)` — nunca pela extensão da URI (no web o
+ * `expo-image-picker`/gravador de áudio devolvem `blob:...` sem ponto
+ * nenhum, ver nota em `fazerUploadImagemPost`/CLAUDE.md). */
+export async function fazerUploadMidiaConversa(
+  conversaId: string,
+  uriLocal: string,
+  tipoPadrao: 'image' | 'audio',
+): Promise<string> {
+  const resposta = await fetch(uriLocal);
+  const arrayBuffer = await resposta.arrayBuffer();
+  const contentType = resposta.headers.get('content-type') ?? `${tipoPadrao}/octet-stream`;
+  const extensao = contentType.split('/').pop()?.toLowerCase().replace('jpeg', 'jpg') || 'bin';
+  const caminho = `${conversaId}/${Date.now()}-${Math.round(Math.random() * 1e6)}.${extensao}`;
+
+  const { error } = await supabase.storage.from(BUCKET_MIDIA).upload(caminho, arrayBuffer, {
+    contentType,
+  });
+  if (error) throw error;
+  return caminho;
+}
+
+export async function obterUrlAssinadaConversa(caminho: string): Promise<string> {
+  const { data, error } = await supabase.storage
+    .from(BUCKET_MIDIA)
+    .createSignedUrl(caminho, 60 * 60);
+  if (error) throw error;
+  return data.signedUrl;
 }
 
 export async function apagarMensagemDireta(id: string) {

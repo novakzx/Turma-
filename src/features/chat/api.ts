@@ -2,7 +2,9 @@ import type { RealtimeChannel } from '@supabase/supabase-js';
 
 import { supabase } from '@/lib/supabase';
 
-import type { MensagemChat, Sala } from './types';
+import type { MensagemChat, Sala, TipoMidiaMensagem } from './types';
+
+const BUCKET_MIDIA = 'salas-midia';
 
 /** RLS já resolve o escopo: sala de turma/matéria só entra quem é da
  * turma certa, sala de assunto é visível pra escola inteira (brief
@@ -64,12 +66,48 @@ export async function listarMensagens(salaId: string): Promise<MensagemComAutor[
 export async function enviarMensagem(params: {
   salaId: string;
   autorId: string;
-  conteudo: string;
+  conteudo?: string;
+  midiaUrl?: string;
+  midiaTipo?: TipoMidiaMensagem;
 }) {
-  const { error } = await supabase
-    .from('mensagens_chat')
-    .insert({ sala_id: params.salaId, autor_id: params.autorId, conteudo: params.conteudo });
+  const { error } = await supabase.from('mensagens_chat').insert({
+    sala_id: params.salaId,
+    autor_id: params.autorId,
+    conteudo: params.conteudo ?? null,
+    midia_url: params.midiaUrl ?? null,
+    midia_tipo: params.midiaTipo ?? null,
+  });
   if (error) throw error;
+}
+
+/** Upload de foto/áudio pra dentro de uma sala (pedido do usuário) —
+ * mesma ideia de `fazerUploadMidiaConversa`, path começa com o id da
+ * sala; a policy do bucket espelha `mensagens_chat_insert` (sala não
+ * trancada, autor não silenciado). */
+export async function fazerUploadMidiaSala(
+  salaId: string,
+  uriLocal: string,
+  tipoPadrao: 'image' | 'audio',
+): Promise<string> {
+  const resposta = await fetch(uriLocal);
+  const arrayBuffer = await resposta.arrayBuffer();
+  const contentType = resposta.headers.get('content-type') ?? `${tipoPadrao}/octet-stream`;
+  const extensao = contentType.split('/').pop()?.toLowerCase().replace('jpeg', 'jpg') || 'bin';
+  const caminho = `${salaId}/${Date.now()}-${Math.round(Math.random() * 1e6)}.${extensao}`;
+
+  const { error } = await supabase.storage.from(BUCKET_MIDIA).upload(caminho, arrayBuffer, {
+    contentType,
+  });
+  if (error) throw error;
+  return caminho;
+}
+
+export async function obterUrlAssinadaSala(caminho: string): Promise<string> {
+  const { data, error } = await supabase.storage
+    .from(BUCKET_MIDIA)
+    .createSignedUrl(caminho, 60 * 60);
+  if (error) throw error;
+  return data.signedUrl;
 }
 
 /** Soft delete (`apagada = true`) — só staff consegue de verdade (RLS +
