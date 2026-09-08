@@ -20,6 +20,10 @@ describe('escolherModelo (Cloudflare Workers AI — ids confirmados em developer
   it('usa o modelo mais forte pra prova simulada', () => {
     expect(escolherModelo('prova')).toBe('@cf/meta/llama-3.3-70b-instruct-fp8-fast');
   });
+
+  it('usa o modelo mais forte pra apresentação', () => {
+    expect(escolherModelo('apresentacao')).toBe('@cf/meta/llama-3.3-70b-instruct-fp8-fast');
+  });
 });
 
 describe('montarPromptSistema', () => {
@@ -30,7 +34,14 @@ describe('montarPromptSistema', () => {
   });
 
   it('mantém a regra de nunca dar resposta pronta sem mostrar raciocínio', () => {
-    for (const modo of ['explicar', 'duvida', 'resumo', 'plano', 'prova'] as const) {
+    for (const modo of [
+      'explicar',
+      'duvida',
+      'resumo',
+      'plano',
+      'prova',
+      'apresentacao',
+    ] as const) {
       const prompt = montarPromptSistema({ nomeMateria: 'Física', modo });
       expect(prompt).toContain('raciocínio');
     }
@@ -50,5 +61,11 @@ describe('montarPromptSistema', () => {
     const prompt = montarPromptSistema({ nomeMateria: 'Geografia', modo: 'prova' });
     expect(prompt).toContain(MARCADOR_GABARITO);
     expect(prompt).toContain('gabarito');
+  });
+
+  it('ajusta a instrução pro modo apresentação (pede o formato de slide)', () => {
+    const prompt = montarPromptSistema({ nomeMateria: 'Biologia', modo: 'apresentacao' });
+    expect(prompt).toContain('### Slide N:');
+    expect(prompt).toContain('- ');
   });
 });

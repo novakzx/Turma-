@@ -1,4 +1,4 @@
-import { MARCADOR_GABARITO } from './types';
+import { MARCADOR_GABARITO, REGEX_SLIDE } from './types';
 
 /**
  * Estatística de estudo semanal (pedido do usuário) — resumo de uso do
@@ -88,4 +88,33 @@ export function formatarTempo(totalSegundos: number): string {
   const minutos = Math.floor(segundosPositivos / 60);
   const segundos = segundosPositivos % 60;
   return `${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
+}
+
+export type Slide = { titulo: string; pontos: string[] };
+
+/**
+ * Apresentação de slides (pedido do usuário): quebra a resposta da IA
+ * (modo `apresentacao`) numa lista de slides de verdade — a UI mostra
+ * cada um como um cartão (título + pontos), em vez de um bloco de texto
+ * corrido. Confia no formato exato pedido no prompt de sistema (`###
+ * Slide N: <título>` seguido de linhas `- <ponto>`); resposta que não
+ * seguiu esse formato (modelo "esqueceu", ou é texto antigo de antes
+ * deste modo existir) devolve `null` — a UI então mostra o texto cru
+ * como fallback, igual `separarGabarito` faz quando não acha o marcador.
+ */
+export function analisarApresentacao(texto: string): Slide[] | null {
+  const cabecalhos = [...texto.matchAll(REGEX_SLIDE)];
+  if (cabecalhos.length === 0) return null;
+
+  return cabecalhos.map((cabecalho, indice) => {
+    const inicioCorpo = cabecalho.index + cabecalho[0].length;
+    const fimCorpo = cabecalhos[indice + 1]?.index ?? texto.length;
+    const pontos = texto
+      .slice(inicioCorpo, fimCorpo)
+      .split('\n')
+      .map((linha) => linha.trim())
+      .filter((linha) => linha.startsWith('- '))
+      .map((linha) => linha.slice(2).trim());
+    return { titulo: cabecalho[1].trim(), pontos };
+  });
 }

@@ -1,4 +1,9 @@
-import { calcularEstatisticaSemanal, formatarTempo, separarGabarito } from '../regras';
+import {
+  analisarApresentacao,
+  calcularEstatisticaSemanal,
+  formatarTempo,
+  separarGabarito,
+} from '../regras';
 import { MARCADOR_GABARITO } from '../types';
 
 describe('calcularEstatisticaSemanal', () => {
@@ -60,6 +65,39 @@ describe('separarGabarito', () => {
     const resultado = separarGabarito('Resposta sem marcador nenhum.');
     expect(resultado.enunciado).toBe('Resposta sem marcador nenhum.');
     expect(resultado.gabarito).toBeNull();
+  });
+});
+
+describe('analisarApresentacao', () => {
+  it('separa em slides pelo título e pontos', () => {
+    const texto =
+      '### Slide 1: Introdução\n' +
+      '- Ponto um\n' +
+      '- Ponto dois\n' +
+      '### Slide 2: Desenvolvimento\n' +
+      '- Outro ponto\n';
+    expect(analisarApresentacao(texto)).toEqual([
+      { titulo: 'Introdução', pontos: ['Ponto um', 'Ponto dois'] },
+      { titulo: 'Desenvolvimento', pontos: ['Outro ponto'] },
+    ]);
+  });
+
+  it('devolve null quando o texto não tem nenhum slide no formato certo', () => {
+    expect(analisarApresentacao('Resposta comum, sem formato de slide nenhum.')).toBeNull();
+  });
+
+  it('ignora linha que não começa com "- " (não vira ponto)', () => {
+    const texto = '### Slide 1: Título\nUma frase solta que não é bullet.\n- Ponto de verdade\n';
+    expect(analisarApresentacao(texto)).toEqual([
+      { titulo: 'Título', pontos: ['Ponto de verdade'] },
+    ]);
+  });
+
+  it('último slide pega o conteúdo até o fim do texto', () => {
+    const texto = '### Slide 1: Só um\n- Ponto A\n- Ponto B';
+    expect(analisarApresentacao(texto)).toEqual([
+      { titulo: 'Só um', pontos: ['Ponto A', 'Ponto B'] },
+    ]);
   });
 });
 

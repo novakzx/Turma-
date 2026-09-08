@@ -1,7 +1,7 @@
 // Lógica pura por trás da Edge Function chat-estudo (Fase 3, brief 6.2).
 // Mesma ideia de regras.ts: sem import de Deno/Supabase, testável com Jest.
 
-export type ModoChatEstudo = 'explicar' | 'duvida' | 'resumo' | 'plano' | 'prova';
+export type ModoChatEstudo = 'explicar' | 'duvida' | 'resumo' | 'plano' | 'prova' | 'apresentacao';
 
 export const ROTULO_MODO: Record<ModoChatEstudo, string> = {
   explicar: 'Explicar conceito',
@@ -9,7 +9,15 @@ export const ROTULO_MODO: Record<ModoChatEstudo, string> = {
   resumo: 'Gerar resumo',
   plano: 'Plano de estudo',
   prova: 'Prova simulada',
+  apresentacao: 'Apresentação',
 };
+
+/** Formato exato que a apresentação de slides (modo `apresentacao`)
+ * precisa seguir — `analisarApresentacao` em `src/features/estudo/
+ * regras.ts` (espelhado aqui só como constante de texto, não há import
+ * cruzado entre Deno e o app) confia nesse formato pra separar a
+ * resposta em slides de verdade na UI. */
+const FORMATO_SLIDE = '### Slide N: <título>';
 
 /** Mesmo marcador que `src/features/estudo/types.ts` — duplicado de
  * propósito, mesma razão de `ModoChatEstudo` estar duplicado nos dois
@@ -43,6 +51,7 @@ export function escolherModelo(modo: ModoChatEstudo): string {
     case 'resumo':
     case 'plano':
     case 'prova':
+    case 'apresentacao':
       return '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
     case 'explicar':
     case 'duvida':
@@ -74,6 +83,16 @@ export function montarPromptSistema(params: { nomeMateria: string; modo: ModoCha
         `a linha exata "${MARCADOR_GABARITO}" sozinha, e só depois dela o gabarito numerado com a ` +
         'resposta certa de cada uma (aqui, diferente do resto do tutor, pode dar a resposta pronta — ' +
         'é o gabarito, o aluno pediu pra conferir depois de tentar sozinho).'
+      );
+    case 'apresentacao':
+      return (
+        base +
+        ' Agora monte o conteúdo de uma apresentação de slides (6 a 8 slides) sobre o assunto ' +
+        'que o aluno pedir. Cada slide começa numa linha exata no formato ' +
+        `"${FORMATO_SLIDE}" (troque N pelo número do slide e <título> por um título curto), ` +
+        'seguida de 3 a 5 pontos em bullet, cada um numa linha própria começando com "- ". ' +
+        'Não escreva nada fora desse formato — sem introdução antes do primeiro slide, sem ' +
+        'conclusão fora de um slide, sem numerar os pontos.'
       );
     case 'resumo':
       return (
