@@ -30,3 +30,14 @@ jobs:
 
       - name: Test
         run: npm test -- --ci
+
+      # Auditoria de segurança pedida no processo de hardening pré-lançamento
+      # (ver README > "Segurança e privacidade"): falha o CI só em vulnera-
+      # bilidade high/critical em dependência de PRODUÇÃO — as ~14 moderadas
+      # conhecidas hoje (checadas em 2026-09-08) vivem todas em ferramenta de
+      # build nativo (expo-config-plugins/xcode/uuid, puxadas por
+      # expo-splash-screen; query-string, puxada por expo-router) que nunca
+      # roda no navegador do usuário nem no bundle web publicado — não vale
+      # travar o deploy por elas, mas high/critical de verdade quebra o build.
+      - name: Audit de dependências (produção)
+        run: npm audit --omit=dev --audit-level=high

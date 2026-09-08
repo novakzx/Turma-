@@ -12,8 +12,20 @@ import { deveDispararTrajeto, montarAvisoTrajeto } from '../_shared/regras.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const WEBHOOK_SECRET = Deno.env.get('WEBHOOK_INTERNAL_SECRET');
 
-Deno.serve(async (_req) => {
+Deno.serve(async (req) => {
+  // Mesmo motivo do guard em notificar-aviso: função "só pro cron"
+  // sem nenhuma verificação de verdade era chamável por qualquer um na
+  // internet (a proteção de plataforma via `verify_jwt` não conta, já
+  // que a chave usada era a anon key, pública). Hoje o cron que chamava
+  // isso está desativado (`desliga_cron_aviso_clima`), mas o endpoint
+  // continua no ar do mesmo jeito — o guard fica mesmo sem chamador
+  // ativo agora, pra não ficar exposto se o cron for reativado depois.
+  if (!WEBHOOK_SECRET || req.headers.get('x-webhook-secret') !== WEBHOOK_SECRET) {
+    return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401 });
+  }
+
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
   const { data: escolas, error } = await admin
@@ -23,8 +35,11 @@ Deno.serve(async (_req) => {
     .not('longitude', 'is', null);
 
   if (error) {
+    // Detalhe de verdade só no log do servidor -- nunca na resposta
+    // (evita vazar nome de coluna/tabela/mensagem interna do Postgres
+    // pra quem quer que consiga chamar isso).
     console.error('aviso-clima: erro ao listar escolas', error);
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: 'internal_error' }), { status: 500 });
   }
 
   const hoje = new Date().toISOString().slice(0, 10);

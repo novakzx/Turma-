@@ -17,28 +17,43 @@ const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
 
 const HISTORICO_MAXIMO = 20;
+const MENSAGEM_TAMANHO_MAXIMO = 4000;
+// Cada chamada custa dinheiro de verdade (API da Gemini) — sem limite
+// nenhum, um script batendo nesse endpoint em loop vira gasto ilimitado
+// pra conta do projeto. Generoso o bastante pra uso normal (ninguém
+// manda 15 perguntas em 5 minutos de verdade estudando), curto o
+// bastante pra travar abuso automatizado.
+const LIMITE_MENSAGENS = 15;
+const JANELA_LIMITE_MS = 5 * 60 * 1000;
 
-// Esta função (diferente de notificar-aviso/aviso-clima) é chamada direto
-// do app via `supabase.functions.invoke` — no target web isso dispara um
-// preflight OPTIONS, e sem esses headers o navegador bloqueia a resposta
-// antes mesmo dela chegar no cliente (achado testando de verdade: dava
-// "Failed to send a request to the Edge Function" sem pista nenhuma até
-// olhar o console do navegador).
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+// Só as origens de verdade deste projeto — `*` deixaria qualquer site
+// chamar essa função (com o JWT de quem visitasse ele, se conseguisse
+// um de algum jeito) livremente. `undefined` (nenhum header de CORS)
+// quando a origem não bate é o comportamento certo: o navegador de
+// quem chamou vai bloquear a resposta sozinho.
+const ORIGENS_PERMITIDAS = ['https://turma-rho.vercel.app', 'http://localhost:8081'];
 
-function respostaJson(corpo: unknown, status = 200) {
+function corsHeaders(origin: string | null) {
+  const permitida = origin && ORIGENS_PERMITIDAS.includes(origin);
+  return {
+    ...(permitida ? { 'Access-Control-Allow-Origin': origin } : {}),
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    Vary: 'Origin',
+  };
+}
+
+function respostaJson(corpo: unknown, status = 200, origin: string | null = null) {
   return new Response(JSON.stringify(corpo), {
     status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    headers: { ...corsHeaders(origin), 'Content-Type': 'application/json' },
   });
 }
 
 Deno.serve(async (req) => {
+  const origin = req.headers.get('Origin');
+
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders(origin) });
   }
 
   try {
@@ -48,12 +63,13 @@ Deno.serve(async (req) => {
       return respostaJson(
         { error: 'Chat com IA ainda não foi configurado (falta GEMINI_API_KEY).' },
         503,
+        origin,
       );
     }
 
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      return respostaJson({ error: 'Sem autenticação.' }, 401);
+      return respostaJson({ error: 'Sem autenticação.' }, 401, origin);
     }
 
     const payload = await req.json();
@@ -62,7 +78,10 @@ Deno.serve(async (req) => {
     const modo = (payload?.modo as ModoChatEstudo | undefined) ?? 'duvida';
 
     if (!materiaId || !mensagem) {
-      return respostaJson({ error: 'payload inválido' }, 400);
+      return respostaJson({ error: 'payload inválido' }, 400, origin);
+    }
+    if (mensagem.length > MENSAGEM_TAMANHO_MAXIMO) {
+      return respostaJson({ error: 'Mensagem muito longa.' }, 400, origin);
     }
 
     // Client "como o usuário" (repassa o JWT dele) — RLS garante sozinha
@@ -76,7 +95,25 @@ Deno.serve(async (req) => {
       error: userError,
     } = await userClient.auth.getUser();
     if (userError || !user) {
-      return respostaJson({ error: 'Sessão inválida.' }, 401);
+      return respostaJson({ error: 'Sessão inválida.' }, 401, origin);
+    }
+
+    // Rate limit por usuário (não só no cliente — um script chamando a
+    // API direto, sem passar pela UI, precisa cair aqui do mesmo jeito).
+    // Conta as próprias perguntas recentes em qualquer matéria — RLS de
+    // `chat_ia_mensagens` já restringe ao próprio aluno.
+    const { count: mensagensRecentes } = await userClient
+      .from('chat_ia_mensagens')
+      .select('id', { count: 'exact', head: true })
+      .eq('aluno_id', user.id)
+      .eq('papel', 'usuario')
+      .gte('criado_em', new Date(Date.now() - JANELA_LIMITE_MS).toISOString());
+    if ((mensagensRecentes ?? 0) >= LIMITE_MENSAGENS) {
+      return respostaJson(
+        { error: 'Muitas mensagens em pouco tempo — espera um pouco antes de tentar de novo.' },
+        429,
+        origin,
+      );
     }
 
     const { data: materia, error: materiaError } = await userClient
@@ -85,7 +122,7 @@ Deno.serve(async (req) => {
       .eq('id', materiaId)
       .single();
     if (materiaError || !materia) {
-      return respostaJson({ error: 'Matéria não encontrada.' }, 404);
+      return respostaJson({ error: 'Matéria não encontrada.' }, 404, origin);
     }
 
     const { data: historico, error: historicoError } = await userClient
@@ -143,7 +180,7 @@ Deno.serve(async (req) => {
         respostaGemini.status === 503
           ? 'A IA está sobrecarregada agora — tenta de novo em alguns segundos.'
           : 'Não deu pra falar com a IA agora.';
-      return respostaJson({ error: mensagemErro }, 502);
+      return respostaJson({ error: mensagemErro }, 502, origin);
     }
 
     const dadosResposta = await respostaGemini.json();
@@ -157,7 +194,7 @@ Deno.serve(async (req) => {
 
     if (!textoResposta) {
       console.error('chat-estudo: Gemini sem texto na resposta', JSON.stringify(dadosResposta));
-      return respostaJson({ error: 'A IA não conseguiu responder dessa vez.' }, 502);
+      return respostaJson({ error: 'A IA não conseguiu responder dessa vez.' }, 502, origin);
     }
 
     // Persiste os dois lados com a service role — não existe policy de
@@ -170,9 +207,11 @@ Deno.serve(async (req) => {
     ]);
     if (insertError) console.error('chat-estudo: falha ao salvar histórico', insertError);
 
-    return respostaJson({ resposta: textoResposta, modelo });
+    return respostaJson({ resposta: textoResposta, modelo }, 200, origin);
   } catch (err) {
+    // Detalhe de verdade só no log -- nunca na resposta (evita vazar
+    // stack trace/mensagem interna pra quem chamou).
     console.error('chat-estudo falhou:', err);
-    return respostaJson({ error: String(err) }, 500);
+    return respostaJson({ error: 'internal_error' }, 500, origin);
   }
 });

@@ -12,9 +12,26 @@ import { emLotes, filtrarDestinatarios, type PerfilDestinatario } from '../_shar
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const WEBHOOK_SECRET = Deno.env.get('WEBHOOK_INTERNAL_SECRET');
 
 Deno.serve(async (req) => {
   try {
+    // CRÍTICO (auditoria de segurança): esta função só deveria ser
+    // chamada pelo trigger de INSERT em `avisos` — mas `verify_jwt` do
+    // Supabase aceita qualquer JWT válido do projeto, e o trigger
+    // autenticava com a anon key, que é PÚBLICA de propósito (vive no
+    // bundle do app). Ou seja: qualquer pessoa na internet, sabendo só
+    // a URL do projeto, conseguia chamar isso direto com
+    // `escola_id`/`titulo`/`descricao` forjados e a função — rodando
+    // com a service role, ignorando RLS — mandava push notification de
+    // conteúdo arbitrário pra todo mundo daquela escola. O segredo
+    // comparado aqui não é a anon key nem a service role: é um valor
+    // gerado à parte (Vault, migration `endurece_edge_functions_internas`)
+    // que só o trigger e esta função conhecem.
+    if (!WEBHOOK_SECRET || req.headers.get('x-webhook-secret') !== WEBHOOK_SECRET) {
+      return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401 });
+    }
+
     const payload = await req.json();
     const { id, escola_id, turma_id, tipo, titulo, descricao } = payload ?? {};
 
@@ -66,6 +83,6 @@ Deno.serve(async (req) => {
     });
   } catch (err) {
     console.error('notificar-aviso falhou:', err);
-    return new Response(JSON.stringify({ error: String(err) }), { status: 500 });
+    return new Response(JSON.stringify({ error: 'internal_error' }), { status: 500 });
   }
 });
