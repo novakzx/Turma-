@@ -20,3 +20,20 @@ export async function buscarUsuarios(termo: string, meuId: string): Promise<Perf
   if (error) throw error;
   return data;
 }
+
+/** Resolve um @usuário mencionado (ver `TextoComMencoes`) pro perfil de
+ * verdade — mesma régua de RLS de `profiles` que já vale pro resto do app:
+ * mencionar alguém fora do alcance de visibilidade (perfil privado de
+ * outra escola, por ex.) simplesmente não resolve nada, sem vazar que a
+ * conta existe. */
+export async function buscarPerfilPorNomeUsuario(
+  nomeUsuario: string,
+): Promise<Pick<PerfilResumo, 'id' | 'nome' | 'nome_usuario' | 'foto_url'> | null> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, nome, nome_usuario, foto_url')
+    .eq('nome_usuario', nomeUsuario.toLowerCase())
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}

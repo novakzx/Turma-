@@ -1,4 +1,4 @@
-import { escolherModelo, montarPromptSistema } from '../regrasEstudo';
+import { MARCADOR_GABARITO, escolherModelo, montarPromptSistema } from '../regrasEstudo';
 
 describe('escolherModelo (Gemini — só gemini-flash-latest confirmado, ver comentário na fonte)', () => {
   it('usa gemini-flash-latest pra explicar conceito', () => {
@@ -16,6 +16,10 @@ describe('escolherModelo (Gemini — só gemini-flash-latest confirmado, ver com
   it('usa gemini-flash-latest pra montar plano de estudo', () => {
     expect(escolherModelo('plano')).toBe('gemini-flash-latest');
   });
+
+  it('usa gemini-flash-latest pra prova simulada', () => {
+    expect(escolherModelo('prova')).toBe('gemini-flash-latest');
+  });
 });
 
 describe('montarPromptSistema', () => {
@@ -26,7 +30,7 @@ describe('montarPromptSistema', () => {
   });
 
   it('mantém a regra de nunca dar resposta pronta sem mostrar raciocínio', () => {
-    for (const modo of ['explicar', 'duvida', 'resumo', 'plano'] as const) {
+    for (const modo of ['explicar', 'duvida', 'resumo', 'plano', 'prova'] as const) {
       const prompt = montarPromptSistema({ nomeMateria: 'Física', modo });
       expect(prompt).toContain('raciocínio');
     }
@@ -40,5 +44,11 @@ describe('montarPromptSistema', () => {
     expect(montarPromptSistema({ nomeMateria: 'Química', modo: 'plano' })).toContain(
       'data da prova',
     );
+  });
+
+  it('ajusta a instrução pro modo prova (pede o marcador de gabarito)', () => {
+    const prompt = montarPromptSistema({ nomeMateria: 'Geografia', modo: 'prova' });
+    expect(prompt).toContain(MARCADOR_GABARITO);
+    expect(prompt).toContain('gabarito');
   });
 });

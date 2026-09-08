@@ -1,4 +1,5 @@
-import { calcularEstatisticaSemanal } from '../regras';
+import { calcularEstatisticaSemanal, formatarTempo, separarGabarito } from '../regras';
+import { MARCADOR_GABARITO } from '../types';
 
 describe('calcularEstatisticaSemanal', () => {
   it('devolve tudo zerado/null sem nenhuma mensagem', () => {
@@ -44,5 +45,32 @@ describe('calcularEstatisticaSemanal', () => {
     ];
     const resultado = calcularEstatisticaSemanal(mensagens);
     expect(['segunda-feira', 'terça-feira']).toContain(resultado.diaMaisAtivo);
+  });
+});
+
+describe('separarGabarito', () => {
+  it('separa enunciado e gabarito quando o marcador está presente', () => {
+    const texto = `1. Quanto é 2+2?\n2. Capital de Portugal?\n${MARCADOR_GABARITO}\n1. 4\n2. Lisboa`;
+    const resultado = separarGabarito(texto);
+    expect(resultado.enunciado).toBe('1. Quanto é 2+2?\n2. Capital de Portugal?');
+    expect(resultado.gabarito).toBe('1. 4\n2. Lisboa');
+  });
+
+  it('devolve gabarito null quando o marcador não aparece', () => {
+    const resultado = separarGabarito('Resposta sem marcador nenhum.');
+    expect(resultado.enunciado).toBe('Resposta sem marcador nenhum.');
+    expect(resultado.gabarito).toBeNull();
+  });
+});
+
+describe('formatarTempo', () => {
+  it('formata minutos e segundos com zero à esquerda', () => {
+    expect(formatarTempo(125)).toBe('02:05');
+    expect(formatarTempo(5)).toBe('00:05');
+    expect(formatarTempo(600)).toBe('10:00');
+  });
+
+  it('nunca fica negativo', () => {
+    expect(formatarTempo(-10)).toBe('00:00');
   });
 });

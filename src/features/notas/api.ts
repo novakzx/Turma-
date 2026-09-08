@@ -47,6 +47,26 @@ export async function buscarNotaMaximaDaEscola(escolaId: string): Promise<number
   return data.nota_maxima;
 }
 
+export type AvaliacaoComMateria = Avaliacao & { materias: { nome: string } | null };
+
+/** Todas as avaliações do aluno com data marcada (pro calendário integrado
+ * — pedido do usuário), de qualquer matéria — diferente de
+ * `listarAvaliacoes`, que é por matéria (usado na calculadora de notas).
+ * RLS já restringe a `aluno_id = auth.uid()`. Traz o nome da matéria junto
+ * (`materias(nome)`) pra não precisar de uma segunda consulta por item. */
+export async function listarTodasAvaliacoesComData(
+  alunoId: string,
+): Promise<AvaliacaoComMateria[]> {
+  const { data, error } = await supabase
+    .from('avaliacoes')
+    .select('*, materias(nome)')
+    .eq('aluno_id', alunoId)
+    .not('data', 'is', null)
+    .order('data');
+  if (error) throw error;
+  return data;
+}
+
 export async function listarAvaliacoes(materiaId: string): Promise<Avaliacao[]> {
   // RLS já restringe a `aluno_id = auth.uid()` — não precisa filtrar aqui.
   const { data, error } = await supabase

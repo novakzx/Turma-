@@ -12,8 +12,10 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { EntradaAnimada } from '@/components/ui/EntradaAnimada';
+import { TextoComMencoes } from '@/components/ui/TextoComMencoes';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { FotoPerfil } from '@/features/perfil/FotoPerfil';
+import { BotaoTraduzir } from '@/features/traducao/BotaoTraduzir';
 
 import { buscarEnquete, votarEnquete } from './api';
 import { BotaoDenunciar } from './BotaoDenunciar';
@@ -259,7 +261,13 @@ export function CartaoPost({
       ) : null}
 
       {post.conteudo ? (
-        <Text className="px-4 text-base text-slate-900 dark:text-slate-100">{post.conteudo}</Text>
+        <View className="gap-2 px-4">
+          <TextoComMencoes
+            texto={post.conteudo}
+            className="text-base text-slate-900 dark:text-slate-100"
+          />
+          <BotaoTraduzir texto={post.conteudo} />
+        </View>
       ) : null}
 
       {post.tipo === 'foto' && post.midia_url ? (

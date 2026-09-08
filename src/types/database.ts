@@ -353,6 +353,57 @@ export type Database = {
         };
         Relationships: [];
       };
+      flashcards: {
+        Row: {
+          aluno_id: string;
+          criado_em: string;
+          fator_facilidade: number;
+          id: string;
+          intervalo_dias: number;
+          materia_id: string;
+          pergunta: string;
+          proxima_revisao: string;
+          resposta: string;
+        };
+        Insert: {
+          aluno_id: string;
+          criado_em?: string;
+          fator_facilidade?: number;
+          id?: string;
+          intervalo_dias?: number;
+          materia_id: string;
+          pergunta: string;
+          proxima_revisao?: string;
+          resposta: string;
+        };
+        Update: {
+          aluno_id?: string;
+          criado_em?: string;
+          fator_facilidade?: number;
+          id?: string;
+          intervalo_dias?: number;
+          materia_id?: string;
+          pergunta?: string;
+          proxima_revisao?: string;
+          resposta?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'flashcards_aluno_id_fkey';
+            columns: ['aluno_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'flashcards_materia_id_fkey';
+            columns: ['materia_id'];
+            isOneToOne: false;
+            referencedRelation: 'materias';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       materias: {
         Row: {
           criado_em: string;

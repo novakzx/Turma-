@@ -1,14 +1,20 @@
 // Lógica pura por trás da Edge Function chat-estudo (Fase 3, brief 6.2).
 // Mesma ideia de regras.ts: sem import de Deno/Supabase, testável com Jest.
 
-export type ModoChatEstudo = 'explicar' | 'duvida' | 'resumo' | 'plano';
+export type ModoChatEstudo = 'explicar' | 'duvida' | 'resumo' | 'plano' | 'prova';
 
 export const ROTULO_MODO: Record<ModoChatEstudo, string> = {
   explicar: 'Explicar conceito',
   duvida: 'Tirar dúvida',
   resumo: 'Gerar resumo',
   plano: 'Plano de estudo',
+  prova: 'Prova simulada',
 };
+
+/** Mesmo marcador que `src/features/estudo/types.ts` — duplicado de
+ * propósito, mesma razão de `ModoChatEstudo` estar duplicado nos dois
+ * lados (Deno fica fora do tsconfig do app). */
+export const MARCADOR_GABARITO = '===GABARITO===';
 
 /**
  * Trocado de Claude (Anthropic) pra Gemini (Google) a pedido do usuário —
@@ -41,6 +47,15 @@ export function montarPromptSistema(params: { nomeMateria: string; modo: ModoCha
     'o objetivo é o aluno aprender a chegar lá, não só copiar a resposta.';
 
   switch (params.modo) {
+    case 'prova':
+      return (
+        base +
+        ' Agora monte uma prova simulada curta (5 perguntas, nível da matéria e da idade escolar) ' +
+        `sobre o assunto que o aluno pedir. Numere as perguntas. Depois da última pergunta, escreva ` +
+        `a linha exata "${MARCADOR_GABARITO}" sozinha, e só depois dela o gabarito numerado com a ` +
+        'resposta certa de cada uma (aqui, diferente do resto do tutor, pode dar a resposta pronta — ' +
+        'é o gabarito, o aluno pediu pra conferir depois de tentar sozinho).'
+      );
     case 'resumo':
       return (
         base +

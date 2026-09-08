@@ -1,3 +1,5 @@
+import { MARCADOR_GABARITO } from './types';
+
 /**
  * Estatística de estudo semanal (pedido do usuário) — resumo de uso do
  * chat com IA nos últimos 7 dias: quantas perguntas o aluno fez, quantas
@@ -61,4 +63,29 @@ export function calcularEstatisticaSemanal(
     materiasRevisadas: materiasUnicas.size,
     diaMaisAtivo: diaMaisAtivoIndice !== null ? NOMES_DIA_SEMANA[diaMaisAtivoIndice] : null,
   };
+}
+
+/**
+ * Prova simulada (pedido do usuário): separa o enunciado da IA do gabarito,
+ * escondido atrás de `MARCADOR_GABARITO` até o aluno tocar em "Ver gabarito".
+ * Texto sem o marcador (resposta antiga, ou a IA não seguiu o formato pedido
+ * no prompt de sistema) devolve `gabarito: null` — a UI simplesmente não
+ * mostra o botão de revelar nesse caso, em vez de quebrar.
+ */
+export function separarGabarito(texto: string): { enunciado: string; gabarito: string | null } {
+  const indice = texto.indexOf(MARCADOR_GABARITO);
+  if (indice === -1) return { enunciado: texto, gabarito: null };
+  return {
+    enunciado: texto.slice(0, indice).trim(),
+    gabarito: texto.slice(indice + MARCADOR_GABARITO.length).trim(),
+  };
+}
+
+/** `125` -> `"02:05"` — timer da prova simulada, só formatação (a
+ * contagem em si é `setInterval` no componente, não precisa de teste). */
+export function formatarTempo(totalSegundos: number): string {
+  const segundosPositivos = Math.max(0, totalSegundos);
+  const minutos = Math.floor(segundosPositivos / 60);
+  const segundos = segundosPositivos % 60;
+  return `${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
 }

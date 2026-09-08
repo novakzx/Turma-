@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '@/components/ui/Button';
 import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
 import { TextField } from '@/components/ui/TextField';
+import { TextoComMencoes } from '@/components/ui/TextoComMencoes';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { mensagemDeErro } from '@/features/auth/errors';
 import {
@@ -67,11 +68,15 @@ function LinhaMensagem({
             {mensagem.profiles?.nome ?? 'Aluno'}
           </Text>
         ) : null}
-        <Text
+        <TextoComMencoes
+          texto={mensagem.conteudo}
           className={`text-base ${ehPropria ? 'text-white' : 'text-slate-900 dark:text-slate-100'}`}
-        >
-          {mensagem.conteudo}
-        </Text>
+          // Bolha própria já é `bg-primary` — destacar a menção na MESMA
+          // cor primária ficaria ilegível (texto primary sobre fundo
+          // primary); sublinhado + branco continua indicando "isto é
+          // clicável" sem sumir no fundo.
+          mencaoClassName={ehPropria ? 'font-semibold text-white underline' : undefined}
+        />
       </View>
       <View className="flex-row items-center gap-3 px-1">
         <Text className="text-xs text-slate-400 dark:text-slate-500">

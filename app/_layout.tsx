@@ -9,7 +9,7 @@ import '@/lib/nativewindAnimated';
 // um `if (Platform.OS === 'android')` que a lib já faz por dentro.
 import '@/features/widget/task';
 
-import { QueryClientProvider } from '@tanstack/react-query';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from 'nativewind';
@@ -19,8 +19,10 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AvisosWeb } from '@/components/ui/AvisosWeb';
+import { BannerOffline } from '@/components/ui/BannerOffline';
 import { AuthProvider, useAuth } from '@/features/auth/AuthProvider';
 import { carregarTemaPreferido } from '@/features/configuracoes/tema';
+import { OFFLINE_PERSIST_OPTIONS } from '@/lib/offlinePersist';
 import { queryClient } from '@/lib/queryClient';
 
 /**
@@ -84,6 +86,7 @@ function RootNavigator() {
     // o clique nem chegava no botão, sem erro nenhum no console.
     <View className="flex-1">
       <StatusBar style={isDark ? 'light' : 'dark'} />
+      <BannerOffline />
       <View className="flex-1">
         <Stack
           screenOptions={{
@@ -115,11 +118,17 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <QueryClientProvider client={queryClient}>
+        {/* Modo offline básico (pedido do usuário): persiste no
+            `AsyncStorage` só o que é seguro mostrar desatualizado sem
+            aviso (matérias, notas, chat de estudo, flashcards — ver
+            `src/lib/offlinePersist.ts` pro porquê de feed/chat ficarem de
+            fora). Troca de `QueryClientProvider` puro por este wrapper é
+            só isso — resto do app usa `useQuery`/`useMutation` igual. */}
+        <PersistQueryClientProvider client={queryClient} persistOptions={OFFLINE_PERSIST_OPTIONS}>
           <AuthProvider>
             <RootNavigator />
           </AuthProvider>
-        </QueryClientProvider>
+        </PersistQueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

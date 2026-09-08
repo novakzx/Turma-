@@ -1,16 +1,36 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { router } from 'expo-router';
 import { useColorScheme } from 'nativewind';
 import { useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Alert, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
 import { TextField } from '@/components/ui/TextField';
-import { atualizarSenha } from '@/features/auth/api';
+import { atualizarSenha, signOut } from '@/features/auth/api';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { mensagemDeErro } from '@/features/auth/errors';
 import { salvarTemaPreferido, type TemaPreferido } from '@/features/configuracoes/tema';
 import { atualizarPrivacidade } from '@/features/perfil/api';
+import { excluirMinhaConta, exportarMeusDados } from '@/features/perfil/dadosPessoais';
+
+/** `window.confirm` no web, `Alert.alert` nativo — mesmo padrão já usado
+ * em `perfil.tsx`/`gerenciar-materias.tsx` (`Alert.alert` não tem UI no
+ * navegador). Aqui a mensagem é fixa (sempre a mesma pergunta séria de
+ * "apagar conta"), por isso não recebe parâmetro de texto como as outras. */
+function confirmarExclusaoConta(aoConfirmar: () => void) {
+  const mensagem =
+    'Isso apaga sua conta e todo o seu histórico (posts, mensagens, notas, flashcards) ' +
+    'PERMANENTEMENTE. Não tem como desfazer. Tem certeza?';
+  if (Platform.OS === 'web') {
+    if (window.confirm(mensagem)) aoConfirmar();
+    return;
+  }
+  Alert.alert('Apagar conta', mensagem, [
+    { text: 'Cancelar', style: 'cancel' },
+    { text: 'Apagar tudo', style: 'destructive', onPress: aoConfirmar },
+  ]);
+}
 
 const OPCOES_TEMA: {
   valor: TemaPreferido;
@@ -96,6 +116,26 @@ export default function Configuracoes() {
       setNovaSenha('');
       setConfirmarSenha('');
       setSecaoAberta(null);
+    },
+    onError: (error) => setErro(mensagemDeErro(error)),
+  });
+
+  const exportarMutation = useMutation({
+    mutationFn: () => exportarMeusDados(profile!.id),
+    onError: (error) => setErro(mensagemDeErro(error)),
+  });
+
+  const excluirContaMutation = useMutation({
+    mutationFn: excluirMinhaConta,
+    onSuccess: async () => {
+      // A conta já foi apagada no servidor (auth.users + cascade) — a
+      // sessão local ainda existe até isto rodar; `signOut` limpa o token
+      // guardado e o `queryClient.clear()` evita qualquer resquício de
+      // dado da conta apagada aparecer se alguém logar de novo neste
+      // mesmo aparelho em seguida.
+      await signOut();
+      queryClient.clear();
+      router.replace('/');
     },
     onError: (error) => setErro(mensagemDeErro(error)),
   });
@@ -215,6 +255,29 @@ export default function Configuracoes() {
             loading={senhaMutation.isPending}
           />
         </CartaoAcaoExpansivel>
+      </Secao>
+
+      <Secao titulo="Meus dados">
+        <Button
+          label="Exportar meus dados"
+          icon="download-outline"
+          variant="secondary"
+          onPress={() => exportarMutation.mutate()}
+          loading={exportarMutation.isPending}
+        />
+        <Text className="text-xs text-slate-500 dark:text-slate-400">
+          Baixa um arquivo com tudo que você postou, comentou e conversou na Turma+.
+        </Text>
+        <Button
+          label="Apagar minha conta"
+          icon="trash-outline"
+          variant="secondary"
+          onPress={() => confirmarExclusaoConta(() => excluirContaMutation.mutate())}
+          loading={excluirContaMutation.isPending}
+        />
+        <Text className="text-xs text-slate-500 dark:text-slate-400">
+          Apaga sua conta e todo o seu histórico permanentemente. Não tem como desfazer.
+        </Text>
       </Secao>
 
       {sucesso ? (

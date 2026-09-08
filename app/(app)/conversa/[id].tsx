@@ -17,6 +17,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/Button';
 import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
+import { TextoComMencoes } from '@/components/ui/TextoComMencoes';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { mensagemDeErro } from '@/features/auth/errors';
 import { BotaoDenunciar } from '@/features/feed/BotaoDenunciar';
@@ -152,9 +153,11 @@ function LinhaMensagem({
             : 'border border-slate-100 bg-surface dark:border-slate-800 dark:bg-surface-dark'
         }`}
       >
-        <Text className={souEu ? 'text-white' : 'text-slate-900 dark:text-slate-100'}>
-          {mensagem.conteudo}
-        </Text>
+        <TextoComMencoes
+          texto={mensagem.conteudo}
+          className={souEu ? 'text-white' : 'text-slate-900 dark:text-slate-100'}
+          mencaoClassName={souEu ? 'font-semibold text-white underline' : undefined}
+        />
       </View>
       {!souEu || podeApagar ? (
         <View className="flex-row items-center gap-2 px-1">

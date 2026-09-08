@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { router } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { FlatList, KeyboardAvoidingView, Platform, Pressable, Text, View } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
@@ -13,16 +14,25 @@ import {
   enviarMensagemChat,
   listarHistoricoChat,
 } from '@/features/estudo/api';
+import { formatarTempo, separarGabarito } from '@/features/estudo/regras';
 import {
   ICONE_MODO,
   ROTULO_MODO,
   type MensagemChatIA,
   type ModoChatEstudo,
 } from '@/features/estudo/types';
+import { criarFlashcard } from '@/features/flashcards/api';
 import { listarMateriasDaTurma } from '@/features/notas/api';
 import { useEspacoReservadoBarraAbas } from '@/lib/barraAbas';
 
-const MODOS: ModoChatEstudo[] = ['duvida', 'explicar', 'resumo', 'plano'];
+const MODOS: ModoChatEstudo[] = ['duvida', 'explicar', 'resumo', 'plano', 'prova'];
+
+/** Duração fixa da prova simulada (15 min) — é só um cronômetro de UX
+ * pra dar noção de tempo real de prova, não um prazo de verdade que
+ * bloqueia nada no servidor (diferente do "silenciar usuário", ver
+ * CLAUDE.md — aqui não há nada de segurança em jogo, então o relógio do
+ * cliente é a fonte certa). */
+const DURACAO_PROVA_SEGUNDOS = 15 * 60;
 
 function ChipMateria({
   nome,
@@ -98,8 +108,33 @@ function CartaoEstatisticaSemanal({ alunoId }: { alunoId: string }) {
   );
 }
 
-function BolhaMensagem({ mensagem }: { mensagem: MensagemChatIA }) {
+function BolhaMensagem({
+  mensagem,
+  perguntaAnterior,
+  materiaId,
+  alunoId,
+}: {
+  mensagem: MensagemChatIA;
+  /** Mensagem do aluno logo antes desta (só faz sentido pra mensagem da
+   * IA) — usada como `pergunta` do flashcard criado a partir da resposta. */
+  perguntaAnterior: MensagemChatIA | null;
+  materiaId: string;
+  alunoId: string;
+}) {
   const doAluno = mensagem.papel === 'usuario';
+  const [mostrarGabarito, setMostrarGabarito] = useState(false);
+  const { enunciado, gabarito } = separarGabarito(mensagem.conteudo);
+
+  const flashcardMutation = useMutation({
+    mutationFn: () =>
+      criarFlashcard({
+        alunoId,
+        materiaId,
+        pergunta: perguntaAnterior?.conteudo ?? enunciado.slice(0, 200),
+        resposta: enunciado,
+      }),
+  });
+
   return (
     // `shrink` (não só o `max-w-[85%]` do pai) é o que faz de verdade —
     // sem isso, dentro de um `flex-row`, a bolha não respeita o teto de
@@ -116,16 +151,61 @@ function BolhaMensagem({ mensagem }: { mensagem: MensagemChatIA }) {
           <Ionicons name="sparkles" size={14} color="#F59E0B" />
         </View>
       ) : null}
-      <View
-        className={`shrink rounded-2xl px-4 py-2.5 shadow-sm shadow-slate-900/5 ${
-          doAluno
-            ? 'bg-primary dark:bg-primary-dark'
-            : 'border border-slate-100 bg-surface dark:border-slate-800 dark:bg-surface-dark'
-        }`}
-      >
-        <Text className={doAluno ? 'text-white' : 'text-slate-900 dark:text-slate-100'}>
-          {mensagem.conteudo}
-        </Text>
+      <View className="shrink gap-1.5">
+        <View
+          className={`shrink rounded-2xl px-4 py-2.5 shadow-sm shadow-slate-900/5 ${
+            doAluno
+              ? 'bg-primary dark:bg-primary-dark'
+              : 'border border-slate-100 bg-surface dark:border-slate-800 dark:bg-surface-dark'
+          }`}
+        >
+          <Text className={doAluno ? 'text-white' : 'text-slate-900 dark:text-slate-100'}>
+            {enunciado}
+          </Text>
+        </View>
+
+        {gabarito ? (
+          mostrarGabarito ? (
+            <View className="shrink rounded-2xl border border-accent/30 bg-accent/5 px-4 py-2.5 dark:border-accent-dark/30 dark:bg-accent-dark/10">
+              <Text className="mb-1 text-xs font-semibold uppercase tracking-wide text-accent dark:text-accent-dark">
+                Gabarito
+              </Text>
+              <Text className="text-slate-900 dark:text-slate-100">{gabarito}</Text>
+            </View>
+          ) : (
+            <Pressable
+              onPress={() => setMostrarGabarito(true)}
+              accessibilityRole="button"
+              className="min-h-11 flex-row items-center gap-1 self-start rounded-full border border-accent/40 px-3 dark:border-accent-dark/40"
+            >
+              <Ionicons name="key-outline" size={14} color="#F59E0B" />
+              <Text className="text-xs font-semibold text-accent dark:text-accent-dark">
+                Ver gabarito
+              </Text>
+            </Pressable>
+          )
+        ) : null}
+
+        {/* "+ Flashcard" só faz sentido numa resposta de verdade da IA
+            (não na prova, que já tem gabarito próprio, nem na mensagem
+            do próprio aluno). */}
+        {!doAluno && !gabarito ? (
+          <Pressable
+            onPress={() => flashcardMutation.mutate()}
+            disabled={flashcardMutation.isPending || flashcardMutation.isSuccess}
+            accessibilityRole="button"
+            className="min-h-11 flex-row items-center gap-1 self-start rounded-full border border-slate-200 px-3 dark:border-slate-700"
+          >
+            <Ionicons
+              name={flashcardMutation.isSuccess ? 'checkmark' : 'albums-outline'}
+              size={14}
+              color="#4F46E5"
+            />
+            <Text className="text-xs font-semibold text-primary dark:text-primary-dark">
+              {flashcardMutation.isSuccess ? 'Flashcard criado' : 'Criar flashcard'}
+            </Text>
+          </Pressable>
+        ) : null}
       </View>
     </View>
   );
@@ -138,7 +218,21 @@ export default function Estudo() {
   const [modo, setModo] = useState<ModoChatEstudo>('duvida');
   const [texto, setTexto] = useState('');
   const [erro, setErro] = useState<string | null>(null);
+  const [segundosRestantesProva, setSegundosRestantesProva] = useState<number | null>(null);
   const espacoBarraAbas = useEspacoReservadoBarraAbas();
+
+  // Cronômetro da prova simulada: um único interval por toda a vida do
+  // componente (evita recriar/limpar a cada segundo) — o próprio setter
+  // decide se conta ou não (`s === null` = prova ainda não começou;
+  // `s <= 0` = já zerou, fica parado em 0). Setar o mesmo valor (`null`
+  // ou `0` repetido) não gera re-render de mais — React ignora `setState`
+  // pro mesmo valor primitivo.
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSegundosRestantesProva((s) => (s === null || s <= 0 ? s : s - 1));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const materiasQuery = useQuery({
     queryKey: ['materias', profile?.turma_id],
@@ -157,6 +251,10 @@ export default function Estudo() {
     onSuccess: () => {
       setTexto('');
       setErro(null);
+      // Prova gerada com sucesso: dispara o cronômetro de 15 min agora,
+      // não no clique de "Enviar" — só faz sentido contar o tempo depois
+      // que as perguntas de verdade chegaram.
+      if (modo === 'prova') setSegundosRestantesProva(DURACAO_PROVA_SEGUNDOS);
       queryClient.invalidateQueries({ queryKey: ['chat-ia', materiaId] });
     },
     onError: (error) => setErro(mensagemDeErro(error)),
@@ -165,7 +263,11 @@ export default function Estudo() {
   function handleEnviar() {
     if (!materiaId) return;
     if (!texto.trim()) {
-      setErro('Escreve sua pergunta antes de enviar.');
+      setErro(
+        modo === 'prova'
+          ? 'Escreve o assunto da prova antes de gerar (ex.: "frações" ou "2ª Guerra Mundial").'
+          : 'Escreve sua pergunta antes de enviar.',
+      );
       return;
     }
     setErro(null);
@@ -197,18 +299,28 @@ export default function Estudo() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <View className="gap-2 border-b border-slate-100 p-3 dark:border-slate-800">
-        <View className="flex-row flex-wrap gap-2">
-          {(materiasQuery.data ?? []).map((materia) => (
-            <ChipMateria
-              key={materia.id}
-              nome={materia.nome}
-              selecionada={materiaId === materia.id}
-              onPress={() => setMateriaId(materia.id)}
-            />
-          ))}
+        <View className="flex-row items-center justify-between gap-2">
+          <View className="flex-1 flex-row flex-wrap gap-2">
+            {(materiasQuery.data ?? []).map((materia) => (
+              <ChipMateria
+                key={materia.id}
+                nome={materia.nome}
+                selecionada={materiaId === materia.id}
+                onPress={() => setMateriaId(materia.id)}
+              />
+            ))}
+          </View>
+          <Pressable
+            onPress={() => router.push('/flashcards')}
+            accessibilityRole="button"
+            accessibilityLabel="Flashcards"
+            className="min-h-11 min-w-11 items-center justify-center rounded-full border border-slate-200 dark:border-slate-700"
+          >
+            <Ionicons name="albums-outline" size={18} color="#4F46E5" />
+          </Pressable>
         </View>
         {materiaId ? (
-          <View className="flex-row flex-wrap gap-2">
+          <View className="flex-row flex-wrap items-center gap-2">
             {MODOS.map((opcao) => (
               <Pressable
                 key={opcao}
@@ -231,6 +343,14 @@ export default function Estudo() {
                 </Text>
               </Pressable>
             ))}
+            {modo === 'prova' && segundosRestantesProva !== null ? (
+              <View className="flex-row items-center gap-1 rounded-full bg-danger/10 px-3 py-1.5 dark:bg-danger-dark/10">
+                <Ionicons name="timer-outline" size={14} color="#DC2626" />
+                <Text className="text-xs font-semibold text-danger dark:text-danger-dark">
+                  {formatarTempo(segundosRestantesProva)}
+                </Text>
+              </View>
+            ) : null}
           </View>
         ) : null}
       </View>
@@ -264,7 +384,16 @@ export default function Estudo() {
               descricao="Escolhe o modo acima e manda sua primeira pergunta."
             />
           }
-          renderItem={({ item }) => <BolhaMensagem mensagem={item} />}
+          renderItem={({ item, index }) => (
+            <BolhaMensagem
+              mensagem={item}
+              perguntaAnterior={
+                item.papel === 'assistente' ? (historicoQuery.data?.[index - 1] ?? null) : null
+              }
+              materiaId={materiaId as string}
+              alunoId={profile!.id}
+            />
+          )}
         />
       )}
 
@@ -294,7 +423,11 @@ export default function Estudo() {
                 label="Mensagem"
                 value={texto}
                 onChangeText={setTexto}
-                placeholder="Escreve sua pergunta..."
+                placeholder={
+                  modo === 'prova'
+                    ? 'Assunto da prova (ex.: frações)...'
+                    : 'Escreve sua pergunta...'
+                }
                 multiline
               />
             </View>

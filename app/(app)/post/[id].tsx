@@ -7,6 +7,7 @@ import { Alert, FlatList, Platform, Pressable, Text, View } from 'react-native';
 import { Button } from '@/components/ui/Button';
 import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
 import { TextField } from '@/components/ui/TextField';
+import { TextoComMencoes } from '@/components/ui/TextoComMencoes';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { mensagemDeErro } from '@/features/auth/errors';
 import {
@@ -22,6 +23,7 @@ import { EnquetePost } from '@/features/feed/CartaoPost';
 import { ImagemPost } from '@/features/feed/ImagemPost';
 import { ROTULO_TIPO_POST } from '@/features/feed/types';
 import { FotoPerfil } from '@/features/perfil/FotoPerfil';
+import { BotaoTraduzir } from '@/features/traducao/BotaoTraduzir';
 
 function formatarData(iso: string) {
   return new Intl.DateTimeFormat('pt-PT', {
@@ -72,7 +74,10 @@ function LinhaComentario({
           {formatarData(comentario.criado_em)}
         </Text>
       </View>
-      <Text className="text-sm text-slate-700 dark:text-slate-300">{comentario.conteudo}</Text>
+      <TextoComMencoes
+        texto={comentario.conteudo}
+        className="text-sm text-slate-700 dark:text-slate-300"
+      />
       <View className="flex-row items-center gap-3">
         <BotaoDenunciar tipoConteudo="comentario" conteudoId={comentario.id} />
         {podeApagar ? (
@@ -223,7 +228,13 @@ export default function DetalhePost() {
           ) : null}
 
           {post.conteudo ? (
-            <Text className="text-base text-slate-800 dark:text-slate-200">{post.conteudo}</Text>
+            <View className="gap-2">
+              <TextoComMencoes
+                texto={post.conteudo}
+                className="text-base text-slate-800 dark:text-slate-200"
+              />
+              <BotaoTraduzir texto={post.conteudo} />
+            </View>
           ) : null}
 
           {post.tipo === 'foto' && post.midia_url ? <ImagemPost caminho={post.midia_url} /> : null}
