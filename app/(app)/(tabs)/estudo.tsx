@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   FlatList,
   KeyboardAvoidingView,
   Platform,
@@ -425,7 +426,14 @@ export default function Estudo() {
           className="gap-2 border-t border-slate-800 p-3"
           style={{ paddingBottom: insets.bottom + 12 }}
         >
-          {erro ? (
+          {enviarMutation.isPending ? (
+            <View className="flex-row items-center gap-1.5">
+              <ActivityIndicator size="small" color="#8B5CF6" />
+              <Text className="text-sm text-slate-400">
+                A IA está a pensar... pode demorar alguns segundos.
+              </Text>
+            </View>
+          ) : erro ? (
             <View className="flex-row items-center gap-1.5">
               <Ionicons name="alert-circle" size={14} color="#F87171" />
               <Text className="text-sm text-danger dark:text-danger-dark">{erro}</Text>

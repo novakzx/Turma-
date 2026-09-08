@@ -32,9 +32,16 @@ export async function buscarEstatisticaSemanal(alunoId: string): Promise<Estatis
   return calcularEstatisticaSemanal(data);
 }
 
+// A Cloudflare Workers AI (provedor de IA atual, ver `chat-estudo/
+// index.ts`) responde em poucos segundos na maioria das vezes, mas o
+// primeiro uso de um modelo "frio" pode demorar bem mais — 30s é
+// generoso o bastante pra cobrir isso sem deixar o botão "Enviar"
+// parecendo travado pra sempre se algo realmente engasgar.
+const TIMEOUT_CHAT_MS = 30_000;
+
 /**
- * A Edge Function é quem fala com a Gemini e grava as duas mensagens
- * (usuário + assistente) — o app nunca chama a API da Gemini direto
+ * A Edge Function é quem fala com a IA e grava as duas mensagens
+ * (usuário + assistente) — o app nunca chama a API de IA direto
  * (regra de ouro do brief, seção 4).
  */
 export async function enviarMensagemChat(params: {
@@ -44,6 +51,7 @@ export async function enviarMensagemChat(params: {
 }): Promise<{ resposta: string; modelo: string }> {
   const { data, error } = await supabase.functions.invoke('chat-estudo', {
     body: { materiaId: params.materiaId, mensagem: params.mensagem, modo: params.modo },
+    timeout: TIMEOUT_CHAT_MS,
   });
   if (error) throw new Error(await mensagemDoErroDaFuncao(error));
   return data;
