@@ -26,9 +26,19 @@ const MENSAGEM_TAMANHO_MAXIMO = 4000;
 // limite nenhum aqui, um script batendo nesse endpoint em loop estoura a
 // cota pra todo mundo. Generoso o bastante pra uso normal (ninguém manda
 // 15 perguntas em 5 minutos de verdade estudando), curto o bastante pra
-// travar abuso automatizado.
-const LIMITE_MENSAGENS = 15;
-const JANELA_LIMITE_MS = 5 * 60 * 1000;
+// travar abuso automatizado (rajada — script/loop). Separado do limite
+// diário abaixo, que é sobre volume total, não velocidade.
+const LIMITE_MENSAGENS_RAJADA = 15;
+const JANELA_LIMITE_RAJADA_MS = 5 * 60 * 1000;
+
+// Limite diário por aluno (pedido do usuário) — a rajada acima trava
+// script/loop, mas não impede uma conta só de usar a cota do dia inteiro
+// sozinha ao longo de várias horas de uso normal. 30/dia é generoso pra
+// estudar de verdade (várias matérias, plano de prova) sem deixar uma
+// conta consumir a cota compartilhada de 10.000 neurons/dia sozinha —
+// ajuste aqui se a escola crescer e a cota apertar.
+const LIMITE_MENSAGENS_DIARIO = 30;
+const JANELA_LIMITE_DIARIO_MS = 24 * 60 * 60 * 1000;
 
 // Só as origens de verdade deste projeto — `*` deixaria qualquer site
 // chamar essa função (com o JWT de quem visitasse ele, se conseguisse
@@ -114,15 +124,33 @@ Deno.serve(async (req) => {
     // API direto, sem passar pela UI, precisa cair aqui do mesmo jeito).
     // Conta as próprias perguntas recentes em qualquer matéria — RLS de
     // `chat_ia_mensagens` já restringe ao próprio aluno.
-    const { count: mensagensRecentes } = await userClient
+    const { count: mensagensRajada } = await userClient
       .from('chat_ia_mensagens')
       .select('id', { count: 'exact', head: true })
       .eq('aluno_id', user.id)
       .eq('papel', 'usuario')
-      .gte('criado_em', new Date(Date.now() - JANELA_LIMITE_MS).toISOString());
-    if ((mensagensRecentes ?? 0) >= LIMITE_MENSAGENS) {
+      .gte('criado_em', new Date(Date.now() - JANELA_LIMITE_RAJADA_MS).toISOString());
+    if ((mensagensRajada ?? 0) >= LIMITE_MENSAGENS_RAJADA) {
       return respostaJson(
         { error: 'Muitas mensagens em pouco tempo — espera um pouco antes de tentar de novo.' },
+        429,
+        origin,
+      );
+    }
+
+    // Limite diário (separado da rajada acima — ver constantes no topo
+    // do arquivo). Mesma query, só troca a janela de tempo e o teto.
+    const { count: mensagensHoje } = await userClient
+      .from('chat_ia_mensagens')
+      .select('id', { count: 'exact', head: true })
+      .eq('aluno_id', user.id)
+      .eq('papel', 'usuario')
+      .gte('criado_em', new Date(Date.now() - JANELA_LIMITE_DIARIO_MS).toISOString());
+    if ((mensagensHoje ?? 0) >= LIMITE_MENSAGENS_DIARIO) {
+      return respostaJson(
+        {
+          error: `Você já mandou ${LIMITE_MENSAGENS_DIARIO} mensagens pra IA nas últimas 24 horas — volta amanhã pra continuar usando.`,
+        },
         429,
         origin,
       );
