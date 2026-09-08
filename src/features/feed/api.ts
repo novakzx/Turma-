@@ -16,24 +16,23 @@ export type PostComContadores = Post & {
 const SELECT_POST_COM_CONTADORES =
   '*, profiles(id, nome, foto_url), post_curtidas(count), post_comentarios(count)';
 
-/** RLS já restringe a `turma_id` própria (ou escola inteira pra
- * coordenacao) — aqui só ordena e traz as contagens junto, num round-trip
- * só (brief 6.4: curtir e comentar, sem seguir/repost). */
-export async function listarPosts(turmaId: string): Promise<PostComContadores[]> {
+/** Feed aberto pra qualquer conta do app (pedido do usuário — antes só
+ * mostrava post da própria turma; RLS de `posts` também já libera geral,
+ * ver migration `feed_stories_visivel_para_todos`) — aqui só ordena e
+ * traz as contagens junto, num round-trip só (brief 6.4: curtir e
+ * comentar, sem seguir/repost). */
+export async function listarPosts(): Promise<PostComContadores[]> {
   const { data, error } = await supabase
     .from('posts')
     .select(SELECT_POST_COM_CONTADORES)
-    .eq('turma_id', turmaId)
     .order('criado_em', { ascending: false });
   if (error) throw error;
   return data as unknown as PostComContadores[];
 }
 
 /** "Ver as publicações" no perfil (brief da Fase 6+: perfil editável) —
- * mesmo formato de post-com-contadores do feed da turma, só que filtrado
- * por autor em vez de turma. RLS de `posts` já restringe à turma/escola
- * de quem está olhando, então isso nunca vaza post de fora do alcance
- * de quem está vendo o perfil. */
+ * mesmo formato de post-com-contadores do feed, só que filtrado por
+ * autor em vez de trazer tudo. */
 export async function listarPostsDoAutor(autorId: string): Promise<PostComContadores[]> {
   const { data, error } = await supabase
     .from('posts')

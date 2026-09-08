@@ -11,7 +11,6 @@ import {
   atualizarAnosReprovados,
   buscarMeuPedidoPendente,
   concluirOnboarding,
-  criarTurma,
   listarEscolas,
   listarTurmasPorEscola,
   pedirEntradaNaTurma,
@@ -72,9 +71,6 @@ export function EscolaTurmaForm({
   const [buscaEscola, setBuscaEscola] = useState('');
   const [escolaId, setEscolaId] = useState<string | null>(escolaIdInicial);
   const [turmaId, setTurmaId] = useState<string | null>(turmaIdInicial);
-  const [criandoTurma, setCriandoTurma] = useState(false);
-  const [novoNomeTurma, setNovoNomeTurma] = useState('');
-  const [novoAnoTurma, setNovoAnoTurma] = useState('');
   const [numeroCartao, setNumeroCartao] = useState('');
   const [reprovou, setReprovou] = useState<boolean | null>(null);
   const [anosReprovados, setAnosReprovados] = useState<Set<number>>(new Set());
@@ -99,10 +95,8 @@ export function EscolaTurmaForm({
 
   // Pedido do usuário: se a idade do cadastro não bater com o ano
   // letivo escolhido, perguntar se o aluno repetiu de ano (e quais
-  // anos) antes de deixar continuar. Vale tanto pra turma já existente
-  // quanto pro ano/série digitado ao criar uma turma nova.
-  const serieAnoParaChecar =
-    turmaSelecionada?.serie_ano ?? (criandoTurma ? novoAnoTurma.trim() : '');
+  // anos) antes de deixar continuar.
+  const serieAnoParaChecar = turmaSelecionada?.serie_ano ?? '';
   const precisaPerguntarRepeticao =
     !!profile?.idade &&
     !!serieAnoParaChecar &&
@@ -130,24 +124,6 @@ export function EscolaTurmaForm({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
       onConcluido();
-    },
-    onError: (error) => setErro(mensagemDeErro(error)),
-  });
-
-  const criarTurmaMutation = useMutation({
-    mutationFn: () =>
-      criarTurma({
-        escolaId: escolaId as string,
-        nome: novoNomeTurma.trim(),
-        serieAno: novoAnoTurma.trim(),
-        criadoPor: session!.user.id,
-      }),
-    onSuccess: (novoId) => {
-      queryClient.invalidateQueries({ queryKey: ['turmas', escolaId] });
-      setTurmaId(novoId);
-      setCriandoTurma(false);
-      setNovoNomeTurma('');
-      setNovoAnoTurma('');
     },
     onError: (error) => setErro(mensagemDeErro(error)),
   });
@@ -209,15 +185,6 @@ export function EscolaTurmaForm({
       turmaId,
       numeroCartao: numeroCartao.trim(),
     });
-  }
-
-  function handleCriarTurma() {
-    if (!novoNomeTurma.trim() || !novoAnoTurma.trim()) {
-      setErro('Informe o nome e o ano/série da turma nova.');
-      return;
-    }
-    if (!validarERegistrarRepeticao()) return;
-    criarTurmaMutation.mutate();
   }
 
   function handlePedirEntrada() {
@@ -318,7 +285,7 @@ export function EscolaTurmaForm({
             <View className="gap-2">
               {(turmasQuery.data ?? []).length === 0 ? (
                 <Text className="text-slate-400">
-                  Essa escola ainda não tem turma cadastrada — crie a primeira abaixo.
+                  Essa escola ainda não tem turma cadastrada — fale com a coordenação.
                 </Text>
               ) : (
                 (turmasQuery.data ?? []).map((turma) => (
@@ -333,47 +300,6 @@ export function EscolaTurmaForm({
                     }}
                   />
                 ))
-              )}
-
-              {criandoTurma ? (
-                <View className="gap-2 rounded-lg border border-primary/30 p-3 dark:border-primary-dark/30">
-                  <TextField
-                    label="Nome da turma"
-                    value={novoNomeTurma}
-                    onChangeText={setNovoNomeTurma}
-                    placeholder="ex.: Turma B"
-                  />
-                  <TextField
-                    label="Ano/série"
-                    value={novoAnoTurma}
-                    onChangeText={setNovoAnoTurma}
-                    placeholder="ex.: 10º ano"
-                  />
-                  <View className="flex-row gap-2">
-                    <View className="flex-1">
-                      <Button
-                        label="Cancelar"
-                        variant="secondary"
-                        onPress={() => setCriandoTurma(false)}
-                      />
-                    </View>
-                    <View className="flex-1">
-                      <Button
-                        label="Criar"
-                        icon="add"
-                        onPress={handleCriarTurma}
-                        loading={criarTurmaMutation.isPending}
-                      />
-                    </View>
-                  </View>
-                </View>
-              ) : (
-                <Button
-                  label="Criar turma nova"
-                  icon="add-circle-outline"
-                  variant="secondary"
-                  onPress={() => setCriandoTurma(true)}
-                />
               )}
             </View>
           )}

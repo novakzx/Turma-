@@ -93,9 +93,10 @@ export async function buscarPerfilPublico(id: string): Promise<PerfilPublico> {
   return data;
 }
 
-/** Stories ativas (RLS já filtra por expiração + quem pode ver:
- * autor/segue/mesma turma), agrupadas por autor no componente — aqui
- * só traz a lista crua ordenada, mais recente primeiro. */
+/** Stories ativas de qualquer conta do app (RLS só filtra por
+ * expiração — pedido do usuário, ver migration
+ * `feed_stories_visivel_para_todos`), agrupadas por autor no componente
+ * — aqui só traz a lista crua ordenada, mais recente primeiro. */
 export async function listarStoriesVisiveis(): Promise<StoryComAutor[]> {
   const { data, error } = await supabase
     .from('stories')

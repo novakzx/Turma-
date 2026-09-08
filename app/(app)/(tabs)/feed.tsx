@@ -15,9 +15,8 @@ export default function Feed() {
   const queryClient = useQueryClient();
 
   const postsQuery = useQuery({
-    queryKey: ['posts', profile?.turma_id],
-    queryFn: () => listarPosts(profile?.turma_id as string),
-    enabled: !!profile?.turma_id,
+    queryKey: ['posts'],
+    queryFn: listarPosts,
   });
 
   const postIds = useMemo(() => (postsQuery.data ?? []).map((p) => p.id), [postsQuery.data]);
@@ -28,7 +27,7 @@ export default function Feed() {
   });
 
   function invalidarTudo() {
-    queryClient.invalidateQueries({ queryKey: ['posts', profile?.turma_id] });
+    queryClient.invalidateQueries({ queryKey: ['posts'] });
     queryClient.invalidateQueries({ queryKey: ['meus-likes'] });
   }
 
@@ -55,7 +54,7 @@ export default function Feed() {
           <StoriesBar />
           <EmptyState
             icon="newspaper-outline"
-            titulo="Nenhum post na turma ainda"
+            titulo="Nenhum post ainda"
             descricao="Seja o primeiro a postar algo pra galera."
           />
         </>

@@ -47,9 +47,11 @@ function BolinhaStory({
 
 /**
  * Bolinhas de stories no topo do feed/perfil (pedido do usuário, Fase
- * 10). RLS de `stories` já decide quais aparecem aqui (próprio autor,
- * quem se segue, mesma turma) — a primeira bolinha é sempre "Sua
- * story", com "+" quando não tem nenhuma ativa ainda.
+ * 10). RLS de `stories` já decide quais aparecem aqui — story de
+ * qualquer conta do app, não filtrado por turma/quem segue (pedido do
+ * usuário, ver migration `feed_stories_visivel_para_todos`) — a primeira
+ * bolinha é sempre "Sua story", com "+" quando não tem nenhuma ativa
+ * ainda.
  */
 export function StoriesBar() {
   const { profile } = useAuth();

@@ -51,31 +51,6 @@ export async function concluirOnboarding(params: {
   if (error) throw error;
 }
 
-/** Turma nova (brief Fase 9: "a turma deve ser algo que um usuário
- * cria"). Quem cria vira o dono automaticamente (`criado_por`) — RLS
- * exige isso (`turmas_insert`). Só grava a turma; quem cria ainda
- * precisa confirmar o onboarding (`concluirOnboarding`) pra virar
- * membro dela — criador não precisa de pedido de entrada, óbvio. */
-export async function criarTurma(params: {
-  escolaId: string;
-  nome: string;
-  serieAno: string;
-  criadoPor: string;
-}) {
-  const { data, error } = await supabase
-    .from('turmas')
-    .insert({
-      escola_id: params.escolaId,
-      nome: params.nome,
-      serie_ano: params.serieAno,
-      criado_por: params.criadoPor,
-    })
-    .select('id')
-    .single();
-  if (error) throw error;
-  return data.id as string;
-}
-
 /** Pedido de entrada numa turma criada por outro usuário — só o dono
  * dela (ou staff da escola) aprova, via RPC `responder_pedido_entrada_turma`
  * (nunca update direto: profiles.turma_id de outra pessoa não é

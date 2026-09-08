@@ -186,9 +186,10 @@ export function EnquetePost({ postId }: { postId: string }) {
   );
 }
 
-/** Card de post — reusado no feed da turma e em "Minhas publicações" no
- * perfil (mesmo formato de dado, `PostComContadores`, só a query que
- * busca muda: por turma ou por autor). Redesenho Fase 11: avatar de
+/** Card de post — reusado no feed (todas as contas do app, ver
+ * `listarPosts`) e em "Minhas publicações" no perfil (mesmo formato de
+ * dado, `PostComContadores`, só a query que busca muda: geral ou por
+ * autor). Redesenho Fase 11: avatar de
  * verdade (clicável, leva pro perfil do autor — Fase 10), imagem
  * "edge-to-edge" dentro do card, e toque duplo pra curtir. */
 export function CartaoPost({
