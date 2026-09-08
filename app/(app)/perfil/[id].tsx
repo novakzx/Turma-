@@ -137,6 +137,7 @@ export default function PerfilPublico() {
         bio={perfil.bio}
         link={perfil.link}
         papel={perfil.papel}
+        verificado={perfil.assinatura_ativa}
         contadorPosts={postsQuery.data?.length ?? 0}
         contadorSeguidores={contadoresQuery.data?.seguidores ?? 0}
         contadorSeguindo={contadoresQuery.data?.seguindo ?? 0}

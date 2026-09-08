@@ -16,6 +16,7 @@ export type PerfilPublico = PerfilResumo & {
   papel: Tables<'profiles'>['papel'];
   publico: boolean;
   turma_id: string | null;
+  assinatura_ativa: boolean;
 };
 
 export type StoryComAutor = Story & { profiles: PerfilResumo | null };

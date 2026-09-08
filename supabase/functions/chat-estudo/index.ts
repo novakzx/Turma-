@@ -120,40 +120,55 @@ Deno.serve(async (req) => {
       return respostaJson({ error: 'Sessão inválida.' }, 401, origin);
     }
 
-    // Rate limit por usuário (não só no cliente — um script chamando a
-    // API direto, sem passar pela UI, precisa cair aqui do mesmo jeito).
-    // Conta as próprias perguntas recentes em qualquer matéria — RLS de
-    // `chat_ia_mensagens` já restringe ao próprio aluno.
-    const { count: mensagensRajada } = await userClient
-      .from('chat_ia_mensagens')
-      .select('id', { count: 'exact', head: true })
-      .eq('aluno_id', user.id)
-      .eq('papel', 'usuario')
-      .gte('criado_em', new Date(Date.now() - JANELA_LIMITE_RAJADA_MS).toISOString());
-    if ((mensagensRajada ?? 0) >= LIMITE_MENSAGENS_RAJADA) {
-      return respostaJson(
-        { error: 'Muitas mensagens em pouco tempo — espera um pouco antes de tentar de novo.' },
-        429,
-        origin,
-      );
-    }
+    // Assinante do Turma+ Premium (R$2,99/mês, ver migration
+    // `assinatura_stripe`) não tem nenhum dos dois limites abaixo — é
+    // literalmente o que a assinatura vende ("IA sem limites"). Só o
+    // booleano importa aqui: quem escreve nele é exclusivamente o
+    // webhook do Stripe (service role), nunca o app, então não tem
+    // como um aluno comum burlar isso mudando o próprio perfil.
+    const { data: perfilAssinatura } = await userClient
+      .from('profiles')
+      .select('assinatura_ativa')
+      .eq('id', user.id)
+      .single();
+    const ehAssinante = perfilAssinatura?.assinatura_ativa === true;
 
-    // Limite diário (separado da rajada acima — ver constantes no topo
-    // do arquivo). Mesma query, só troca a janela de tempo e o teto.
-    const { count: mensagensHoje } = await userClient
-      .from('chat_ia_mensagens')
-      .select('id', { count: 'exact', head: true })
-      .eq('aluno_id', user.id)
-      .eq('papel', 'usuario')
-      .gte('criado_em', new Date(Date.now() - JANELA_LIMITE_DIARIO_MS).toISOString());
-    if ((mensagensHoje ?? 0) >= LIMITE_MENSAGENS_DIARIO) {
-      return respostaJson(
-        {
-          error: `Você já mandou ${LIMITE_MENSAGENS_DIARIO} mensagens pra IA nas últimas 24 horas — volta amanhã pra continuar usando.`,
-        },
-        429,
-        origin,
-      );
+    if (!ehAssinante) {
+      // Rate limit por usuário (não só no cliente — um script chamando a
+      // API direto, sem passar pela UI, precisa cair aqui do mesmo jeito).
+      // Conta as próprias perguntas recentes em qualquer matéria — RLS de
+      // `chat_ia_mensagens` já restringe ao próprio aluno.
+      const { count: mensagensRajada } = await userClient
+        .from('chat_ia_mensagens')
+        .select('id', { count: 'exact', head: true })
+        .eq('aluno_id', user.id)
+        .eq('papel', 'usuario')
+        .gte('criado_em', new Date(Date.now() - JANELA_LIMITE_RAJADA_MS).toISOString());
+      if ((mensagensRajada ?? 0) >= LIMITE_MENSAGENS_RAJADA) {
+        return respostaJson(
+          { error: 'Muitas mensagens em pouco tempo — espera um pouco antes de tentar de novo.' },
+          429,
+          origin,
+        );
+      }
+
+      // Limite diário (separado da rajada acima — ver constantes no topo
+      // do arquivo). Mesma query, só troca a janela de tempo e o teto.
+      const { count: mensagensHoje } = await userClient
+        .from('chat_ia_mensagens')
+        .select('id', { count: 'exact', head: true })
+        .eq('aluno_id', user.id)
+        .eq('papel', 'usuario')
+        .gte('criado_em', new Date(Date.now() - JANELA_LIMITE_DIARIO_MS).toISOString());
+      if ((mensagensHoje ?? 0) >= LIMITE_MENSAGENS_DIARIO) {
+        return respostaJson(
+          {
+            error: `Você já mandou ${LIMITE_MENSAGENS_DIARIO} mensagens pra IA nas últimas 24 horas — assine o Turma+ Premium (R$2,99/mês) pra IA sem limites, ou volta amanhã.`,
+          },
+          429,
+          origin,
+        );
+      }
     }
 
     const { data: materia, error: materiaError } = await userClient

@@ -12,6 +12,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { EntradaAnimada } from '@/components/ui/EntradaAnimada';
+import { SeloVerificado } from '@/components/ui/SeloVerificado';
 import { TextoComMencoes } from '@/components/ui/TextoComMencoes';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { FotoPerfil } from '@/features/perfil/FotoPerfil';
@@ -235,9 +236,12 @@ export function CartaoPost({
           nome={post.profiles?.nome ?? '?'}
           tamanho={36}
         />
-        <Text className="flex-1 text-sm font-semibold text-slate-100">
-          {post.profiles?.nome ?? 'Alguém da turma'}
-        </Text>
+        <View className="flex-1 flex-row items-center gap-1">
+          <Text className="shrink text-sm font-semibold text-slate-100" numberOfLines={1}>
+            {post.profiles?.nome ?? 'Alguém da turma'}
+          </Text>
+          {post.profiles?.assinatura_ativa ? <SeloVerificado /> : null}
+        </View>
         <Text className="text-xs text-slate-400">{formatarData(post.criado_em)}</Text>
       </Pressable>
 

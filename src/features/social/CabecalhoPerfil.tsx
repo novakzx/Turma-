@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import type { ReactNode } from 'react';
 import { Linking, Pressable, Text, View } from 'react-native';
 
+import { SeloVerificado } from '@/components/ui/SeloVerificado';
 import { FotoPerfil } from '@/features/perfil/FotoPerfil';
 import { formatarLinkExibicao } from '@/features/perfil/link';
 
@@ -56,6 +57,7 @@ export function CabecalhoPerfil({
   bio,
   link,
   papel,
+  verificado,
   contadorPosts,
   contadorSeguidores,
   contadorSeguindo,
@@ -68,6 +70,8 @@ export function CabecalhoPerfil({
   bio: string | null;
   link?: string | null;
   papel?: keyof typeof ROTULO_PAPEL;
+  /** Assinante do Turma+ Premium (ver `profiles.assinatura_ativa`). */
+  verificado?: boolean;
   contadorPosts: number;
   contadorSeguidores: number;
   contadorSeguindo: number;
@@ -77,7 +81,10 @@ export function CabecalhoPerfil({
     <View className="items-center gap-3">
       <FotoPerfil caminho={fotoUrl} nome={nome} tamanho={96} />
       <View className="items-center gap-1">
-        <Text className="text-2xl font-bold text-slate-100">{nome}</Text>
+        <View className="flex-row items-center gap-1.5">
+          <Text className="text-2xl font-bold text-slate-100">{nome}</Text>
+          {verificado ? <SeloVerificado tamanho={18} /> : null}
+        </View>
         {nomeUsuario ? <Text className="text-sm text-slate-400">@{nomeUsuario}</Text> : null}
         {papel ? (
           <View className="mt-1 flex-row items-center gap-1.5 rounded-md bg-primary/10 px-3 py-1 dark:bg-primary-dark/10">

@@ -79,6 +79,7 @@ export default function Perfil() {
           bio={profile?.bio ?? null}
           link={profile?.link ?? null}
           papel={profile?.papel}
+          verificado={profile?.assinatura_ativa ?? false}
           contadorPosts={postsQuery.data?.length ?? 0}
           contadorSeguidores={contadoresQuery.data?.seguidores ?? 0}
           contadorSeguindo={contadoresQuery.data?.seguindo ?? 0}
@@ -123,6 +124,12 @@ export default function Perfil() {
       <GridPosts posts={postsQuery.data ?? []} />
 
       <View className="gap-3 px-6">
+        <Button
+          label={profile?.assinatura_ativa ? 'Turma+ Premium' : 'Assinar Turma+ Premium'}
+          icon="sparkles"
+          onPress={() => router.push('/assinatura')}
+        />
+
         <Button
           label={ehStaff ? 'Gerenciar matérias' : 'Matérias da turma'}
           icon="library-outline"

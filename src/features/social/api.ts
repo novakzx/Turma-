@@ -87,7 +87,7 @@ export async function listarSeguindo(profileId: string): Promise<PerfilResumo[]>
 export async function buscarPerfilPublico(id: string): Promise<PerfilPublico> {
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, nome, nome_usuario, foto_url, bio, link, papel, publico, turma_id')
+    .select('id, nome, nome_usuario, foto_url, bio, link, papel, publico, turma_id, assinatura_ativa')
     .eq('id', id)
     .single();
   if (error) throw error;

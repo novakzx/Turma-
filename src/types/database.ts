@@ -740,7 +740,9 @@ export type Database = {
       profiles: {
         Row: {
           anos_reprovados: number[];
+          assinatura_ativa: boolean;
           assinatura_push_web: Json | null;
+          assinatura_valido_ate: string | null;
           bio: string | null;
           consentimento_responsavel: boolean;
           criado_em: string;
@@ -757,12 +759,16 @@ export type Database = {
           publico: boolean;
           push_token: string | null;
           silenciado_ate: string | null;
+          stripe_customer_id: string | null;
+          stripe_subscription_id: string | null;
           termos_aceitos_em: string | null;
           turma_id: string | null;
         };
         Insert: {
           anos_reprovados?: number[];
+          assinatura_ativa?: boolean;
           assinatura_push_web?: Json | null;
+          assinatura_valido_ate?: string | null;
           bio?: string | null;
           consentimento_responsavel?: boolean;
           criado_em?: string;
@@ -779,12 +785,16 @@ export type Database = {
           publico?: boolean;
           push_token?: string | null;
           silenciado_ate?: string | null;
+          stripe_customer_id?: string | null;
+          stripe_subscription_id?: string | null;
           termos_aceitos_em?: string | null;
           turma_id?: string | null;
         };
         Update: {
           anos_reprovados?: number[];
+          assinatura_ativa?: boolean;
           assinatura_push_web?: Json | null;
+          assinatura_valido_ate?: string | null;
           bio?: string | null;
           consentimento_responsavel?: boolean;
           criado_em?: string;
@@ -801,6 +811,8 @@ export type Database = {
           publico?: boolean;
           push_token?: string | null;
           silenciado_ate?: string | null;
+          stripe_customer_id?: string | null;
+          stripe_subscription_id?: string | null;
           termos_aceitos_em?: string | null;
           turma_id?: string | null;
         };
@@ -1155,7 +1167,8 @@ export type Tables<
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    keyof DefaultSchema['Tables'] | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema['Tables']
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
   }
@@ -1179,7 +1192,8 @@ export type TablesInsert<
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    keyof DefaultSchema['Tables'] | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema['Tables']
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
   }
@@ -1203,7 +1217,8 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    keyof DefaultSchema['Enums'] | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema['Enums']
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
   }
@@ -1219,7 +1234,8 @@ export type Enums<
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    keyof DefaultSchema['CompositeTypes'] | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema['CompositeTypes']
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
   }
