@@ -52,12 +52,35 @@ export async function signUp(params: {
   const { data, error } = await supabase.auth.signUp({
     email: params.email,
     password: params.senha,
-    // Guardado em user_metadata pra fetchOrCreateProfile usar no primeiro
-    // login (signUp não devolve sessão enquanto o e-mail não for
-    // confirmado — "Confirm email" ligado de propósito agora que o SMTP
-    // funciona —, então o profile só é criado depois, no primeiro
-    // signIn bem-sucedido).
     options: {
+      // Achado testando de verdade ("quando confirmo o e-mail ele não
+      // confirma no app"): sem isso, o link do e-mail de confirmação
+      // usa o "Site URL" configurado no painel do Supabase como
+      // destino do redirect — e esse valor estava apontando pra
+      // `localhost:3000`, um endereço que não roda em lugar nenhum
+      // acessível pra quem clica o link (confirmado no log: o
+      // `/verify` volta 303 igual, `email_confirmed_at` é gravado
+      // certinho no banco — a conta REALMENTE fica confirmada — só o
+      // navegador cai numa página morta depois, então parece que "não
+      // confirmou"). No web, manda pra origem de onde o cadastro foi
+      // feito (funciona tanto em `localhost:8081` local quanto no
+      // domínio de produção, sem precisar hard-codar nenhum dos dois —
+      // mesma ideia já usada em `signInWithGoogle`). Precisa também
+      // estar na lista de "Redirect URLs" do painel do Supabase, senão
+      // esse valor é ignorado silenciosamente e cai de volta no Site
+      // URL errado.
+      //
+      // Nativo (iOS/Android) ainda não está coberto aqui: precisaria de
+      // um listener de deep link pra pegar o token do
+      // `turmamais://...` de volta e chamar `setSession`, igual o
+      // `signInWithGoogle` nativo já faz manualmente — não implementado
+      // ainda, ver README.
+      emailRedirectTo: Platform.OS === 'web' ? window.location.origin : undefined,
+      // Guardado em user_metadata pra fetchOrCreateProfile usar no primeiro
+      // login (signUp não devolve sessão enquanto o e-mail não for
+      // confirmado — "Confirm email" ligado de propósito agora que o SMTP
+      // funciona —, então o profile só é criado depois, no primeiro
+      // signIn bem-sucedido).
       data: {
         nome: params.nome,
         nomeUsuario: params.nomeUsuario,
