@@ -12,9 +12,14 @@ import { mensagemDeErro } from '@/features/auth/errors';
 import { CONSENTIMENTO_RESPONSAVEIS, TERMOS_DE_USO } from '@/features/auth/termos';
 
 const REGEX_NOME_USUARIO = /^[a-z0-9_]{3,20}$/;
+// Validação simples de formato, não de existência de verdade — o
+// Supabase já recusa endereço inválido/duplicado na hora (ver
+// `errors.ts`), isso aqui só evita mandar algo obviamente errado.
+const REGEX_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type Erros = {
   nome?: string;
+  email?: string;
   nomeUsuario?: string;
   idade?: string;
   senha?: string;
@@ -26,6 +31,7 @@ type Erros = {
 
 export default function CadastroScreen() {
   const [nome, setNome] = useState('');
+  const [email, setEmail] = useState('');
   const [nomeUsuario, setNomeUsuario] = useState('');
   const [idade, setIdade] = useState('');
   const [senha, setSenha] = useState('');
@@ -33,26 +39,21 @@ export default function CadastroScreen() {
   const [aceitouTermos, setAceitouTermos] = useState(false);
   const [consentimentoResponsavel, setConsentimentoResponsavel] = useState(false);
   const [erros, setErros] = useState<Erros>({});
+  // E-mail real de novo (pedido do usuário, depois de configurar o SMTP
+  // do Resend) — com "Confirm email" ligado, signUp não volta mais com
+  // sessão na hora; precisa de um estado próprio pra essa espera (não é
+  // erro nenhum, é o fluxo esperado agora).
+  const [aguardandoConfirmacao, setAguardandoConfirmacao] = useState(false);
 
   const mutation = useMutation({
     mutationFn: signUp,
-    // Sem e-mail nenhum no cadastro (pedido do usuário) — o normal é
-    // signUp voltar com sessão na hora e o AuthProvider trocar de tela
-    // sozinho (Stack.Protected), sem precisar de nada aqui. **Isso só
-    // funciona com "Confirm email" desligado no painel do Supabase**
-    // (Authentication → Sign In / Providers → Email) — religar esse
-    // toggle por engano já aconteceu mais de uma vez neste projeto. Sem
-    // esse guard, a tela ficava simplesmente parada sem nenhum aviso
-    // quando isso acontecia (a conta é criada mesmo assim, só nunca
-    // ganha sessão) — achado testando de verdade depois de relato do
-    // usuário ("tá dando erro ao se cadastrar").
     onSuccess: (data) => {
       if (!data.session) {
-        setErros({
-          geral:
-            'Não deu pra concluir o cadastro agora — tente de novo em alguns minutos. Se continuar assim, avise a coordenação (config. do servidor precisa de ajuste).',
-        });
+        setAguardandoConfirmacao(true);
       }
+      // Se vier com sessão (ex.: "Confirm email" acabar desligado de
+      // novo por engano), o AuthProvider troca de tela sozinho
+      // (Stack.Protected) — nada a fazer aqui nesse caso.
     },
     onError: (error) => setErros({ geral: mensagemDeErro(error) }),
   });
@@ -62,6 +63,7 @@ export default function CadastroScreen() {
   async function handleSubmit() {
     const novosErros: Erros = {};
     if (!nome.trim()) novosErros.nome = 'Informe seu nome.';
+    if (!REGEX_EMAIL.test(email.trim())) novosErros.email = 'Informe um e-mail válido.';
 
     const usuarioLimpo = nomeUsuario.trim().replace(/^@/, '').toLowerCase();
     if (!usuarioLimpo) {
@@ -101,12 +103,39 @@ export default function CadastroScreen() {
 
     mutation.mutate({
       nome: nome.trim(),
+      email: email.trim(),
       nomeUsuario: usuarioLimpo,
       idade: idadeNumero,
       senha,
       aceitouTermos,
       consentimentoResponsavel,
     });
+  }
+
+  if (aguardandoConfirmacao) {
+    return (
+      <View className="flex-1 items-center justify-center gap-4 bg-background px-8 dark:bg-background-dark">
+        <View className="h-20 w-20 items-center justify-center rounded-full bg-primary/10 dark:bg-primary-dark/10">
+          <Ionicons name="mail-unread-outline" size={36} color="#4F46E5" />
+        </View>
+        <Text className="text-center text-2xl font-bold text-primary dark:text-primary-dark">
+          Confirme seu e-mail
+        </Text>
+        <Text className="text-center text-base text-slate-600 dark:text-slate-400">
+          Mandamos um link de confirmação pra{' '}
+          <Text className="font-semibold text-slate-800 dark:text-slate-200">{email.trim()}</Text>.
+          Abre sua caixa de entrada (e o spam, só por garantia) e toca no link pra ativar sua conta.
+        </Text>
+        <View className="mt-2 w-full">
+          <Button
+            label="Já tenho conta"
+            icon="arrow-back"
+            variant="secondary"
+            onPress={() => router.back()}
+          />
+        </View>
+      </View>
+    );
   }
 
   return (
@@ -132,6 +161,19 @@ export default function CadastroScreen() {
           error={erros.nome}
           autoComplete="name"
           textContentType="name"
+        />
+        <TextField
+          label="E-mail"
+          icon="mail-outline"
+          value={email}
+          onChangeText={setEmail}
+          error={erros.email}
+          placeholder="ex.: maria@exemplo.com"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoCorrect={false}
+          autoComplete="email"
+          textContentType="emailAddress"
         />
         <TextField
           label="Nome de usuário"

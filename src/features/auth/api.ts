@@ -27,20 +27,22 @@ const REDIRECT_NATIVO = `${ESQUEMA_APP}://google-auth`;
  * (`termos_aceitos_em`) e o estado do consentimento dos responsáveis
  * (`consentimento_responsavel`), ver `fetchOrCreateProfile`.
  */
-/** O Supabase Auth não tem cadastro "só usuário", exige algum e-mail
- * internamente — pedido do usuário foi tirar e-mail de vez do cadastro,
- * então geramos um aqui, nunca mostrado a ninguém (só existe pra
- * satisfazer o `auth.users.email`). Some com o próprio nome de usuário
- * (já verificado disponível antes de chegar aqui) + timestamp, então não
- * tem risco real de colisão. Ver migration `login_sem_email_por_usuario`
- * — é o mesmo valor que a RPC `email_por_nome_usuario` devolve pro login
- * resolver depois. */
-function gerarEmailInterno(nomeUsuario: string): string {
-  return `${nomeUsuario}.${Date.now()}@turmamais.internal`;
-}
-
+/**
+ * Volta a pedir e-mail de verdade no cadastro (pedido explícito do
+ * usuário, depois de configurar o SMTP do Resend) — a versão anterior
+ * gerava um e-mail sintético (`<usuário>.<timestamp>@turmamais.internal`)
+ * só pra satisfazer o `auth.users.email`, porque o Supabase Auth não
+ * tem cadastro "só usuário". Com SMTP configurado, o e-mail de
+ * confirmação chega de verdade — então voltou a fazer sentido coletar
+ * o e-mail real (também abre a porta pra "esqueci minha senha" no
+ * futuro, que não existe ainda). `signIn` continua por nome de
+ * usuário — a RPC `email_por_nome_usuario` (ver migration
+ * `login_sem_email_por_usuario`) resolve pro e-mail de verdade agora
+ * guardado, sem precisar mudar a UI de login.
+ */
 export async function signUp(params: {
   nome: string;
+  email: string;
   nomeUsuario: string;
   idade: number;
   senha: string;
@@ -48,11 +50,12 @@ export async function signUp(params: {
   consentimentoResponsavel: boolean;
 }) {
   const { data, error } = await supabase.auth.signUp({
-    email: gerarEmailInterno(params.nomeUsuario),
+    email: params.email,
     password: params.senha,
     // Guardado em user_metadata pra fetchOrCreateProfile usar no primeiro
-    // login (signUp pode não devolver sessão se a confirmação de e-mail
-    // estiver ligada, então o profile só é criado depois, no primeiro
+    // login (signUp não devolve sessão enquanto o e-mail não for
+    // confirmado — "Confirm email" ligado de propósito agora que o SMTP
+    // funciona —, então o profile só é criado depois, no primeiro
     // signIn bem-sucedido).
     options: {
       data: {

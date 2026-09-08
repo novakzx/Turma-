@@ -9,6 +9,14 @@ const TRADUCOES: Record<string, string> = {
   'Email not confirmed': 'Confirme seu e-mail antes de entrar — veja sua caixa de entrada.',
   'Password should be at least 6 characters': 'A senha precisa ter pelo menos 6 caracteres.',
   'Unable to validate email address: invalid format': 'Esse e-mail não parece válido.',
+  // Supabase devolve essa mensagem genérica quando o SMTP configurado
+  // (Resend) recusa o envio — achado testando de verdade: o motivo real
+  // de baixo (visível só no log do Supabase, não pro app) costuma ser o
+  // domínio do Resend ainda em modo de teste ("sandbox"), que só manda
+  // e-mail pro próprio dono da conta. Precisa ser resolvido no painel do
+  // Resend/Supabase — não é algo que o app consegue contornar sozinho.
+  'Error sending confirmation email':
+    'Não deu pra mandar o e-mail de confirmação agora. Tente de novo mais tarde ou avise a coordenação.',
 };
 
 // Erro de constraint do Postgres não é uma mensagem fixa (vem com o nome
