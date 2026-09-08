@@ -20,6 +20,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AvisosWeb } from '@/components/ui/AvisosWeb';
 import { BannerOffline } from '@/components/ui/BannerOffline';
+import { PromptInstalarPWA } from '@/components/ui/PromptInstalarPWA';
 import { AuthProvider, useAuth } from '@/features/auth/AuthProvider';
 import { carregarTemaPreferido } from '@/features/configuracoes/tema';
 import { OFFLINE_PERSIST_OPTIONS } from '@/lib/offlinePersist';
@@ -93,6 +94,7 @@ function RootNavigator() {
           o padrão do sistema pra quem nunca trocou o tema. */}
       <StatusBar style="light" />
       <BannerOffline />
+      <PromptInstalarPWA />
       <View className="flex-1">
         <Stack
           screenOptions={{

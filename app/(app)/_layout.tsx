@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 
 import { useAuth } from '@/features/auth/AuthProvider';
 import { registrarPushToken } from '@/features/notificacoes/pushToken';
+import { registrarPushWeb } from '@/features/notificacoes/webPush';
 
 export default function AppLayout() {
   const { session } = useAuth();
@@ -17,6 +18,12 @@ export default function AppLayout() {
     // em pushToken.ts sobre simulador e EAS projectId ausente).
     registrarPushToken(session.user.id).catch((err) => {
       console.error('registrarPushToken falhou', err);
+    });
+    // Web/PWA — caminho que funciona de verdade hoje (ver webPush.ts:
+    // o nativo acima ainda não tem EAS configurado, então não entrega
+    // nada por enquanto). Mesmo tratamento silencioso de erro.
+    registrarPushWeb(session.user.id).catch((err) => {
+      console.error('registrarPushWeb falhou', err);
     });
   }, [session]);
 

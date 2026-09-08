@@ -740,6 +740,7 @@ export type Database = {
       profiles: {
         Row: {
           anos_reprovados: number[];
+          assinatura_push_web: Json | null;
           bio: string | null;
           consentimento_responsavel: boolean;
           criado_em: string;
@@ -761,6 +762,7 @@ export type Database = {
         };
         Insert: {
           anos_reprovados?: number[];
+          assinatura_push_web?: Json | null;
           bio?: string | null;
           consentimento_responsavel?: boolean;
           criado_em?: string;
@@ -782,6 +784,7 @@ export type Database = {
         };
         Update: {
           anos_reprovados?: number[];
+          assinatura_push_web?: Json | null;
           bio?: string | null;
           consentimento_responsavel?: boolean;
           criado_em?: string;
