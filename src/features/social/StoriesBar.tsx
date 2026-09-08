@@ -4,11 +4,14 @@ import { router } from 'expo-router';
 import { useMemo } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
+import { AnelStory } from '@/components/ui/AnelStory';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { FotoPerfil } from '@/features/perfil/FotoPerfil';
 
 import { listarStoriesVisiveis } from './api';
 import type { StoryComAutor } from './types';
+
+const TAMANHO_AVATAR = 60;
 
 function BolinhaStory({
   nome,
@@ -28,13 +31,13 @@ function BolinhaStory({
       accessibilityLabel={`Story de ${nome}`}
       className="w-16 items-center gap-1"
     >
-      <View
-        className={`h-16 w-16 items-center justify-center rounded-full ${
-          temStory ? 'border-2 border-primary dark:border-primary-dark' : ''
-        }`}
-      >
-        <FotoPerfil caminho={fotoUrl} nome={nome} tamanho={temStory ? 58 : 64} />
-      </View>
+      {temStory ? (
+        <AnelStory tamanho={TAMANHO_AVATAR}>
+          <FotoPerfil caminho={fotoUrl} nome={nome} tamanho={TAMANHO_AVATAR} />
+        </AnelStory>
+      ) : (
+        <FotoPerfil caminho={fotoUrl} nome={nome} tamanho={TAMANHO_AVATAR + 8} />
+      )}
       <Text
         numberOfLines={1}
         className="w-16 text-center text-xs text-slate-600 dark:text-slate-400"
@@ -92,20 +95,20 @@ export function StoriesBar() {
           accessibilityRole="button"
           accessibilityLabel={minhasStories.length > 0 ? 'Sua story' : 'Adicionar story'}
         >
-          <View
-            className={`h-16 w-16 items-center justify-center rounded-full ${
-              minhasStories.length > 0 ? 'border-2 border-primary dark:border-primary-dark' : ''
-            }`}
-          >
+          {minhasStories.length > 0 ? (
+            <AnelStory tamanho={TAMANHO_AVATAR}>
+              <FotoPerfil caminho={profile.foto_url} nome={profile.nome} tamanho={TAMANHO_AVATAR} />
+            </AnelStory>
+          ) : (
             <FotoPerfil
               caminho={profile.foto_url}
               nome={profile.nome}
-              tamanho={minhasStories.length > 0 ? 58 : 64}
+              tamanho={TAMANHO_AVATAR + 8}
             />
-          </View>
+          )}
           {minhasStories.length === 0 ? (
-            <View className="absolute -bottom-0.5 -right-0.5 h-5 w-5 items-center justify-center rounded-full bg-primary dark:bg-primary-dark">
-              <Ionicons name="add" size={14} color="#FFFFFF" />
+            <View className="absolute -bottom-0.5 -right-0.5 h-5 w-5 items-center justify-center rounded-full border-2 border-background bg-primary dark:border-background-dark dark:bg-primary-dark">
+              <Ionicons name="add" size={12} color="#FFFFFF" />
             </View>
           ) : null}
         </Pressable>

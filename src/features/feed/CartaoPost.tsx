@@ -181,14 +181,17 @@ export function CartaoPost({
           accessibilityLabel={curtido ? 'Descurtir' : 'Curtir'}
           className="min-h-11 flex-row items-center gap-1 rounded-full px-3 py-2 active:bg-primary/5"
         >
+          {/* Coração vermelho quando curtido — convenção quase universal
+              (Instagram e afins), mais reconhecível de longe que a cor
+              da marca aqui especificamente. */}
           <Ionicons
             name={curtido ? 'heart' : 'heart-outline'}
             size={18}
-            color={curtido ? '#4F46E5' : '#94A3B8'}
+            color={curtido ? '#DC2626' : '#94A3B8'}
           />
           <Text
             className={
-              curtido ? 'text-primary dark:text-primary-dark' : 'text-slate-600 dark:text-slate-400'
+              curtido ? 'text-danger dark:text-danger-dark' : 'text-slate-600 dark:text-slate-400'
             }
           >
             {totalCurtidas}
