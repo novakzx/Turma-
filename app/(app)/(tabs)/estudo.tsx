@@ -16,7 +16,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/Button';
 import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
-import { ImagemChat } from '@/components/ui/ImagemChat';
 import { TextField } from '@/components/ui/TextField';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { mensagemDeErro } from '@/features/auth/errors';
@@ -24,14 +23,8 @@ import {
   buscarEstatisticaSemanal,
   enviarMensagemChat,
   listarHistoricoChat,
-  obterUrlAssinadaApresentacao,
 } from '@/features/estudo/api';
-import {
-  analisarApresentacao,
-  formatarTempo,
-  separarGabarito,
-  type Slide,
-} from '@/features/estudo/regras';
+import { formatarTempo, separarGabarito } from '@/features/estudo/regras';
 import {
   ICONE_MODO,
   ROTULO_MODO,
@@ -41,7 +34,7 @@ import {
 import { criarFlashcard } from '@/features/flashcards/api';
 import { listarMateriasDaTurma } from '@/features/notas/api';
 
-const MODOS: ModoChatEstudo[] = ['duvida', 'explicar', 'resumo', 'plano', 'prova', 'apresentacao'];
+const MODOS: ModoChatEstudo[] = ['duvida', 'explicar', 'resumo', 'plano', 'prova'];
 
 /** Duração fixa da prova simulada (15 min) — é só um cronômetro de UX
  * pra dar noção de tempo real de prova, não um prazo de verdade que
@@ -120,37 +113,6 @@ function CartaoEstatisticaSemanal({ alunoId }: { alunoId: string }) {
   );
 }
 
-/** Um slide da apresentação (modo `apresentacao`) — título + pontos em
- * bullet, num cartão separado por slide em vez de um bloco de texto só,
- * pra ficar claro que é conteúdo estruturado pra usar numa aula/trabalho. */
-function CartaoSlide({ numero, titulo, pontos, imagemCaminho }: Slide & { numero: number }) {
-  return (
-    <View className="shrink gap-1.5 rounded-lg border border-slate-800 bg-surface p-3 dark:bg-surface-dark">
-      <View className="flex-row items-center gap-1.5">
-        <View className="h-5 w-5 items-center justify-center rounded-full bg-accent/10 dark:bg-accent-dark/10">
-          <Text className="text-[10px] font-bold text-accent dark:text-accent-dark">{numero}</Text>
-        </View>
-        <Text className="flex-1 font-semibold text-slate-100">{titulo}</Text>
-      </View>
-      {imagemCaminho ? (
-        <View className="items-center self-center">
-          <ImagemChat
-            caminho={imagemCaminho}
-            obterUrl={obterUrlAssinadaApresentacao}
-            label={`Imagem gerada pro slide "${titulo}"`}
-          />
-        </View>
-      ) : null}
-      {pontos.map((ponto, indice) => (
-        <View key={indice} className="flex-row gap-1.5 pl-1">
-          <Text className="text-slate-400">•</Text>
-          <Text className="flex-1 text-sm text-slate-300">{ponto}</Text>
-        </View>
-      ))}
-    </View>
-  );
-}
-
 function BolhaMensagem({
   mensagem,
   perguntaAnterior,
@@ -167,11 +129,6 @@ function BolhaMensagem({
   const doAluno = mensagem.papel === 'usuario';
   const [mostrarGabarito, setMostrarGabarito] = useState(false);
   const { enunciado, gabarito } = separarGabarito(mensagem.conteudo);
-  // Só a IA gera apresentação — mensagem do próprio aluno (o pedido,
-  // ex.: "fotossíntese") nunca teria o formato de slide, então nem vale
-  // a pena checar (evita um falso positivo bizarro se o aluno colar um
-  // texto parecido por acaso).
-  const slides = !doAluno ? analisarApresentacao(enunciado) : null;
 
   const flashcardMutation = useMutation({
     mutationFn: () =>
@@ -200,19 +157,15 @@ function BolhaMensagem({
         </View>
       ) : null}
       <View className="shrink gap-1.5">
-        {slides ? (
-          slides.map((slide, indice) => <CartaoSlide key={indice} numero={indice + 1} {...slide} />)
-        ) : (
-          <View
-            className={`shrink rounded-lg px-4 py-2.5 ${
-              doAluno
-                ? 'bg-primary dark:bg-primary-dark'
-                : 'border border-slate-800 bg-surface dark:bg-surface-dark'
-            }`}
-          >
-            <Text className={doAluno ? 'text-white' : 'text-slate-100'}>{enunciado}</Text>
-          </View>
-        )}
+        <View
+          className={`shrink rounded-lg px-4 py-2.5 ${
+            doAluno
+              ? 'bg-primary dark:bg-primary-dark'
+              : 'border border-slate-800 bg-surface dark:bg-surface-dark'
+          }`}
+        >
+          <Text className={doAluno ? 'text-white' : 'text-slate-100'}>{enunciado}</Text>
+        </View>
 
         {gabarito ? (
           mostrarGabarito ? (
@@ -237,9 +190,9 @@ function BolhaMensagem({
         ) : null}
 
         {/* "+ Flashcard" só faz sentido numa resposta de verdade da IA
-            (não na prova, que já tem gabarito próprio, não na apresentação
-            de slides, nem na mensagem do próprio aluno). */}
-        {!doAluno && !gabarito && !slides ? (
+            (não na prova, que já tem gabarito próprio, nem na mensagem
+            do próprio aluno). */}
+        {!doAluno && !gabarito ? (
           <Pressable
             onPress={() => flashcardMutation.mutate()}
             disabled={flashcardMutation.isPending || flashcardMutation.isSuccess}
@@ -321,9 +274,7 @@ export default function Estudo() {
       setErro(
         modo === 'prova'
           ? 'Escreve o assunto da prova antes de gerar (ex.: "frações" ou "2ª Guerra Mundial").'
-          : modo === 'apresentacao'
-            ? 'Escreve o assunto da apresentação antes de gerar (ex.: "fotossíntese").'
-            : 'Escreve sua pergunta antes de enviar.',
+          : 'Escreve sua pergunta antes de enviar.',
       );
       return;
     }
@@ -497,9 +448,7 @@ export default function Estudo() {
                 placeholder={
                   modo === 'prova'
                     ? 'Assunto da prova (ex.: frações)...'
-                    : modo === 'apresentacao'
-                      ? 'Assunto da apresentação (ex.: fotossíntese)...'
-                      : 'Escreve sua pergunta...'
+                    : 'Escreve sua pergunta...'
                 }
                 multiline
               />
