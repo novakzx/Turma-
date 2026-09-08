@@ -1,24 +1,24 @@
 import { MARCADOR_GABARITO, escolherModelo, montarPromptSistema } from '../regrasEstudo';
 
-describe('escolherModelo (Gemini — só gemini-flash-latest confirmado, ver comentário na fonte)', () => {
-  it('usa gemini-flash-latest pra explicar conceito', () => {
-    expect(escolherModelo('explicar')).toBe('gemini-flash-latest');
+describe('escolherModelo (Cloudflare Workers AI — ids confirmados em developers.cloudflare.com/workers-ai/models)', () => {
+  it('usa o modelo leve pra explicar conceito', () => {
+    expect(escolherModelo('explicar')).toBe('@cf/meta/llama-3.1-8b-instruct-fast');
   });
 
-  it('usa gemini-flash-latest pra tirar dúvida pontual', () => {
-    expect(escolherModelo('duvida')).toBe('gemini-flash-latest');
+  it('usa o modelo leve pra tirar dúvida pontual', () => {
+    expect(escolherModelo('duvida')).toBe('@cf/meta/llama-3.1-8b-instruct-fast');
   });
 
-  it('usa gemini-flash-latest pra gerar resumo', () => {
-    expect(escolherModelo('resumo')).toBe('gemini-flash-latest');
+  it('usa o modelo mais forte pra gerar resumo', () => {
+    expect(escolherModelo('resumo')).toBe('@cf/meta/llama-3.3-70b-instruct-fp8-fast');
   });
 
-  it('usa gemini-flash-latest pra montar plano de estudo', () => {
-    expect(escolherModelo('plano')).toBe('gemini-flash-latest');
+  it('usa o modelo mais forte pra montar plano de estudo', () => {
+    expect(escolherModelo('plano')).toBe('@cf/meta/llama-3.3-70b-instruct-fp8-fast');
   });
 
-  it('usa gemini-flash-latest pra prova simulada', () => {
-    expect(escolherModelo('prova')).toBe('gemini-flash-latest');
+  it('usa o modelo mais forte pra prova simulada', () => {
+    expect(escolherModelo('prova')).toBe('@cf/meta/llama-3.3-70b-instruct-fp8-fast');
   });
 });
 

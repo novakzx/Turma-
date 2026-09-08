@@ -44,11 +44,13 @@ Copie `.env.example` pra `.env` e preencha:
 | ------------------------------- | ------------------------------------------------ | ------------------------------------------------------- |
 | `EXPO_PUBLIC_SUPABASE_URL`      | Cliente (app)                                    | Não — pode ficar no bundle                              |
 | `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Cliente (app)                                    | Não — protegida pelas policies de RLS, não pelo segredo |
-| `GEMINI_API_KEY`                | Edge Function (`supabase secrets set`)           | **Sim** — nunca no app                                  |
+| `CF_ACCOUNT_ID`                 | Edge Function `chat-estudo` (`supabase secrets set`) | **Sim** — nunca no app                              |
+| `CF_API_TOKEN`                  | Edge Function `chat-estudo` (`supabase secrets set`) | **Sim** — nunca no app                              |
+| `GEMINI_API_KEY`                | Edge Function `traduzir-texto` (`supabase secrets set`) | **Sim** — nunca no app                           |
 | `SUPABASE_SERVICE_ROLE_KEY`     | Edge Function (`supabase secrets set`)           | **Sim** — nunca no app                                  |
 | `EXPO_ACCESS_TOKEN`             | Edge Function, se usar envio de push autenticado | **Sim** — nunca no app                                  |
 
-As duas últimas linhas da tabela são secrets de Edge Function, não variáveis do app — não existe `.env` pra elas neste repo; são configuradas direto no projeto Supabase (`supabase secrets set NOME=valor`).
+As linhas marcadas "Sim" são secrets de Edge Function, não variáveis do app — não existe `.env` pra elas neste repo; são configuradas direto no projeto Supabase (`supabase secrets set NOME=valor`).
 
 ### Edge Functions e automações
 
@@ -56,11 +58,11 @@ As duas últimas linhas da tabela são secrets de Edge Function, não variáveis
 | ----------------- | ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `notificar-aviso` | Trigger `AFTER INSERT` em `avisos` (`private.notificar_aviso_criado`)                                                  | Lê `push_token` de quem tem direito ao aviso (escopo escola/turma, só `aluno` — ver `supabase/functions/_shared/regras.ts`) e manda pro Expo Push Service.                                                                                                                                                                                                                    |
 | `aviso-clima`     | **Desligada** — era `pg_cron` a cada 4h (`aviso-clima-periodico`), unscheduled na migration `desliga_cron_aviso_clima` | Função e código continuam no repo; pra cada escola com `latitude`/`longitude` cadastrada, consultava o Open-Meteo e criava um aviso `tipo='trajeto'` quando a previsão passava o limite configurável daquela escola. Desligada porque não existe mais tela nenhuma no app que mostre um `aviso` (ver "Status atual") — sem isso ficaria gerando aviso e push pra ninguém ver. |
-| `chat-estudo`     | Chamada direta do app (`supabase.functions.invoke`)                                                                    | Recebe matéria + mensagem + modo (explicar/dúvida/resumo/plano), monta o histórico da conversa (`chat_ia_mensagens`, só leitura pro cliente) e o prompt de tutor (`supabase/functions/_shared/regrasEstudo.ts`), chama a Gemini e grava as duas mensagens com a service role.                                                                                                 |
+| `chat-estudo`     | Chamada direta do app (`supabase.functions.invoke`)                                                                    | Recebe matéria + mensagem + modo (explicar/dúvida/resumo/plano/prova), monta o histórico da conversa (`chat_ia_mensagens`, só leitura pro cliente) e o prompt de tutor (`supabase/functions/_shared/regrasEstudo.ts`), chama o Cloudflare Workers AI e grava as duas mensagens com a service role.                                                                            |
 
 `notificar-aviso`/`aviso-clima` têm `verify_jwt` ligado e autenticam com a chave anon do projeto (pública, a mesma do `.env`) — chamadas servidor-a-servidor (trigger/cron), sem CORS envolvido. `chat-estudo` **é** chamada direto do navegador/app, então precisa responder o preflight `OPTIONS` com os headers de CORS certos — sem isso o request nem sai do cliente (achado testando de verdade: ver `supabase/functions/chat-estudo/index.ts`). Todas usam a `SUPABASE_SERVICE_ROLE_KEY` que o runtime já injeta sozinho pra ler/escrever ignorando RLS quando precisam — não precisou gerenciar segredo próprio via `supabase secrets set` pra isso.
 
-**`chat-estudo` exige `GEMINI_API_KEY`** como secret da função (`supabase secrets set GEMINI_API_KEY=...`, ou Studio → Edge Functions → Secrets) — sem isso ela responde 503 com uma mensagem clara em vez de quebrar. Modelo usado: `gemini-flash-latest` (único id confirmado de verdade — a lista de modelos da Gemini muda com frequência, ver comentário em `supabase/functions/_shared/regrasEstudo.ts` sobre por que a escalada de modelo por complexidade do brief original não foi reativada ainda).
+**`chat-estudo` exige `CF_ACCOUNT_ID` e `CF_API_TOKEN`** como secrets da função (`supabase secrets set CF_ACCOUNT_ID=... CF_API_TOKEN=...`, ou Studio → Edge Functions → Secrets) — sem isso ela responde 503 com uma mensagem clara em vez de quebrar. Token gerado no dashboard da Cloudflare → Workers AI → API Tokens (tier grátis, 10.000 "neurons"/dia, recorrente — mesma conta Cloudflare já usada pro rate limiting por IP, sem cadastro novo). Modelos usados (ver comentário em `supabase/functions/_shared/regrasEstudo.ts` — testado ao vivo, `@cf/meta/llama-3.1-8b-instruct` sem sufixo já respondeu 410 "descontinuado", só a variante `-fast` é mantida): `@cf/meta/llama-3.1-8b-instruct-fast` pros modos corriqueiros (explicar/dúvida), `@cf/meta/llama-3.3-70b-instruct-fp8-fast` pros modos que pedem mais raciocínio (resumo/plano/prova). Trocado de Groq pra isso por um bug de login no console deles (ver histórico). `traduzir-texto` continua na Gemini (`GEMINI_API_KEY`) — não foi trocada.
 
 Pra redeployar depois de mexer no código: `supabase functions deploy <nome>` (ou pelo MCP do Supabase, como foi feito aqui).
 
@@ -94,7 +96,7 @@ O projeto já está configurado pra build gerenciado (`eas.json`, ícones e spla
 Já está configurado (`vercel.json`: comando de build, `dist/` como saída, rewrite de SPA pra toda rota cair em `index.html`, senão `/feed` ou `/post/123` dão 404 num reload direto). Só falta importar o projeto:
 
 1. Em [vercel.com](https://vercel.com) → **Add New → Project** → importe `novakzx/Turma-` (o repositório já está no ar — ver seção principal do README/`git remote`).
-2. Nas variáveis de ambiente do projeto na Vercel, adicione `EXPO_PUBLIC_SUPABASE_URL` e `EXPO_PUBLIC_SUPABASE_ANON_KEY` (os mesmos valores do seu `.env` local — são públicas, protegidas por RLS, não segredo de verdade, mas o build não funciona sem elas). **Nunca** adicione `GEMINI_API_KEY`/`SUPABASE_SERVICE_ROLE_KEY` aqui — essas só existem como secret de Edge Function, nunca no bundle do app (ver "Segurança e privacidade").
+2. Nas variáveis de ambiente do projeto na Vercel, adicione `EXPO_PUBLIC_SUPABASE_URL` e `EXPO_PUBLIC_SUPABASE_ANON_KEY` (os mesmos valores do seu `.env` local — são públicas, protegidas por RLS, não segredo de verdade, mas o build não funciona sem elas). **Nunca** adicione `CF_ACCOUNT_ID`/`CF_API_TOKEN`/`GEMINI_API_KEY`/`SUPABASE_SERVICE_ROLE_KEY` aqui — essas só existem como secret de Edge Function, nunca no bundle do app (ver "Segurança e privacidade").
 3. Deploy. A Vercel detecta o `vercel.json` sozinha (`framework: null` — não é Next.js nem nenhum framework que ela reconheça automaticamente).
 
 Testado localmente antes de configurar isso: `npx expo export --platform web` gera `dist/` sem erro (bundle de ~3.3MB, dentro do esperado pra um app com Reanimated + vector-icons + Supabase).
@@ -157,7 +159,7 @@ supabase/
   functions/
     _shared/          # Lógica pura das Edge Functions (regras.ts, regrasEstudo.ts — testada com Jest)
     notificar-aviso/  # Dispara push quando um aviso é criado
-    chat-estudo/      # Chat com IA por matéria (precisa de GEMINI_API_KEY)
+    chat-estudo/      # Chat com IA por matéria (precisa de CF_ACCOUNT_ID/CF_API_TOKEN)
     aviso-clima/      # Cron: cria aviso automático de trajeto via Open-Meteo
 ```
 
@@ -190,7 +192,7 @@ O público é majoritariamente menor de idade — isto é requisito de MVP, não
 - [x] **Fase 0 — Fundação**: projeto Expo + TypeScript, schema Supabase com RLS, lint/test/CI.
 - [x] **Fase 1 — Conta e perfil**: cadastro/login (email+senha — _depois trocado por nome de usuário+senha, sem e-mail nenhum, ver "Status atual"_), onboarding de escola/turma, papel `aluno` por padrão.
 - [x] **Fase 2 — Avisos e clima**: mural em tempo real, push via Edge Function, integração Open-Meteo, aviso automático de trajeto. _(a aba que mostrava isso virou um calendário de feriados escolares depois, a pedido do usuário — o back-end continua no ar, ver "Status atual".)_
-- [x] **Fase 3 — Estudo**: chat com IA por matéria (Gemini, `GEMINI_API_KEY` configurada e testada de ponta a ponta), calculadora de notas.
+- [x] **Fase 3 — Estudo**: chat com IA por matéria (Cloudflare Workers AI, `CF_ACCOUNT_ID`/`CF_API_TOKEN` configuradas e testadas de ponta a ponta), calculadora de notas.
 - [x] **Fase 4 — Feed da turma**: post, curtida, comentário, upload de imagem.
 - [x] **Fase 5 — Chat comunitário**: salas em tempo real, moderação.
 - [~] **Fase 6 — Acabamento**: linguagem visual (ícones, animações, cantos arredondados), auditoria de acessibilidade e config de build EAS/ícones/splash já feitas; falta só o que exige conta Expo/loja de verdade (`eas init`, build, submit — ver seção "Build via EAS e preparação pra loja").

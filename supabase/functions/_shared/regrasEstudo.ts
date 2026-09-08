@@ -17,19 +17,38 @@ export const ROTULO_MODO: Record<ModoChatEstudo, string> = {
 export const MARCADOR_GABARITO = '===GABARITO===';
 
 /**
- * Trocado de Claude (Anthropic) pra Gemini (Google) a pedido do usuário —
- * mesma ideia de escalar modelo por complexidade que o brief 6.2 original
- * pedia pro Claude, só que `gemini-flash-latest` é o único id de modelo
- * confirmado de verdade (testado pelo usuário com a própria chave, ver
- * `README.md` > "Edge Functions e automações"); a lista de modelos da
- * Gemini muda com frequência e um id "pro" chutado sem confirmar quebraria
- * silenciosamente os modos resumo/plano (a API responde 404 pra modelo
- * inexistente). Por enquanto todos os modos usam o mesmo modelo — trocar
- * resumo/plano pra um tier mais caro é seguro reativar depois que alguém
- * confirmar o id certo (ver https://ai.google.dev/gemini-api/docs/models).
+ * Trocado de Groq pra Cloudflare Workers AI a pedido do usuário — o login
+ * do console da Groq estava com bug conhecido (relatado por outros
+ * usuários no fórum deles desde fev/2026) impedindo criar a chave; o
+ * projeto já tem conta Cloudflare (usada pro rate limiting por IP, ver
+ * `private.aplica_rate_limit`), então zero cadastro novo. Tier grátis:
+ * 10.000 "neurons"/dia, recorrente (não é crédito único).
+ *
+ * ACHADO testando ao vivo: `@cf/meta/llama-3.1-8b-instruct` (sem
+ * "-fast") já tinha sido descontinuado em 30/mai/2026 — a API responde
+ * 410, não 404, então não cai no mesmo "silenciosamente quebra" que o
+ * comentário antigo da Gemini temia, mas quebra do mesmo jeito.
+ * `@cf/meta/llama-3.1-8b-instruct-fast` é a variante que a própria
+ * Cloudflare confirma manter viva (anúncio de depreciação de mai/2026:
+ * "-fast" e "-lora" continuam) — só ela deve ser usada, nunca a base sem
+ * sufixo. `@cf/meta/llama-3.3-70b-instruct-fp8-fast` (mais forte, já
+ * otimizado pra latência) segue confirmado ativo pros modos que pedem
+ * mais raciocínio — mesma ideia de escalar modelo por complexidade do
+ * brief 6.2 original. Terceira troca de provedor deste projeto (Claude →
+ * Gemini → Groq → Cloudflare) — todas por motivo de disponibilidade/
+ * acesso, não de qualidade do modelo em si.
  */
-export function escolherModelo(_modo: ModoChatEstudo): string {
-  return 'gemini-flash-latest';
+export function escolherModelo(modo: ModoChatEstudo): string {
+  switch (modo) {
+    case 'resumo':
+    case 'plano':
+    case 'prova':
+      return '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
+    case 'explicar':
+    case 'duvida':
+    default:
+      return '@cf/meta/llama-3.1-8b-instruct-fast';
+  }
 }
 
 /**

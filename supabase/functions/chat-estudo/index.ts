@@ -1,8 +1,10 @@
 // Edge Function: chat com IA por matéria (brief 6.2, arquitetura seção 4
 // — "chamada só pela Edge Function, nunca direto do app"). Trocado de
-// Anthropic (Claude) pra Gemini (Google) a pedido do usuário — o app
-// nunca vê a GEMINI_API_KEY; ela só existe como secret desta função
-// (`supabase secrets set GEMINI_API_KEY=...`).
+// Groq pra Cloudflare Workers AI a pedido do usuário (o login do console
+// da Groq estava com bug do lado deles, sem dar pra criar a chave — ver
+// `regrasEstudo.ts`). O app nunca vê `CF_API_TOKEN`; ela só existe como
+// secret desta função (`supabase secrets set CF_API_TOKEN=...` e
+// `CF_ACCOUNT_ID=...`).
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
 import {
@@ -14,15 +16,17 @@ import {
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+const CF_ACCOUNT_ID = Deno.env.get('CF_ACCOUNT_ID');
+const CF_API_TOKEN = Deno.env.get('CF_API_TOKEN');
 
 const HISTORICO_MAXIMO = 20;
 const MENSAGEM_TAMANHO_MAXIMO = 4000;
-// Cada chamada custa dinheiro de verdade (API da Gemini) — sem limite
-// nenhum, um script batendo nesse endpoint em loop vira gasto ilimitado
-// pra conta do projeto. Generoso o bastante pra uso normal (ninguém
-// manda 15 perguntas em 5 minutos de verdade estudando), curto o
-// bastante pra travar abuso automatizado.
+// Mesmo o tier grátis do Cloudflare Workers AI sendo generoso (10.000
+// "neurons"/dia), é um teto compartilhado por todo o projeto — sem
+// limite nenhum aqui, um script batendo nesse endpoint em loop estoura a
+// cota pra todo mundo. Generoso o bastante pra uso normal (ninguém manda
+// 15 perguntas em 5 minutos de verdade estudando), curto o bastante pra
+// travar abuso automatizado.
 const LIMITE_MENSAGENS = 15;
 const JANELA_LIMITE_MS = 5 * 60 * 1000;
 
@@ -65,11 +69,11 @@ Deno.serve(async (req) => {
   }
 
   try {
-    if (!GEMINI_API_KEY) {
-      // Não é um erro de código — é a chave ainda não ter sido
-      // configurada (ver README > "Edge Functions e automações").
+    if (!CF_ACCOUNT_ID || !CF_API_TOKEN) {
+      // Não é um erro de código — são as credenciais ainda não terem
+      // sido configuradas (ver README > "Edge Functions e automações").
       return respostaJson(
-        { error: 'Chat com IA ainda não foi configurado (falta GEMINI_API_KEY).' },
+        { error: 'Chat com IA ainda não foi configurado (falta CF_ACCOUNT_ID/CF_API_TOKEN).' },
         503,
         origin,
       );
@@ -141,67 +145,65 @@ Deno.serve(async (req) => {
       .limit(HISTORICO_MAXIMO);
     if (historicoError) throw historicoError;
 
-    // Gemini usa `role: 'user' | 'model'` (não 'assistant') e agrupa o
-    // texto dentro de `parts` — formato bem diferente do Claude, que a
-    // troca de provedor obrigou a adaptar aqui.
-    const historicoGemini = (historico ?? []).reverse().map((m) => ({
-      role: m.papel === 'usuario' ? ('user' as const) : ('model' as const),
-      parts: [{ text: m.conteudo as string }],
+    // Cloudflare Workers AI expõe uma API compatível com OpenAI (`role:
+    // 'system' | 'user' | 'assistant'`, texto direto em `content`) —
+    // mesmo formato que a Groq usava, então essa parte não mudou.
+    const historicoConvertido = (historico ?? []).reverse().map((m) => ({
+      role: m.papel === 'usuario' ? ('user' as const) : ('assistant' as const),
+      content: m.conteudo as string,
     }));
-    historicoGemini.push({ role: 'user', parts: [{ text: mensagem }] });
 
     const modelo = escolherModelo(modo);
     const systemPrompt = montarPromptSistema({ nomeMateria: materia.nome, modo });
 
-    // A Gemini às vezes recusa com 503 "high demand" (sobrecarga
-    // temporária do lado deles, não um erro nosso — visto de verdade
-    // testando o chat) — uma única nova tentativa depois de um respiro
-    // curto resolve a maioria dos casos sem esperar o usuário clicar
-    // "Enviar" de novo.
-    async function chamarGemini() {
+    // 429 (cota do tier grátis estourada) ou 503 (sobrecarga temporária)
+    // — uma única nova tentativa depois de um respiro curto resolve a
+    // maioria dos casos sem esperar o usuário clicar "Enviar" de novo.
+    async function chamarCloudflare() {
       return fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent`,
+        `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/ai/v1/chat/completions`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'X-goog-api-key': GEMINI_API_KEY,
+            Authorization: `Bearer ${CF_API_TOKEN}`,
           },
           body: JSON.stringify({
-            systemInstruction: { parts: [{ text: systemPrompt }] },
-            contents: historicoGemini,
+            model: modelo,
+            messages: [
+              { role: 'system', content: systemPrompt },
+              ...historicoConvertido,
+              { role: 'user', content: mensagem },
+            ],
           }),
         },
       );
     }
 
-    let respostaGemini = await chamarGemini();
-    if (respostaGemini.status === 503) {
+    let respostaCloudflare = await chamarCloudflare();
+    if (respostaCloudflare.status === 429 || respostaCloudflare.status === 503) {
       await new Promise((resolve) => setTimeout(resolve, 1500));
-      respostaGemini = await chamarGemini();
+      respostaCloudflare = await chamarCloudflare();
     }
 
-    if (!respostaGemini.ok) {
-      const corpo = await respostaGemini.text();
-      console.error('chat-estudo: Gemini recusou', respostaGemini.status, corpo);
+    if (!respostaCloudflare.ok) {
+      const corpo = await respostaCloudflare.text();
+      console.error('chat-estudo: Cloudflare Workers AI recusou', respostaCloudflare.status, corpo);
       const mensagemErro =
-        respostaGemini.status === 503
+        respostaCloudflare.status === 429 || respostaCloudflare.status === 503
           ? 'A IA está sobrecarregada agora — tenta de novo em alguns segundos.'
           : 'Não deu pra falar com a IA agora.';
       return respostaJson({ error: mensagemErro }, 502, origin);
     }
 
-    const dadosResposta = await respostaGemini.json();
-    // `candidates` pode vir vazio se a resposta foi bloqueada por
-    // segurança (`promptFeedback.blockReason`) — trata como "sem texto"
-    // em vez de deixar `.join('')` esconder o problema como resposta vazia.
-    const textoResposta: string =
-      dadosResposta.candidates?.[0]?.content?.parts
-        ?.map((bloco: { text?: string }) => bloco.text ?? '')
-        .join('\n') ?? '';
+    const dadosResposta = await respostaCloudflare.json();
+    const textoResposta: string = dadosResposta.choices?.[0]?.message?.content ?? '';
 
     if (!textoResposta) {
-      console.error('chat-estudo: Gemini sem texto na resposta', JSON.stringify(dadosResposta));
+      console.error(
+        'chat-estudo: Cloudflare Workers AI sem texto na resposta',
+        JSON.stringify(dadosResposta),
+      );
       return respostaJson({ error: 'A IA não conseguiu responder dessa vez.' }, 502, origin);
     }
 
