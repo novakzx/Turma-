@@ -23,6 +23,14 @@ const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY');
 const PRECO_CENTAVOS = 299; // R$2,99
 const NOME_PRODUTO = 'Turma+ Premium';
 const DESCRICAO_PRODUTO = 'IA de estudo sem limite diário + selo de verificado no perfil.';
+// "Software as a service (SaaS) - personal use" — a conta Stripe tem
+// Managed Payments ligado por padrão, que exige um product tax code
+// elegível em todo `price_data` inline (achado ao vivo: sem isso, a
+// Checkout Session falha com "the product tax code is missing").
+// Assinante daqui é sempre pessoa física (aluno), nunca empresa — daí
+// o "personal use", não o "business use" (ver docs.stripe.com/tax/
+// products-prices-tax-codes-tax-behavior).
+const TAX_CODE_SAAS_PESSOA_FISICA = 'txcd_10103000';
 
 // Mesma lista de `chat-estudo`/`excluir-conta` — domínio de produção
 // corrigido pra `suaturma.vercel.app` (ver histórico).
@@ -120,7 +128,11 @@ Deno.serve(async (req) => {
             currency: 'brl',
             unit_amount: PRECO_CENTAVOS,
             recurring: { interval: 'month' },
-            product_data: { name: NOME_PRODUTO, description: DESCRICAO_PRODUTO },
+            product_data: {
+              name: NOME_PRODUTO,
+              description: DESCRICAO_PRODUTO,
+              tax_code: TAX_CODE_SAAS_PESSOA_FISICA,
+            },
           },
           quantity: 1,
         },
