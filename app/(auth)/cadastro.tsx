@@ -47,9 +47,25 @@ export default function CadastroScreen() {
 
   const mutation = useMutation({
     mutationFn: signUp,
+    // Achado testando de verdade ("o e-mail não chega"): quando o
+    // e-mail informado já pertence a uma conta existente, o Supabase
+    // (de propósito, pra não vazar "esse e-mail já tem conta" — ver
+    // docs do `signUp`) devolve sucesso e `confirmation_sent_at`
+    // preenchido igual um cadastro novo de verdade, MAS não manda
+    // e-mail nenhum de fato — o único jeito de diferenciar os dois
+    // casos no cliente é `user.identities` vir vazio (`[]`) só quando
+    // já existia conta antes. Sem esse check, a tela mostrava "Confirme
+    // seu e-mail" mesmo quando não tinha sido enviado nada.
     onSuccess: (data) => {
       if (!data.session) {
-        setAguardandoConfirmacao(true);
+        if (data.user?.identities?.length === 0) {
+          setErros({
+            geral:
+              'Já existe uma conta com esse e-mail. Tenta entrar em vez de criar outra — se esqueceu a senha, fale com a coordenação por enquanto ("esqueci minha senha" ainda não existe).',
+          });
+        } else {
+          setAguardandoConfirmacao(true);
+        }
       }
       // Se vier com sessão (ex.: "Confirm email" acabar desligado de
       // novo por engano), o AuthProvider troca de tela sozinho
