@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useRef } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useReducedMotion,
@@ -14,8 +15,10 @@ import { EntradaAnimada } from '@/components/ui/EntradaAnimada';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { FotoPerfil } from '@/features/perfil/FotoPerfil';
 
+import { buscarEnquete, votarEnquete } from './api';
 import { BotaoDenunciar } from './BotaoDenunciar';
 import { ImagemPost } from './ImagemPost';
+import { calcularPercentualOpcao } from './regras';
 import { ICONE_TIPO_POST, ROTULO_TIPO_POST } from './types';
 import type { PostComContadores } from './api';
 
@@ -98,6 +101,95 @@ function ImagemComToqueDuplo({
   );
 }
 
+/** Enquete rápida (pedido do usuário) — antes de votar mostra as opções
+ * como botões simples; depois de votar (ou pra quem já votou antes)
+ * mostra a barra de porcentagem com a opção escolhida marcada. Busca e
+ * voto ficam contidos aqui dentro do próprio card — cada enquete é
+ * independente, sem precisar subir estado pro componente pai (feed.tsx
+ * só lida com curtida/comentário, que são globais à lista). Sem
+ * padding horizontal próprio de propósito — reusado em `CartaoPost`
+ * (onde o pai NÃO tem `px` e cada filho aplica o seu) e em
+ * `post/[id].tsx` (onde o pai JÁ tem `px-6` pra tudo); ganhar `px`
+ * daqui de dentro somaria os dois nesse segundo caso. */
+export function EnquetePost({ postId }: { postId: string }) {
+  const { profile } = useAuth();
+  const queryClient = useQueryClient();
+
+  const enqueteQuery = useQuery({
+    queryKey: ['enquete', postId],
+    queryFn: () => buscarEnquete(postId, profile!.id),
+    enabled: !!profile,
+  });
+
+  const votarMutation = useMutation({
+    mutationFn: (opcaoId: string) => votarEnquete({ postId, opcaoId, votanteId: profile!.id }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['enquete', postId] }),
+  });
+
+  if (enqueteQuery.isLoading || !enqueteQuery.data) {
+    return (
+      <View className="items-center py-4">
+        <ActivityIndicator color="#4F46E5" />
+      </View>
+    );
+  }
+
+  const { opcoes, contagemPorOpcao, totalVotos, meuVotoOpcaoId } = enqueteQuery.data;
+  const jaVotou = meuVotoOpcaoId !== null;
+
+  return (
+    <View className="gap-2">
+      {opcoes.map((opcao) => {
+        const votosDaOpcao = contagemPorOpcao[opcao.id] ?? 0;
+        const percentual = calcularPercentualOpcao(votosDaOpcao, totalVotos);
+        const escolhida = meuVotoOpcaoId === opcao.id;
+        return (
+          <Pressable
+            key={opcao.id}
+            onPress={() => {
+              if (!votarMutation.isPending) votarMutation.mutate(opcao.id);
+            }}
+            accessibilityRole="button"
+            accessibilityLabel={
+              jaVotou ? `${opcao.texto} — ${percentual}% dos votos` : `Votar em "${opcao.texto}"`
+            }
+            className="min-h-11 overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700"
+          >
+            {jaVotou ? (
+              <View
+                className={`absolute bottom-0 left-0 top-0 ${
+                  escolhida
+                    ? 'bg-primary/20 dark:bg-primary-dark/30'
+                    : 'bg-slate-100 dark:bg-slate-800'
+                }`}
+                style={{ width: `${percentual}%` }}
+              />
+            ) : null}
+            <View className="flex-row items-center justify-between px-4 py-2.5">
+              <View className="flex-1 flex-row items-center gap-1.5 pr-2">
+                {escolhida ? <Ionicons name="checkmark-circle" size={16} color="#4F46E5" /> : null}
+                <Text className="shrink text-sm text-slate-900 dark:text-slate-100">
+                  {opcao.texto}
+                </Text>
+              </View>
+              {jaVotou ? (
+                <Text className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                  {percentual}%
+                </Text>
+              ) : null}
+            </View>
+          </Pressable>
+        );
+      })}
+      <Text className="text-xs text-slate-500 dark:text-slate-400">
+        {totalVotos === 0
+          ? 'Ninguém votou ainda'
+          : `${totalVotos} ${totalVotos === 1 ? 'voto' : 'votos'}`}
+      </Text>
+    </View>
+  );
+}
+
 /** Card de post — reusado no feed da turma e em "Minhas publicações" no
  * perfil (mesmo formato de dado, `PostComContadores`, só a query que
  * busca muda: por turma ou por autor). Redesenho Fase 11: avatar de
@@ -172,6 +264,12 @@ export function CartaoPost({
 
       {post.tipo === 'foto' && post.midia_url ? (
         <ImagemComToqueDuplo caminho={post.midia_url} curtido={curtido} onCurtir={onCurtir} />
+      ) : null}
+
+      {post.tipo === 'enquete' ? (
+        <View className="px-4">
+          <EnquetePost postId={post.id} />
+        </View>
       ) : null}
 
       <View className="flex-row items-center gap-1 px-4 pt-1">

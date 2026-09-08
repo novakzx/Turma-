@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 
+import { calcularEstatisticaSemanal, type EstatisticaSemanal } from './regras';
 import type { MensagemChatIA, ModoChatEstudo } from './types';
 
 export async function listarHistoricoChat(materiaId: string): Promise<MensagemChatIA[]> {
@@ -10,6 +11,24 @@ export async function listarHistoricoChat(materiaId: string): Promise<MensagemCh
     .order('criado_em');
   if (error) throw error;
   return data;
+}
+
+/** Só as perguntas (`papel = 'usuario'`) dos últimos 7 dias — a lógica
+ * de agregação de verdade (contar matéria diferente, achar o dia mais
+ * ativo) fica em `calcularEstatisticaSemanal` (testável sem banco). */
+export async function buscarEstatisticaSemanal(alunoId: string): Promise<EstatisticaSemanal> {
+  const seteDiasAtras = new Date();
+  seteDiasAtras.setDate(seteDiasAtras.getDate() - 7);
+
+  const { data, error } = await supabase
+    .from('chat_ia_mensagens')
+    .select('materia_id, criado_em')
+    .eq('aluno_id', alunoId)
+    .eq('papel', 'usuario')
+    .gte('criado_em', seteDiasAtras.toISOString());
+  if (error) throw error;
+
+  return calcularEstatisticaSemanal(data);
 }
 
 /**

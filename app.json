@@ -56,7 +56,25 @@
       ],
       "expo-font",
       "expo-video",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "react-native-android-widget",
+        {
+          "widgets": [
+            {
+              "name": "ProximoEvento",
+              "label": "Turma+ — Próximo evento",
+              "description": "Mostra o próximo feriado ou evento do calendário escolar, sem precisar abrir o app.",
+              "minWidth": "250dp",
+              "minHeight": "100dp",
+              "targetCellWidth": 3,
+              "targetCellHeight": 1,
+              "resizeMode": "horizontal|vertical",
+              "updatePeriodMillis": 1800000
+            }
+          ]
+        }
+      ]
     ]
   }
 }

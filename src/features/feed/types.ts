@@ -12,6 +12,7 @@ export const ROTULO_TIPO_POST: Record<TipoPost, string> = {
   foto: 'Foto',
   evento: 'Evento',
   lembrete: 'Lembrete',
+  enquete: 'Enquete',
 };
 
 export const ICONE_TIPO_POST: Record<TipoPost, keyof typeof Ionicons.glyphMap> = {
@@ -19,4 +20,5 @@ export const ICONE_TIPO_POST: Record<TipoPost, keyof typeof Ionicons.glyphMap> =
   foto: 'image',
   evento: 'calendar',
   lembrete: 'alarm',
+  enquete: 'bar-chart',
 };

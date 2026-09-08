@@ -18,6 +18,7 @@ import {
   type ComentarioComAutor,
 } from '@/features/feed/api';
 import { BotaoDenunciar } from '@/features/feed/BotaoDenunciar';
+import { EnquetePost } from '@/features/feed/CartaoPost';
 import { ImagemPost } from '@/features/feed/ImagemPost';
 import { ROTULO_TIPO_POST } from '@/features/feed/types';
 import { FotoPerfil } from '@/features/perfil/FotoPerfil';
@@ -226,6 +227,8 @@ export default function DetalhePost() {
           ) : null}
 
           {post.tipo === 'foto' && post.midia_url ? <ImagemPost caminho={post.midia_url} /> : null}
+
+          {post.tipo === 'enquete' ? <EnquetePost postId={post.id} /> : null}
 
           <BotaoDenunciar tipoConteudo="post" conteudoId={post.id} />
 

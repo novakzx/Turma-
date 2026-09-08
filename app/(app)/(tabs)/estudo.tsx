@@ -8,7 +8,11 @@ import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
 import { TextField } from '@/components/ui/TextField';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { mensagemDeErro } from '@/features/auth/errors';
-import { enviarMensagemChat, listarHistoricoChat } from '@/features/estudo/api';
+import {
+  buscarEstatisticaSemanal,
+  enviarMensagemChat,
+  listarHistoricoChat,
+} from '@/features/estudo/api';
 import {
   ICONE_MODO,
   ROTULO_MODO,
@@ -43,6 +47,54 @@ function ChipMateria({
       <Ionicons name="book-outline" size={15} color={selecionada ? '#4F46E5' : '#94A3B8'} />
       <Text className="text-sm text-slate-900 dark:text-slate-100">{nome}</Text>
     </Pressable>
+  );
+}
+
+/** Resumo de uso do chat com IA nos últimos 7 dias (pedido do usuário)
+ * — some sozinho se ainda não houver nenhuma pergunta na semana, pra
+ * não competir com o "Escolha uma matéria" de quem nunca usou. */
+function CartaoEstatisticaSemanal({ alunoId }: { alunoId: string }) {
+  const query = useQuery({
+    queryKey: ['estatistica-semanal-estudo', alunoId],
+    queryFn: () => buscarEstatisticaSemanal(alunoId),
+  });
+
+  if (!query.data || query.data.totalPerguntas === 0) return null;
+  const { totalPerguntas, materiasRevisadas, diaMaisAtivo } = query.data;
+
+  return (
+    <View className="mx-4 mt-4 gap-3 rounded-3xl border border-slate-100 bg-surface p-4 shadow-sm shadow-slate-900/5 dark:border-slate-800 dark:bg-surface-dark">
+      <View className="flex-row items-center gap-2">
+        <Ionicons name="stats-chart" size={16} color="#4F46E5" />
+        <Text className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+          Sua semana de estudo
+        </Text>
+      </View>
+      <View className="flex-row justify-around">
+        <View className="items-center gap-0.5">
+          <Text className="text-xl font-bold text-primary dark:text-primary-dark">
+            {totalPerguntas}
+          </Text>
+          <Text className="text-xs text-slate-500 dark:text-slate-400">
+            {totalPerguntas === 1 ? 'pergunta' : 'perguntas'}
+          </Text>
+        </View>
+        <View className="items-center gap-0.5">
+          <Text className="text-xl font-bold text-primary dark:text-primary-dark">
+            {materiasRevisadas}
+          </Text>
+          <Text className="text-xs text-slate-500 dark:text-slate-400">
+            {materiasRevisadas === 1 ? 'matéria revisada' : 'matérias revisadas'}
+          </Text>
+        </View>
+      </View>
+      {diaMaisAtivo ? (
+        <Text className="text-center text-xs text-slate-500 dark:text-slate-400">
+          Seu dia mais ativo foi{' '}
+          <Text className="font-semibold text-slate-700 dark:text-slate-300">{diaMaisAtivo}</Text>.
+        </Text>
+      ) : null}
+    </View>
   );
 }
 
@@ -184,11 +236,14 @@ export default function Estudo() {
       </View>
 
       {!materiaId ? (
-        <EmptyState
-          icon="hand-left-outline"
-          titulo="Escolha uma matéria"
-          descricao="Toque num chip acima pra começar."
-        />
+        <View className="flex-1">
+          {profile ? <CartaoEstatisticaSemanal alunoId={profile.id} /> : null}
+          <EmptyState
+            icon="hand-left-outline"
+            titulo="Escolha uma matéria"
+            descricao="Toque num chip acima pra começar."
+          />
+        </View>
       ) : historicoQuery.isLoading ? (
         <LoadingState />
       ) : historicoQuery.isError ? (

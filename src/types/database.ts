@@ -551,6 +551,81 @@ export type Database = {
           },
         ];
       };
+      post_enquete_opcoes: {
+        Row: {
+          id: string;
+          ordem: number;
+          post_id: string;
+          texto: string;
+        };
+        Insert: {
+          id?: string;
+          ordem?: number;
+          post_id: string;
+          texto: string;
+        };
+        Update: {
+          id?: string;
+          ordem?: number;
+          post_id?: string;
+          texto?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'post_enquete_opcoes_post_id_fkey';
+            columns: ['post_id'];
+            isOneToOne: false;
+            referencedRelation: 'posts';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      post_enquete_votos: {
+        Row: {
+          criado_em: string;
+          id: string;
+          opcao_id: string;
+          post_id: string;
+          votante_id: string;
+        };
+        Insert: {
+          criado_em?: string;
+          id?: string;
+          opcao_id: string;
+          post_id: string;
+          votante_id: string;
+        };
+        Update: {
+          criado_em?: string;
+          id?: string;
+          opcao_id?: string;
+          post_id?: string;
+          votante_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'post_enquete_votos_opcao_id_fkey';
+            columns: ['opcao_id'];
+            isOneToOne: false;
+            referencedRelation: 'post_enquete_opcoes';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'post_enquete_votos_post_id_fkey';
+            columns: ['post_id'];
+            isOneToOne: false;
+            referencedRelation: 'posts';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'post_enquete_votos_votante_id_fkey';
+            columns: ['votante_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       posts: {
         Row: {
           autor_id: string | null;
@@ -943,7 +1018,7 @@ export type Database = {
         | 'trajeto';
       tipo_conteudo_denuncia: 'post' | 'comentario' | 'mensagem' | 'mensagem_direta';
       tipo_conversa: 'direta' | 'grupo';
-      tipo_post: 'texto' | 'foto' | 'evento' | 'lembrete';
+      tipo_post: 'texto' | 'foto' | 'evento' | 'lembrete' | 'enquete';
       tipo_sala_chat: 'turma' | 'materia' | 'assunto';
     };
     CompositeTypes: {
@@ -1084,7 +1159,7 @@ export const Constants = {
       ],
       tipo_conteudo_denuncia: ['post', 'comentario', 'mensagem', 'mensagem_direta'],
       tipo_conversa: ['direta', 'grupo'],
-      tipo_post: ['texto', 'foto', 'evento', 'lembrete'],
+      tipo_post: ['texto', 'foto', 'evento', 'lembrete', 'enquete'],
       tipo_sala_chat: ['turma', 'materia', 'assunto'],
     },
   },

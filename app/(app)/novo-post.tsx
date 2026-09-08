@@ -16,11 +16,18 @@ import { Button } from '@/components/ui/Button';
 import { TextField } from '@/components/ui/TextField';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { mensagemDeErro } from '@/features/auth/errors';
-import { criarPost, escolherImagem, fazerUploadImagemPost } from '@/features/feed/api';
+import {
+  criarEnquete,
+  criarPost,
+  escolherImagem,
+  fazerUploadImagemPost,
+} from '@/features/feed/api';
 import { ICONE_TIPO_POST, ROTULO_TIPO_POST, type TipoPost } from '@/features/feed/types';
 
-const TIPOS: TipoPost[] = ['texto', 'foto', 'evento', 'lembrete'];
+const TIPOS: TipoPost[] = ['texto', 'foto', 'evento', 'lembrete', 'enquete'];
 const REGEX_DATA = /^\d{4}-\d{2}-\d{2}$/;
+const MAX_OPCOES_ENQUETE = 4;
+const MIN_OPCOES_ENQUETE = 2;
 
 export default function NovoPost() {
   const { profile } = useAuth();
@@ -30,11 +37,22 @@ export default function NovoPost() {
   const [conteudo, setConteudo] = useState('');
   const [dataEvento, setDataEvento] = useState('');
   const [imagemUri, setImagemUri] = useState<string | null>(null);
+  const [opcoesEnquete, setOpcoesEnquete] = useState<string[]>(['', '']);
   const [erro, setErro] = useState<string | null>(null);
 
   const mutation = useMutation({
     mutationFn: async () => {
       if (!profile?.turma_id) throw new Error('Sem turma associada.');
+
+      if (tipo === 'enquete') {
+        await criarEnquete({
+          autorId: profile.id,
+          turmaId: profile.turma_id,
+          pergunta: conteudo.trim(),
+          opcoes: opcoesEnquete.map((o) => o.trim()).filter(Boolean),
+        });
+        return;
+      }
 
       let midiaUrl: string | null = null;
       if (tipo === 'foto' && imagemUri) {
@@ -57,6 +75,20 @@ export default function NovoPost() {
     onError: (error) => setErro(mensagemDeErro(error)),
   });
 
+  function handleAlterarOpcao(indice: number, texto: string) {
+    setOpcoesEnquete((atual) => atual.map((o, i) => (i === indice ? texto : o)));
+  }
+
+  function handleAdicionarOpcao() {
+    setOpcoesEnquete((atual) => (atual.length < MAX_OPCOES_ENQUETE ? [...atual, ''] : atual));
+  }
+
+  function handleRemoverOpcao(indice: number) {
+    setOpcoesEnquete((atual) =>
+      atual.length > MIN_OPCOES_ENQUETE ? atual.filter((_, i) => i !== indice) : atual,
+    );
+  }
+
   async function handleEscolherImagem() {
     try {
       setErro(null);
@@ -76,8 +108,19 @@ export default function NovoPost() {
       setErro('Informe a data do evento no formato AAAA-MM-DD.');
       return;
     }
+    if (tipo === 'enquete') {
+      const opcoesPreenchidas = opcoesEnquete.map((o) => o.trim()).filter(Boolean);
+      if (opcoesPreenchidas.length < MIN_OPCOES_ENQUETE) {
+        setErro(`Preencha pelo menos ${MIN_OPCOES_ENQUETE} opções.`);
+        return;
+      }
+    }
     if (tipo !== 'foto' && !conteudo.trim()) {
-      setErro('Escreve alguma coisa antes de publicar.');
+      setErro(
+        tipo === 'enquete'
+          ? 'Escreve a pergunta da enquete.'
+          : 'Escreve alguma coisa antes de publicar.',
+      );
       return;
     }
     setErro(null);
@@ -132,13 +175,54 @@ export default function NovoPost() {
         ) : null}
 
         <TextField
-          label={tipo === 'foto' ? 'Legenda (opcional)' : 'O que você quer contar pra turma?'}
+          label={
+            tipo === 'foto'
+              ? 'Legenda (opcional)'
+              : tipo === 'enquete'
+                ? 'Pergunta da enquete'
+                : 'O que você quer contar pra turma?'
+          }
           value={conteudo}
           onChangeText={setConteudo}
           multiline
-          numberOfLines={4}
-          style={{ minHeight: 96, textAlignVertical: 'top' }}
+          numberOfLines={tipo === 'enquete' ? 2 : 4}
+          style={{ minHeight: tipo === 'enquete' ? 56 : 96, textAlignVertical: 'top' }}
         />
+
+        {tipo === 'enquete' ? (
+          <View className="gap-2">
+            {opcoesEnquete.map((opcao, indice) => (
+              <View key={indice} className="flex-row items-center gap-2">
+                <View className="flex-1">
+                  <TextField
+                    label={`Opção ${indice + 1}`}
+                    value={opcao}
+                    onChangeText={(texto) => handleAlterarOpcao(indice, texto)}
+                    placeholder={`ex.: ${indice === 0 ? 'Sexta-feira' : 'Segunda-feira'}`}
+                  />
+                </View>
+                {opcoesEnquete.length > MIN_OPCOES_ENQUETE ? (
+                  <Pressable
+                    onPress={() => handleRemoverOpcao(indice)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Remover opção ${indice + 1}`}
+                    className="min-h-11 min-w-11 items-center justify-center"
+                  >
+                    <Ionicons name="close-circle-outline" size={22} color="#94A3B8" />
+                  </Pressable>
+                ) : null}
+              </View>
+            ))}
+            {opcoesEnquete.length < MAX_OPCOES_ENQUETE ? (
+              <Button
+                label="Adicionar opção"
+                icon="add-circle-outline"
+                variant="secondary"
+                onPress={handleAdicionarOpcao}
+              />
+            ) : null}
+          </View>
+        ) : null}
 
         {tipo === 'foto' ? (
           <View className="gap-2">

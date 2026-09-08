@@ -2,6 +2,7 @@ import * as ImagePicker from 'expo-image-picker';
 
 import { supabase } from '@/lib/supabase';
 
+import { calcularResultadoEnquete, type ResultadoEnquete } from './regras';
 import type { Post, PostComentario, TipoConteudoDenuncia, TipoPost } from './types';
 
 const BUCKET_MIDIA = 'posts-midia';
@@ -103,6 +104,80 @@ export async function criarPost(params: {
 
 export async function apagarPost(postId: string) {
   const { error } = await supabase.from('posts').delete().eq('id', postId);
+  if (error) throw error;
+}
+
+/**
+ * Enquete rápida (pedido do usuário): post tipo `enquete` com 2-4
+ * opções fixas, criadas junto na hora — imutáveis depois (sem editar
+ * opção de enquete já publicada, "comece simples"). `conteudo` do post
+ * é a própria pergunta.
+ */
+export async function criarEnquete(params: {
+  autorId: string;
+  turmaId: string;
+  pergunta: string;
+  opcoes: string[];
+}) {
+  const { data: post, error: erroPost } = await supabase
+    .from('posts')
+    .insert({
+      autor_id: params.autorId,
+      turma_id: params.turmaId,
+      tipo: 'enquete',
+      conteudo: params.pergunta,
+    })
+    .select('id')
+    .single();
+  if (erroPost) throw erroPost;
+
+  const { error: erroOpcoes } = await supabase.from('post_enquete_opcoes').insert(
+    params.opcoes.map((texto, ordem) => ({
+      post_id: post.id,
+      texto: texto.trim(),
+      ordem,
+    })),
+  );
+  if (erroOpcoes) throw erroOpcoes;
+}
+
+export type OpcaoEnquete = { id: string; texto: string; ordem: number };
+
+export type EnqueteComVotos = ResultadoEnquete & { opcoes: OpcaoEnquete[] };
+
+/** Volume de votos por post é pequeno (tamanho de turma, dezenas de
+ * alunos no máximo) — traz todos os votos e agrega no cliente
+ * (`calcularResultadoEnquete`, regras.ts) em vez de precisar de uma
+ * consulta agregada separada. */
+export async function buscarEnquete(postId: string, votanteId: string): Promise<EnqueteComVotos> {
+  const [opcoesResp, votosResp] = await Promise.all([
+    supabase
+      .from('post_enquete_opcoes')
+      .select('id, texto, ordem')
+      .eq('post_id', postId)
+      .order('ordem'),
+    supabase.from('post_enquete_votos').select('opcao_id, votante_id').eq('post_id', postId),
+  ]);
+  if (opcoesResp.error) throw opcoesResp.error;
+  if (votosResp.error) throw votosResp.error;
+
+  const opcoes = opcoesResp.data ?? [];
+  const votos = votosResp.data ?? [];
+
+  return { opcoes, ...calcularResultadoEnquete(opcoes, votos, votanteId) };
+}
+
+/** Upsert em vez de insert/update separados — deixa trocar de voto sem
+ * o cliente precisar saber se já votou antes (RLS já garante que só o
+ * próprio voto pode ser alterado e que a opção pertence de fato a essa
+ * enquete, ver migration `enquetes_no_feed`). */
+export async function votarEnquete(params: { postId: string; opcaoId: string; votanteId: string }) {
+  const { error } = await supabase
+    .from('post_enquete_votos')
+    .upsert(
+      { post_id: params.postId, opcao_id: params.opcaoId, votante_id: params.votanteId },
+      { onConflict: 'post_id,votante_id' },
+    );
   if (error) throw error;
 }
 

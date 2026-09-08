@@ -1,5 +1,13 @@
 import '@/lib/global.css';
 import '@/lib/nativewindAnimated';
+// Registra o handler do widget de tela inicial (Android) por efeito
+// colateral — precisa rodar assim que o bundle carrega, pro
+// `AppRegistry.registerHeadlessTask` já estar pronto quando o sistema
+// operacional pedir pra desenhar o widget. A lib já é segura de
+// importar em qualquer plataforma (fica noop fora do Android, ver
+// `AndroidWidget.js` da própria lib) — sem isso, importar aqui exigiria
+// um `if (Platform.OS === 'android')` que a lib já faz por dentro.
+import '@/features/widget/task';
 
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';

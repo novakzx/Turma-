@@ -1,14 +1,28 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Image, Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, Platform, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useVideoPlayer, VideoView } from 'expo-video';
 
 import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
-import { listarStoriesDoAutor, obterUrlAssinadaStory } from '@/features/social/api';
+import { useAuth } from '@/features/auth/AuthProvider';
+import { apagarStory, listarStoriesDoAutor, obterUrlAssinadaStory } from '@/features/social/api';
 import { ehVideo } from '@/features/social/types';
+
+/** `window.confirm` no web, `Alert.alert` nativo — mesmo padrão já
+ * usado em outras telas (`Alert.alert` não tem UI no navegador). */
+function confirmar(mensagem: string, aoConfirmar: () => void) {
+  if (Platform.OS === 'web') {
+    if (window.confirm(mensagem)) aoConfirmar();
+    return;
+  }
+  Alert.alert('Apagar story', mensagem, [
+    { text: 'Cancelar', style: 'cancel' },
+    { text: 'Apagar', style: 'destructive', onPress: aoConfirmar },
+  ]);
+}
 
 function StoryVideo({ uri }: { uri: string }) {
   const player = useVideoPlayer(uri, (p) => p.play());
@@ -25,6 +39,8 @@ function StoryVideo({ uri }: { uri: string }) {
  * não pra quem está vendo. */
 export default function StoryViewer() {
   const { id: autorId } = useLocalSearchParams<{ id: string }>();
+  const { profile } = useAuth();
+  const queryClient = useQueryClient();
   const [indice, setIndice] = useState(0);
 
   const storiesQuery = useQuery({
@@ -34,12 +50,34 @@ export default function StoryViewer() {
 
   const stories = storiesQuery.data ?? [];
   const storyAtual = stories[indice];
+  const ehDono = !!profile && storyAtual?.autor_id === profile.id;
 
   const urlQuery = useQuery({
     queryKey: ['url-assinada-story', storyAtual?.midia_url],
     queryFn: () => obterUrlAssinadaStory(storyAtual!.midia_url),
     enabled: !!storyAtual,
   });
+
+  const apagarMutation = useMutation({
+    mutationFn: () => apagarStory(storyAtual!.id),
+    onSuccess: () => {
+      // Invalida tanto a lista deste autor (recalcula o índice atual
+      // pra a próxima story, se sobrar alguma) quanto a lista geral
+      // (StoriesBar precisa parar de mostrar o anel de "tem story" se
+      // essa era a última).
+      queryClient.invalidateQueries({ queryKey: ['stories-do-autor', autorId] });
+      queryClient.invalidateQueries({ queryKey: ['stories-visiveis'] });
+      if (stories.length <= 1) {
+        router.back();
+      } else if (indice >= stories.length - 1) {
+        setIndice(indice - 1);
+      }
+    },
+  });
+
+  function handleApagar() {
+    confirmar('Apagar essa story? Não dá pra desfazer.', () => apagarMutation.mutate());
+  }
 
   if (storiesQuery.isLoading) return <LoadingState />;
   if (storiesQuery.isError || stories.length === 0) {
@@ -63,14 +101,30 @@ export default function StoryViewer() {
           ))}
         </View>
 
-        <View className="flex-row items-center gap-2 px-4 py-3">
-          <Text className="flex-1 text-base font-semibold text-white">
+        <View className="flex-row items-center gap-1 px-2 py-1">
+          <Text className="flex-1 px-2 text-base font-semibold text-white">
             {storyAtual.profiles?.nome ?? 'Alguém'}
           </Text>
+          {ehDono ? (
+            <Pressable
+              onPress={handleApagar}
+              disabled={apagarMutation.isPending}
+              accessibilityRole="button"
+              accessibilityLabel="Apagar esta story"
+              className="min-h-11 min-w-11 items-center justify-center"
+            >
+              {apagarMutation.isPending ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                <Ionicons name="trash-outline" size={22} color="#FFFFFF" />
+              )}
+            </Pressable>
+          ) : null}
           <Pressable
             onPress={() => router.back()}
             accessibilityRole="button"
             accessibilityLabel="Fechar"
+            className="min-h-11 min-w-11 items-center justify-center"
           >
             <Ionicons name="close" size={26} color="#FFFFFF" />
           </Pressable>
