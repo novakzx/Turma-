@@ -88,7 +88,7 @@ export default function Assinatura() {
         </View>
         <Text className="text-2xl font-bold text-slate-100">Turma+ Premium</Text>
         <Text className="text-center text-sm text-slate-400">
-          R$2,99/mês · cancele quando quiser
+          R$1,99/mês · cancele quando quiser
         </Text>
       </View>
 
@@ -153,7 +153,7 @@ export default function Assinatura() {
         </View>
       ) : (
         <Button
-          label="Assinar por R$2,99/mês"
+          label="Assinar por R$1,99/mês"
           icon="sparkles"
           onPress={() => checkoutMutation.mutate()}
           loading={checkoutMutation.isPending}

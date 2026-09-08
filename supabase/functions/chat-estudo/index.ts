@@ -120,7 +120,7 @@ Deno.serve(async (req) => {
       return respostaJson({ error: 'Sessão inválida.' }, 401, origin);
     }
 
-    // Assinante do Turma+ Premium (R$2,99/mês, ver migration
+    // Assinante do Turma+ Premium (R$1,99/mês, ver migration
     // `assinatura_stripe`) não tem nenhum dos dois limites abaixo — é
     // literalmente o que a assinatura vende ("IA sem limites"). Só o
     // booleano importa aqui: quem escreve nele é exclusivamente o
@@ -163,7 +163,7 @@ Deno.serve(async (req) => {
       if ((mensagensHoje ?? 0) >= LIMITE_MENSAGENS_DIARIO) {
         return respostaJson(
           {
-            error: `Você já mandou ${LIMITE_MENSAGENS_DIARIO} mensagens pra IA nas últimas 24 horas — assine o Turma+ Premium (R$2,99/mês) pra IA sem limites, ou volta amanhã.`,
+            error: `Você já mandou ${LIMITE_MENSAGENS_DIARIO} mensagens pra IA nas últimas 24 horas — assine o Turma+ Premium (R$1,99/mês) pra IA sem limites, ou volta amanhã.`,
           },
           429,
           origin,

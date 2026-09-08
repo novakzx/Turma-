@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase';
 
 /**
  * Abre a Stripe Checkout Session pra assinar o Turma+ Premium
- * (R$2,99/mês). A Edge Function (`assinatura-checkout`) monta o preço
+ * (R$1,99/mês). A Edge Function (`assinatura-checkout`) monta o preço
  * inline e devolve só a URL — quem completa o pagamento é a própria
  * Stripe, nunca este app (nenhum campo de cartão aqui, ver
  * `app/(app)/assinatura.tsx`).

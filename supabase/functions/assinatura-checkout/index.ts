@@ -1,5 +1,5 @@
 // Edge Function: cria uma Stripe Checkout Session pra assinatura do
-// Turma+ Premium (R$2,99/mês — IA sem limite + selo de verificado, ver
+// Turma+ Premium (R$1,99/mês — IA sem limite + selo de verificado, ver
 // migration `assinatura_stripe`). Chamada direto do app
 // (`supabase.functions.invoke`), então precisa do mesmo tratamento de
 // CORS que `chat-estudo` — ver comentário lá.
@@ -20,7 +20,7 @@ const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY');
 
-const PRECO_CENTAVOS = 299; // R$2,99
+const PRECO_CENTAVOS = 199; // R$1,99
 const NOME_PRODUTO = 'Turma+ Premium';
 const DESCRICAO_PRODUTO = 'IA de estudo sem limite diário + selo de verificado no perfil.';
 // "Software as a service (SaaS) - personal use" — a conta Stripe tem
