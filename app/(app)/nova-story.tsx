@@ -34,6 +34,7 @@ export default function NovaStory() {
   const { profile } = useAuth();
   const queryClient = useQueryClient();
   const [uriLocal, setUriLocal] = useState<string | null>(null);
+  const [arquivoWeb, setArquivoWeb] = useState<File | null>(null);
   const [tipoMidia, setTipoMidia] = useState<'foto' | 'video' | null>(null);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -41,7 +42,7 @@ export default function NovaStory() {
     mutationFn: async () => {
       if (!profile) throw new Error('Sem perfil carregado.');
       if (!uriLocal) throw new Error('Escolha uma foto ou vídeo primeiro.');
-      const caminho = await fazerUploadImagemStory(profile.id, uriLocal);
+      const caminho = await fazerUploadImagemStory(profile.id, uriLocal, arquivoWeb);
       await criarStory(profile.id, caminho);
     },
     onSuccess: () => {
@@ -57,6 +58,7 @@ export default function NovaStory() {
       const escolhida = await escolherFotoOuVideo();
       if (escolhida) {
         setUriLocal(escolhida.uri);
+        setArquivoWeb(escolhida.arquivoWeb);
         setTipoMidia(escolhida.tipoMidia);
       }
     } catch (error) {

@@ -169,8 +169,8 @@ export default function SalaChat() {
   });
 
   const enviarImagemMutation = useMutation({
-    mutationFn: async (uriLocal: string) => {
-      const caminho = await fazerUploadMidiaSala(id as string, uriLocal, 'image');
+    mutationFn: async ({ uri, arquivoWeb }: { uri: string; arquivoWeb: File | null }) => {
+      const caminho = await fazerUploadMidiaSala(id as string, uri, 'image', arquivoWeb);
       await enviarMensagem({
         salaId: id as string,
         autorId: profile!.id,
@@ -275,7 +275,7 @@ export default function SalaChat() {
         ) : null}
         <CaixaMensagem
           onEnviarTexto={(texto) => enviarMutation.mutate({ conteudo: texto })}
-          onEnviarImagem={(uri) => enviarImagemMutation.mutate(uri)}
+          onEnviarImagem={(uri, arquivoWeb) => enviarImagemMutation.mutate({ uri, arquivoWeb })}
           onEnviarAudio={(uri) => enviarAudioMutation.mutate(uri)}
           onErro={setErro}
           enviando={enviarMutation.isPending}

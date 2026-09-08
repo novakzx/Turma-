@@ -300,8 +300,8 @@ export default function DetalheConversa() {
   });
 
   const enviarImagemMutation = useMutation({
-    mutationFn: async (uriLocal: string) => {
-      const caminho = await fazerUploadMidiaConversa(id, uriLocal, 'image');
+    mutationFn: async ({ uri, arquivoWeb }: { uri: string; arquivoWeb: File | null }) => {
+      const caminho = await fazerUploadMidiaConversa(id, uri, 'image', arquivoWeb);
       await enviarMensagemDireta({
         conversaId: id,
         autorId: profile!.id,
@@ -467,7 +467,7 @@ export default function DetalheConversa() {
           ) : null}
           <CaixaMensagem
             onEnviarTexto={(texto) => enviarMutation.mutate({ conteudo: texto })}
-            onEnviarImagem={(uri) => enviarImagemMutation.mutate(uri)}
+            onEnviarImagem={(uri, arquivoWeb) => enviarImagemMutation.mutate({ uri, arquivoWeb })}
             onEnviarAudio={(uri) => enviarAudioMutation.mutate(uri)}
             onErro={setErro}
             enviando={enviarMutation.isPending}

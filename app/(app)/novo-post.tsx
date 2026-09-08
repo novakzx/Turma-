@@ -37,6 +37,7 @@ export default function NovoPost() {
   const [conteudo, setConteudo] = useState('');
   const [dataEvento, setDataEvento] = useState('');
   const [imagemUri, setImagemUri] = useState<string | null>(null);
+  const [imagemArquivoWeb, setImagemArquivoWeb] = useState<File | null>(null);
   const [opcoesEnquete, setOpcoesEnquete] = useState<string[]>(['', '']);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -56,7 +57,7 @@ export default function NovoPost() {
 
       let midiaUrl: string | null = null;
       if (tipo === 'foto' && imagemUri) {
-        midiaUrl = await fazerUploadImagemPost(profile.turma_id, imagemUri);
+        midiaUrl = await fazerUploadImagemPost(profile.turma_id, imagemUri, imagemArquivoWeb);
       }
 
       await criarPost({
@@ -92,8 +93,11 @@ export default function NovoPost() {
   async function handleEscolherImagem() {
     try {
       setErro(null);
-      const uri = await escolherImagem();
-      if (uri) setImagemUri(uri);
+      const imagem = await escolherImagem();
+      if (imagem) {
+        setImagemUri(imagem.uri);
+        setImagemArquivoWeb(imagem.arquivoWeb);
+      }
     } catch (error) {
       setErro(mensagemDeErro(error));
     }

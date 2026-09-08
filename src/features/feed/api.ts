@@ -1,5 +1,6 @@
 import * as ImagePicker from 'expo-image-picker';
 
+import { lerBytesDeMidiaLocal } from '@/lib/lerMidiaLocal';
 import { supabase } from '@/lib/supabase';
 
 import { calcularResultadoEnquete, type ResultadoEnquete } from './regras';
@@ -219,10 +220,12 @@ export async function apagarComentario(id: string) {
  * a URL inteira (com ":" e "/") como "extensão" e quebrava o nome do
  * arquivo no Storage.
  */
-export async function fazerUploadImagemPost(turmaId: string, uriLocal: string): Promise<string> {
-  const resposta = await fetch(uriLocal);
-  const arrayBuffer = await resposta.arrayBuffer();
-  const contentType = resposta.headers.get('content-type') ?? 'image/jpeg';
+export async function fazerUploadImagemPost(
+  turmaId: string,
+  uriLocal: string,
+  arquivoWeb?: File | null,
+): Promise<string> {
+  const { arrayBuffer, contentType } = await lerBytesDeMidiaLocal(uriLocal, arquivoWeb);
   const extensao = contentType.split('/').pop()?.toLowerCase().replace('jpeg', 'jpg') || 'jpg';
   const caminho = `${turmaId}/${Date.now()}-${Math.round(Math.random() * 1e6)}.${extensao}`;
 
@@ -249,7 +252,9 @@ export async function obterUrlAssinada(caminho: string): Promise<string> {
  * isso). Agora permissão negada lança erro de verdade — cancelar
  * continua silencioso, é a única distinção que interessa pro
  * usuário. */
-export async function escolherImagem(): Promise<string | null> {
+export type ImagemEscolhida = { uri: string; arquivoWeb: File | null };
+
+export async function escolherImagem(): Promise<ImagemEscolhida | null> {
   const permissao = await ImagePicker.requestMediaLibraryPermissionsAsync();
   if (!permissao.granted) {
     throw new Error(
@@ -262,10 +267,15 @@ export async function escolherImagem(): Promise<string | null> {
     quality: 0.7,
   });
   if (resultado.canceled || resultado.assets.length === 0) return null;
-  return resultado.assets[0].uri;
+  const asset = resultado.assets[0];
+  // `asset.file` só existe no web (ver doc do próprio expo-image-picker)
+  // — é ele quem permite ler os bytes sem passar por `fetch(uri)`, o
+  // que evita o bug do Safari com `fetch` de `blob:` local (ver
+  // `lerBytesDeMidiaLocal`).
+  return { uri: asset.uri, arquivoWeb: asset.file ?? null };
 }
 
-export type MidiaEscolhida = { uri: string; tipoMidia: 'foto' | 'video' };
+export type MidiaEscolhida = { uri: string; arquivoWeb: File | null; tipoMidia: 'foto' | 'video' };
 
 /** Igual `escolherImagem`, mas libera vídeo também — usado nas
  * stories (pedido do usuário: "story não dá pra adicionar fotos nem
@@ -288,7 +298,11 @@ export async function escolherFotoOuVideo(): Promise<MidiaEscolhida | null> {
   });
   if (resultado.canceled || resultado.assets.length === 0) return null;
   const asset = resultado.assets[0];
-  return { uri: asset.uri, tipoMidia: asset.type === 'video' ? 'video' : 'foto' };
+  return {
+    uri: asset.uri,
+    arquivoWeb: asset.file ?? null,
+    tipoMidia: asset.type === 'video' ? 'video' : 'foto',
+  };
 }
 
 export async function denunciar(params: {

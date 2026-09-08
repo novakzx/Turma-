@@ -1,5 +1,6 @@
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
+import { lerBytesDeMidiaLocal } from '@/lib/lerMidiaLocal';
 import { supabase } from '@/lib/supabase';
 
 import type { MensagemChat, Sala, TipoMidiaMensagem } from './types';
@@ -84,14 +85,23 @@ export async function enviarMensagem(params: {
  * mesma ideia de `fazerUploadMidiaConversa`, path começa com o id da
  * sala; a policy do bucket espelha `mensagens_chat_insert` (sala não
  * trancada, autor não silenciado). */
+/** Mesmo racional de `fazerUploadMidiaConversa`: `arquivoWeb` (o `File`
+ * cru do navegador, só existe pra foto) evita `fetch(blob:...)`, que
+ * esbarra num bug conhecido do Safari/iOS (ver `lerBytesDeMidiaLocal`). */
 export async function fazerUploadMidiaSala(
   salaId: string,
   uriLocal: string,
   tipoPadrao: 'image' | 'audio',
+  arquivoWeb?: File | null,
 ): Promise<string> {
-  const resposta = await fetch(uriLocal);
-  const arrayBuffer = await resposta.arrayBuffer();
-  const contentType = resposta.headers.get('content-type') ?? `${tipoPadrao}/octet-stream`;
+  const { arrayBuffer, contentType: contentTypeDetectado } = await lerBytesDeMidiaLocal(
+    uriLocal,
+    arquivoWeb,
+  );
+  const contentType =
+    contentTypeDetectado === 'application/octet-stream'
+      ? `${tipoPadrao}/octet-stream`
+      : contentTypeDetectado;
   const extensao = contentType.split('/').pop()?.toLowerCase().replace('jpeg', 'jpg') || 'bin';
   const caminho = `${salaId}/${Date.now()}-${Math.round(Math.random() * 1e6)}.${extensao}`;
 

@@ -1,5 +1,6 @@
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
+import { lerBytesDeMidiaLocal } from '@/lib/lerMidiaLocal';
 import { supabase } from '@/lib/supabase';
 import type { PerfilResumo } from '@/features/social/types';
 
@@ -185,18 +186,30 @@ export async function enviarMensagemDireta(params: {
 /** Upload de foto/áudio pra dentro de uma conversa (pedido do usuário) —
  * path começa com o id da conversa, a policy do bucket espelha a de
  * `mensagens_diretas` (`private.sou_participante`, ver migration
- * `midia_nos_chats`). Content-type detectado pela resposta do
- * `fetch(uriLocal)` — nunca pela extensão da URI (no web o
+ * `midia_nos_chats`). Content-type detectado pelos bytes de verdade
+ * (via `arquivoWeb`, quando veio de foto no navegador — ver
+ * `lerBytesDeMidiaLocal`) — nunca pela extensão da URI (no web o
  * `expo-image-picker`/gravador de áudio devolvem `blob:...` sem ponto
- * nenhum, ver nota em `fazerUploadImagemPost`/CLAUDE.md). */
+ * nenhum, ver nota em `fazerUploadImagemPost`/CLAUDE.md). `arquivoWeb`
+ * só existe pra foto (o picker de imagem expõe o `File` cru do
+ * navegador); áudio gravado pelo `expo-audio` não tem equivalente
+ * exposto na API pública dele, então continua lendo por `fetch(uri)`
+ * mesmo — se algum dia o Safari também recusar isso pra áudio, é aqui
+ * que mexer. */
 export async function fazerUploadMidiaConversa(
   conversaId: string,
   uriLocal: string,
   tipoPadrao: 'image' | 'audio',
+  arquivoWeb?: File | null,
 ): Promise<string> {
-  const resposta = await fetch(uriLocal);
-  const arrayBuffer = await resposta.arrayBuffer();
-  const contentType = resposta.headers.get('content-type') ?? `${tipoPadrao}/octet-stream`;
+  const { arrayBuffer, contentType: contentTypeDetectado } = await lerBytesDeMidiaLocal(
+    uriLocal,
+    arquivoWeb,
+  );
+  const contentType =
+    contentTypeDetectado === 'application/octet-stream'
+      ? `${tipoPadrao}/octet-stream`
+      : contentTypeDetectado;
   const extensao = contentType.split('/').pop()?.toLowerCase().replace('jpeg', 'jpg') || 'bin';
   const caminho = `${conversaId}/${Date.now()}-${Math.round(Math.random() * 1e6)}.${extensao}`;
 

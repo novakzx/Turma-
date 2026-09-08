@@ -1,3 +1,4 @@
+import { lerBytesDeMidiaLocal } from '@/lib/lerMidiaLocal';
 import { supabase } from '@/lib/supabase';
 
 const BUCKET_FOTOS = 'perfil-fotos';
@@ -45,10 +46,12 @@ export async function atualizarPerfil(params: {
  * (`{userId}/avatar.<ext>`, `upsert: true`) — trocar a foto sobrescreve
  * a anterior em vez de acumular arquivo órfão no Storage.
  */
-export async function fazerUploadFotoPerfil(userId: string, uriLocal: string): Promise<string> {
-  const resposta = await fetch(uriLocal);
-  const arrayBuffer = await resposta.arrayBuffer();
-  const contentType = resposta.headers.get('content-type') ?? 'image/jpeg';
+export async function fazerUploadFotoPerfil(
+  userId: string,
+  uriLocal: string,
+  arquivoWeb?: File | null,
+): Promise<string> {
+  const { arrayBuffer, contentType } = await lerBytesDeMidiaLocal(uriLocal, arquivoWeb);
   const extensao = contentType.split('/').pop()?.toLowerCase().replace('jpeg', 'jpg') || 'jpg';
   const caminho = `${userId}/avatar.${extensao}`;
 

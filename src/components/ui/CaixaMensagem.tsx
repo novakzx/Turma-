@@ -39,7 +39,7 @@ export function CaixaMensagem({
   mensagemDesabilitado,
 }: {
   onEnviarTexto: (texto: string) => void;
-  onEnviarImagem: (uri: string) => void;
+  onEnviarImagem: (uri: string, arquivoWeb: File | null) => void;
   onEnviarAudio: (uri: string, duracaoMs: number) => void;
   onErro: (mensagem: string) => void;
   enviando?: boolean;
@@ -80,8 +80,8 @@ export function CaixaMensagem({
 
   async function handleEscolherImagem() {
     try {
-      const uri = await escolherImagem();
-      if (uri) onEnviarImagem(uri);
+      const imagem = await escolherImagem();
+      if (imagem) onEnviarImagem(imagem.uri, imagem.arquivoWeb);
     } catch (error) {
       onErro(error instanceof Error ? error.message : 'Não deu pra escolher a foto.');
     }

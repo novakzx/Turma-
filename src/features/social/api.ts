@@ -1,3 +1,4 @@
+import { lerBytesDeMidiaLocal } from '@/lib/lerMidiaLocal';
 import { supabase } from '@/lib/supabase';
 
 import type { PerfilPublico, PerfilResumo, StoryComAutor } from './types';
@@ -136,10 +137,12 @@ export async function apagarStory(id: string) {
  * o `content-type`/extensão vêm do próprio blob buscado, não é
  * assumido nada aqui (mesma função serve pros dois desde que o
  * usuário possa escolher vídeo na story, ver `escolherFotoOuVideo`). */
-export async function fazerUploadImagemStory(autorId: string, uriLocal: string): Promise<string> {
-  const resposta = await fetch(uriLocal);
-  const arrayBuffer = await resposta.arrayBuffer();
-  const contentType = resposta.headers.get('content-type') ?? 'image/jpeg';
+export async function fazerUploadImagemStory(
+  autorId: string,
+  uriLocal: string,
+  arquivoWeb?: File | null,
+): Promise<string> {
+  const { arrayBuffer, contentType } = await lerBytesDeMidiaLocal(uriLocal, arquivoWeb);
   const extensao = contentType.split('/').pop()?.toLowerCase().replace('jpeg', 'jpg') || 'jpg';
   const caminho = `${autorId}/${Date.now()}-${Math.round(Math.random() * 1e6)}.${extensao}`;
 

@@ -23,6 +23,7 @@ export default function EditarPerfil() {
   const [bio, setBio] = useState(profile?.bio ?? '');
   const [link, setLink] = useState(profile?.link ?? '');
   const [fotoUriLocal, setFotoUriLocal] = useState<string | null>(null);
+  const [fotoArquivoWeb, setFotoArquivoWeb] = useState<File | null>(null);
   const [erros, setErros] = useState<{
     nome?: string;
     nomeUsuario?: string;
@@ -35,7 +36,7 @@ export default function EditarPerfil() {
       if (!profile) throw new Error('Sem perfil carregado.');
 
       const fotoUrl = fotoUriLocal
-        ? await fazerUploadFotoPerfil(profile.id, fotoUriLocal)
+        ? await fazerUploadFotoPerfil(profile.id, fotoUriLocal, fotoArquivoWeb)
         : undefined;
 
       await atualizarPerfil({
@@ -56,8 +57,11 @@ export default function EditarPerfil() {
 
   async function handleEscolherFoto() {
     try {
-      const uri = await escolherImagem();
-      if (uri) setFotoUriLocal(uri);
+      const imagem = await escolherImagem();
+      if (imagem) {
+        setFotoUriLocal(imagem.uri);
+        setFotoArquivoWeb(imagem.arquivoWeb);
+      }
     } catch (error) {
       setErros((atual) => ({ ...atual, geral: mensagemDeErro(error) }));
     }
