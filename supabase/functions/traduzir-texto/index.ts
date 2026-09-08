@@ -16,7 +16,9 @@ const TEXTO_TAMANHO_MAXIMO = 2000;
 const LIMITE_TRADUCOES = 30;
 const JANELA_LIMITE_MS = 10 * 60 * 1000;
 
-const ORIGENS_PERMITIDAS = ['https://turma-rho.vercel.app', 'http://localhost:8081'];
+// Domínio de produção corrigido pra `suaturma.vercel.app` — ver o
+// comentário completo em `chat-estudo/index.ts` sobre o achado.
+const ORIGENS_PERMITIDAS = ['https://suaturma.vercel.app', 'http://localhost:8081'];
 
 function corsHeaders(origin: string | null) {
   const permitida = origin && ORIGENS_PERMITIDAS.includes(origin);

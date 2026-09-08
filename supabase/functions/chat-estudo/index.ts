@@ -31,7 +31,15 @@ const JANELA_LIMITE_MS = 5 * 60 * 1000;
 // um de algum jeito) livremente. `undefined` (nenhum header de CORS)
 // quando a origem não bate é o comportamento certo: o navegador de
 // quem chamou vai bloquear a resposta sozinho.
-const ORIGENS_PERMITIDAS = ['https://turma-rho.vercel.app', 'http://localhost:8081'];
+//
+// ACHADO (usuário relatou "Failed to send a request to the Edge
+// Function" ao usar o chat): `turma-rho.vercel.app` tinha virado um
+// domínio morto (`curl` confirma `DEPLOYMENT_NOT_FOUND`) — o domínio de
+// produção real é `suaturma.vercel.app`, que nunca tinha entrado nessa
+// lista. Toda chamada do navegador de produção batia exatamente nesse
+// "CORS não bate, sem header nenhum" documentado acima — silencioso do
+// jeito mais difícil de diagnosticar sem abrir o console.
+const ORIGENS_PERMITIDAS = ['https://suaturma.vercel.app', 'http://localhost:8081'];
 
 function corsHeaders(origin: string | null) {
   const permitida = origin && ORIGENS_PERMITIDAS.includes(origin);

@@ -18,7 +18,9 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-const ORIGENS_PERMITIDAS = ['https://turma-rho.vercel.app', 'http://localhost:8081'];
+// Domínio de produção corrigido pra `suaturma.vercel.app` — ver o
+// comentário completo em `chat-estudo/index.ts` sobre o achado.
+const ORIGENS_PERMITIDAS = ['https://suaturma.vercel.app', 'http://localhost:8081'];
 
 function corsHeaders(origin: string | null) {
   const permitida = origin && ORIGENS_PERMITIDAS.includes(origin);
