@@ -217,7 +217,10 @@ function AbaMensagens() {
 export default function Chat() {
   const { profile } = useAuth();
   const queryClient = useQueryClient();
-  const [secao, setSecao] = useState<'salas' | 'mensagens'>('salas');
+  // Pedido do usuário: Mensagens (DM) antes de Salas — era o contrário
+  // (Salas primeiro) desde sempre, sem motivo de negócio nenhum pra essa
+  // ordem específica.
+  const [secao, setSecao] = useState<'salas' | 'mensagens'>('mensagens');
   const [criandoAssunto, setCriandoAssunto] = useState(false);
   const [nomeAssunto, setNomeAssunto] = useState('');
   const [erro, setErro] = useState<string | null>(null);
@@ -273,12 +276,12 @@ export default function Chat() {
       contentContainerClassName="gap-5 p-4 pb-28"
     >
       <View className="flex-row gap-1 rounded-full bg-slate-100 p-1">
-        <BotaoAba label="Salas" ativo={secao === 'salas'} onPress={() => setSecao('salas')} />
         <BotaoAba
           label="Mensagens"
           ativo={secao === 'mensagens'}
           onPress={() => setSecao('mensagens')}
         />
+        <BotaoAba label="Salas" ativo={secao === 'salas'} onPress={() => setSecao('salas')} />
       </View>
 
       {secao === 'mensagens' ? (

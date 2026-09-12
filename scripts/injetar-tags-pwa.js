@@ -23,17 +23,25 @@ const path = require('node:path');
 // roda esse script a partir da raiz do repo, então dá no mesmo.
 const CAMINHO_INDEX = path.join(process.cwd(), 'dist', 'index.html');
 
-// `theme-color` casado com o fundo escuro do redesign "dark-first" (era
-// o indigo antigo, `#4F46E5`, de antes do app inteiro virar escuro por
-// padrão) — sem isso a barra de status/chrome do navegador no celular
-// ficava roxa/clara destoando do resto do app.
+// `theme-color` casado com o fundo claro do redesign v5 (era `#0B0E14`,
+// cor do redesign "dark-first" anterior — ficou esquecido escuro quando
+// o app inteiro virou claro, e sozinho já bastava pra parecer "modo
+// escuro" bugado: instalado como PWA no iPhone, a barra de status/chrome
+// do sistema pega essa cor, então ficava uma tarja escura em cima de um
+// app inteiro claro). `apple-mobile-web-app-status-bar-style` também
+// preso no par certo pra isso: "black-translucent" deixa o conteúdo
+// passar por baixo da barra de status com ícone/hora em cor CLARA — de
+// novo, pensado pro fundo escuro de antes; sobre o fundo claro de agora
+// isso deixa a hora/bateria do sistema quase invisíveis (claro sobre
+// claro). "default" é o par certo pro app claro: barra de status opaca
+// clara, ícone/hora do sistema em escuro.
 const TAGS = `
-    <meta name="theme-color" content="#0B0E14" />
+    <meta name="theme-color" content="#FAF8FF" />
     <link rel="manifest" href="/manifest.json" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Turma+" />
   </head>`;
 
