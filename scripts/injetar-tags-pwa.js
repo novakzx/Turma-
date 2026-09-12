@@ -35,7 +35,16 @@ const CAMINHO_INDEX = path.join(process.cwd(), 'dist', 'index.html');
 // isso deixa a hora/bateria do sistema quase invisíveis (claro sobre
 // claro). "default" é o par certo pro app claro: barra de status opaca
 // clara, ícone/hora do sistema em escuro.
+// `color-scheme` direto na tag `<meta>` (não só em `global.css`) —
+// cobre o instante entre o HTML chegar e o CSS terminar de carregar:
+// sem isso, o navegador aplica a própria folha de estilo padrão, que
+// respeita `prefers-color-scheme` do sistema e pinta um fundo escuro
+// por conta própria pra quem estiver com o celular em modo escuro —
+// um flash escuro bem rápido, mas visível numa conexão de celular mais
+// lenta (o suspeito mais provável pro "modo escuro" que persistiu
+// mesmo depois de corrigir o fundo do body em `global.css`).
 const TAGS = `
+    <meta name="color-scheme" content="light" />
     <meta name="theme-color" content="#FAF8FF" />
     <link rel="manifest" href="/manifest.json" />
     <link rel="apple-touch-icon" href="/icon-192.png" />

@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Fundo cheio, sem cantos arredondados de propósito: iOS/Android
+       aplicam a própria máscara de canto; arredondar aqui de novo
+       criaria uma borda dupla ou deixaria canto reto sobrando se a
+       máscara do sistema não bater exatamente com a nossa. Roxo atual
+       da marca (token "primary", ver tailwind.config.js) — o ícone
+       antigo ainda usava o indigo de antes do redesign v5. -->
+  <rect width="1024" height="1024" fill="#8B5CF6"/>
+
+  <!-- Capelo de formatura: losango achatado (topo do capelo), trapézio
+       (touca) e pingente (haste + bolinha), mesma leitura do ícone
+       "school" usado no cabeçalho do próprio app (TopHeader.tsx), só
+       desenhado à mão em formas básicas pra não depender de nenhuma
+       fonte de ícone no arquivo fonte. Bem simples de propósito:
+       precisa continuar legível como silhueta no favicon de 16px, não
+       só no ícone grande de 512px. -->
+  <polygon points="512,336 772,472 512,608 252,472" fill="#FFFFFF"/>
+  <path d="M 402 500 L 622 500 L 622 620 Q 622 664 512 664 Q 402 664 402 620 Z" fill="#FFFFFF"/>
+
+  <!-- Pingente do capelo, balançando do lado direito. -->
+  <path d="M 700 486 L 718 592" stroke="#FFFFFF" stroke-width="14" stroke-linecap="round" fill="none"/>
+  <circle cx="720" cy="612" r="22" fill="#FFFFFF"/>
+</svg>
