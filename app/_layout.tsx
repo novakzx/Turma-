@@ -13,7 +13,6 @@ import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from 'nativewind';
-import { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -22,7 +21,6 @@ import { AvisosWeb } from '@/components/ui/AvisosWeb';
 import { BannerOffline } from '@/components/ui/BannerOffline';
 import { PromptInstalarPWA } from '@/components/ui/PromptInstalarPWA';
 import { AuthProvider, useAuth } from '@/features/auth/AuthProvider';
-import { carregarTemaPreferido } from '@/features/configuracoes/tema';
 import { OFFLINE_PERSIST_OPTIONS } from '@/lib/offlinePersist';
 import { queryClient } from '@/lib/queryClient';
 
@@ -54,16 +52,15 @@ import { queryClient } from '@/lib/queryClient';
  * classe corretamente, que é o caminho documentado.
  */
 function RootNavigator() {
-  const { colorScheme, setColorScheme } = useColorScheme();
+  // Sem toggle de tema em Configurações mais (o app não tem modo escuro
+  // de propósito desde o redesign v5 — ver tailwind.config.js; escolher
+  // "Escuro" ali não mudava nada visualmente, e isso é exatamente o
+  // "modo escuro bugado" relatado pelo usuário). `colorScheme` ainda
+  // resolve certo pelo `useColorScheme()` do NativeWind, só que agora só
+  // reflete o sistema — não tem mais preferência salva pra restaurar.
+  const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
   const { session, profile, isLoadingSession, isLoadingProfile } = useAuth();
-
-  useEffect(() => {
-    // Aplica a preferência salva em Configurações → Tema assim que o app
-    // abre. Sem isso, `setColorScheme` de uma sessão anterior não
-    // sobreviveria a um restart — o NativeWind não persiste isso sozinho.
-    carregarTemaPreferido().then((tema) => setColorScheme(tema));
-  }, [setColorScheme]);
 
   if (isLoadingSession || (!!session && isLoadingProfile)) {
     return (

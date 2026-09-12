@@ -1,7 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
-import { useColorScheme } from 'nativewind';
 import { useState } from 'react';
 import { Alert, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 
@@ -10,7 +9,6 @@ import { TextField } from '@/components/ui/TextField';
 import { atualizarSenha, signOut } from '@/features/auth/api';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { mensagemDeErro } from '@/features/auth/errors';
-import { salvarTemaPreferido, type TemaPreferido } from '@/features/configuracoes/tema';
 import { atualizarPrivacidade } from '@/features/perfil/api';
 import { excluirMinhaConta, exportarMeusDados } from '@/features/perfil/dadosPessoais';
 
@@ -31,16 +29,6 @@ function confirmarExclusaoConta(aoConfirmar: () => void) {
     { text: 'Apagar tudo', style: 'destructive', onPress: aoConfirmar },
   ]);
 }
-
-const OPCOES_TEMA: {
-  valor: TemaPreferido;
-  rotulo: string;
-  icone: keyof typeof Ionicons.glyphMap;
-}[] = [
-  { valor: 'light', rotulo: 'Claro', icone: 'sunny-outline' },
-  { valor: 'dark', rotulo: 'Escuro', icone: 'moon-outline' },
-  { valor: 'system', rotulo: 'Sistema', icone: 'phone-portrait-outline' },
-];
 
 function Secao({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
@@ -96,7 +84,6 @@ function CartaoAcaoExpansivel({
 export default function Configuracoes() {
   const { profile } = useAuth();
   const queryClient = useQueryClient();
-  const { colorScheme, setColorScheme } = useColorScheme();
 
   const [secaoAberta, setSecaoAberta] = useState<'senha' | null>(null);
   const [novaSenha, setNovaSenha] = useState('');
@@ -140,11 +127,6 @@ export default function Configuracoes() {
     onError: (error) => setErro(mensagemDeErro(error)),
   });
 
-  function handleTrocarTema(tema: TemaPreferido) {
-    setColorScheme(tema);
-    void salvarTemaPreferido(tema);
-  }
-
   function handleSalvarSenha() {
     setErro(null);
     setSucesso(null);
@@ -164,34 +146,6 @@ export default function Configuracoes() {
       className="flex-1 bg-background dark:bg-background-dark"
       contentContainerClassName="gap-4 p-4 pb-10"
     >
-      <Secao titulo="Tema">
-        <View className="flex-row flex-wrap gap-2">
-          {OPCOES_TEMA.map((opcao) => {
-            // `colorScheme` reflete o efetivo (claro/escuro depois de
-            // resolver "sistema"), não a preferência salva — então não dá
-            // pra marcar "Sistema" como selecionado só comparando com
-            // `colorScheme`. Como isso é só feedback visual do botão
-            // (não é a fonte de verdade), comparar com `carregarTemaPreferido`
-            // exigiria estado próprio; simplificamos: os três botões ficam
-            // sempre clicáveis, sem estado "selecionado" fixo.
-            return (
-              <Pressable
-                key={opcao.valor}
-                onPress={() => handleTrocarTema(opcao.valor)}
-                accessibilityRole="button"
-                className="min-h-11 flex-row items-center gap-1.5 rounded-md border border-slate-200 px-4"
-              >
-                <Ionicons name={opcao.icone} size={16} color="#8B5CF6" />
-                <Text className="text-sm text-slate-900">{opcao.rotulo}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
-        <Text className="text-xs text-slate-500">
-          Tema atual: {colorScheme === 'dark' ? 'escuro' : 'claro'}
-        </Text>
-      </Secao>
-
       <Secao titulo="Privacidade">
         <View className="flex-row items-center justify-between">
           <View className="flex-1 flex-row items-center gap-3">
