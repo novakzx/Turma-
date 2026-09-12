@@ -70,7 +70,14 @@ export default function NovoPost() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['posts', profile?.turma_id] });
+      // Achado testando de verdade: desde que o feed passou a mostrar posts
+      // de qualquer turma (`posts_select` sem filtro, ver migration
+      // `feed_stories_visivel_para_todos`), a tela do feed busca com a
+      // chave `['posts']` (sem `turma_id`, ver `app/(app)/(tabs)/feed.tsx`)
+      // — invalidar `['posts', turma_id]` não bate com nada em cache e o
+      // post novo só aparece depois de recarregar a página inteira.
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+      queryClient.invalidateQueries({ queryKey: ['meus-posts', profile?.id] });
       router.back();
     },
     onError: (error) => setErro(mensagemDeErro(error)),
