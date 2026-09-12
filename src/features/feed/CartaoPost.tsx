@@ -223,7 +223,7 @@ export function CartaoPost({
   return (
     <EntradaAnimada
       index={index}
-      className="gap-2 overflow-hidden rounded-3xl bg-surface pb-3 shadow-sm dark:bg-surface-dark"
+      className="gap-2 overflow-hidden rounded-3xl border border-slate-100 bg-surface pb-3 shadow-sm dark:border-slate-100 dark:bg-surface-dark"
     >
       <Pressable
         onPress={irParaPerfilDoAutor}

@@ -11,9 +11,14 @@ import {
   listarOrdenados,
   proximoEvento,
 } from '@/features/calendario/feriados';
+import { feriadosRegionaisEMunicipais } from '@/features/calendario/feriadosRegionaisMunicipais';
 import { GradeMes } from '@/features/calendario/GradeMes';
 import { gerarIcs, mesclarEventos, type EventoCalendario } from '@/features/calendario/regras';
 import { listarTodasAvaliacoesComData } from '@/features/notas/api';
+
+/** Cobre o ano letivo atual + o seguinte — o mesmo horizonte de 2 anos
+ * civis que `ANO_LETIVO` já cobre com a lista curada de `feriados.ts`. */
+const ANOS_FERIADOS_REGIONAIS = [2026, 2027];
 
 const FORMATO_DATA = new Intl.DateTimeFormat('pt-PT', {
   day: '2-digit',
@@ -32,18 +37,24 @@ const ROTULO_TIPO: Record<EventoCalendario['tipo'], string> = {
   nacional: 'Feriado nacional',
   letivo: 'Interrupção letiva',
   avaliacao: 'Avaliação',
+  regional: 'Feriado regional',
+  municipal: 'Feriado municipal',
 };
 
 const COR_TIPO: Record<EventoCalendario['tipo'], string> = {
   nacional: '#8B5CF6',
   letivo: '#2DD4BF',
   avaliacao: '#F87171',
+  regional: '#3B82F6',
+  municipal: '#F59E0B',
 };
 
 const ICONE_TIPO: Record<EventoCalendario['tipo'], keyof typeof Ionicons.glyphMap> = {
   nacional: 'flag',
   letivo: 'school',
   avaliacao: 'document-text',
+  regional: 'earth',
+  municipal: 'business',
 };
 
 function CartaoEvento({ item, index }: { item: EventoCalendario; index: number }) {
@@ -135,6 +146,7 @@ export default function CalendarioFeriados() {
       data: a.data,
       materiaNome: a.materias?.nome,
     })),
+    feriadosRegionaisEMunicipais(ANOS_FERIADOS_REGIONAIS),
   );
 
   const exportarMutation = useMutation({

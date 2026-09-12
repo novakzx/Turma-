@@ -65,6 +65,7 @@ export default function AppLayout() {
       <Stack.Screen name="moderacao-denuncias" options={{ title: 'Denúncias' }} />
       <Stack.Screen name="buscar-usuarios" options={{ title: 'Pesquisar' }} />
       <Stack.Screen name="flashcards" options={{ title: 'Flashcards' }} />
+      <Stack.Screen name="ferramentas-estudo" options={{ title: 'Ferramentas' }} />
     </Stack>
   );
 }

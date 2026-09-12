@@ -331,6 +331,14 @@ export default function Estudo() {
             ))}
           </ScrollView>
           <Pressable
+            onPress={() => router.push('/ferramentas-estudo')}
+            accessibilityRole="button"
+            accessibilityLabel="Ferramentas de cálculo"
+            className="min-h-11 min-w-11 items-center justify-center rounded-full bg-slate-100"
+          >
+            <Ionicons name="calculator-outline" size={18} color="#8B5CF6" />
+          </Pressable>
+          <Pressable
             onPress={() => router.push('/flashcards')}
             accessibilityRole="button"
             accessibilityLabel="Flashcards"

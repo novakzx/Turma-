@@ -24,12 +24,16 @@ const COR_TIPO: Record<EventoCalendario['tipo'], string> = {
   nacional: '#8B5CF6',
   letivo: '#2DD4BF',
   avaliacao: '#F87171',
+  regional: '#3B82F6',
+  municipal: '#F59E0B',
 };
 
 const ROTULO_LEGENDA: Record<EventoCalendario['tipo'], string> = {
   nacional: 'Feriado',
   letivo: 'Interrupção',
   avaliacao: 'Avaliação',
+  regional: 'Regional',
+  municipal: 'Municipal',
 };
 
 function paraChaveDia(ano: number, mes: number, dia: number): string {
@@ -40,8 +44,9 @@ function paraChaveDia(ano: number, mes: number, dia: number): string {
  * Grade do mês com bolinha colorida nos dias que têm evento — pedido do
  * usuário (referência visual anexada tem essa grade em vez de só a lista
  * abaixo). Só mostra o que já existe de verdade em `eventos`
- * (feriado/interrupção/avaliação, ver `regras.ts` — mesma fonte da lista
- * "Próximos Acontecimentos" logo abaixo); a referência também tinha um
+ * (feriado nacional/regional/municipal, interrupção letiva ou avaliação —
+ * ver `regras.ts` — mesma fonte da lista "Próximos Acontecimentos" logo
+ * abaixo); a referência também tinha um
  * banner de "greve ao vivo" com número de relatos, mas isso não existe
  * como dado real neste app (o mural de avisos foi desligado, ver
  * `CalendarioFeriados` em `(tabs)/index.tsx`) — inventar um número ali

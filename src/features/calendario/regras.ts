@@ -15,7 +15,7 @@ export type EventoCalendario = {
   data: string;
   fim?: string;
   regresso?: string;
-  tipo: 'nacional' | 'letivo' | 'avaliacao';
+  tipo: 'nacional' | 'letivo' | 'avaliacao' | 'regional' | 'municipal';
   descricao?: string;
 };
 
@@ -33,6 +33,11 @@ function primeiraData(item: FeriadoOuInterrupcao): string {
 export function mesclarEventos(
   feriados: FeriadoOuInterrupcao[],
   avaliacoes: AvaliacaoParaCalendario[],
+  /** Eventos já prontos no formato `EventoCalendario` — usado pelos
+   * feriados regionais/municipais gerados (ver `feriadosRegionaisMunicipais.ts`),
+   * que não vêm da lista curada de `feriados.ts`. Opcional pra não quebrar
+   * quem já chamava `mesclarEventos` com só 2 argumentos. */
+  extras: EventoCalendario[] = [],
 ): EventoCalendario[] {
   const eventosFeriados: EventoCalendario[] = feriados.map((f) => ({
     id: f.id,
@@ -53,7 +58,9 @@ export function mesclarEventos(
       tipo: 'avaliacao',
     }));
 
-  return [...eventosFeriados, ...eventosAvaliacoes].sort((a, b) => a.data.localeCompare(b.data));
+  return [...eventosFeriados, ...eventosAvaliacoes, ...extras].sort((a, b) =>
+    a.data.localeCompare(b.data),
+  );
 }
 
 /** Formata uma data ISO (`YYYY-MM-DD`) pro formato exigido pelo `DTSTART`
