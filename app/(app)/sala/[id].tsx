@@ -64,11 +64,11 @@ function LinhaMensagem({
         className={`gap-1 rounded-lg px-4 py-2.5 ${
           ehPropria
             ? 'bg-primary dark:bg-primary-dark'
-            : 'border border-slate-800 bg-surface dark:bg-surface-dark'
+            : 'border border-slate-200 bg-surface dark:bg-surface-dark'
         }`}
       >
         {!ehPropria ? (
-          <Text className="text-xs font-semibold text-slate-400">
+          <Text className="text-xs font-semibold text-slate-500">
             {mensagem.profiles?.nome ?? 'Aluno'}
           </Text>
         ) : null}
@@ -79,13 +79,13 @@ function LinhaMensagem({
             caminho={mensagem.midia_url}
             obterUrl={obterUrlAssinadaSala}
             corIcone={ehPropria ? '#FFFFFF' : '#8B5CF6'}
-            corTexto={ehPropria ? 'text-white' : 'text-slate-100'}
+            corTexto={ehPropria ? 'text-white' : 'text-slate-900'}
           />
         ) : null}
         {mensagem.conteudo ? (
           <TextoComMencoes
             texto={mensagem.conteudo}
-            className={`text-base ${ehPropria ? 'text-white' : 'text-slate-100'}`}
+            className={`text-base ${ehPropria ? 'text-white' : 'text-slate-900'}`}
             // Bolha própria já é `bg-primary` — destacar a menção na MESMA
             // cor primária ficaria ilegível (texto primary sobre fundo
             // primary); sublinhado + branco continua indicando "isto é
@@ -225,14 +225,14 @@ export default function SalaChat() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       {ehStaff ? (
-        <View className="flex-row items-center justify-between border-b border-slate-800 px-4 py-2">
+        <View className="flex-row items-center justify-between border-b border-slate-200 px-4 py-2">
           <View className="flex-row items-center gap-1.5">
             <Ionicons
               name={sala.trancada ? 'lock-closed' : 'lock-open-outline'}
               size={16}
               color="#64748B"
             />
-            <Text className="text-sm text-slate-400">
+            <Text className="text-sm text-slate-500">
               {sala.trancada ? 'Sala trancada' : 'Sala aberta'}
             </Text>
           </View>

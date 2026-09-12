@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import {
   Image,
@@ -29,11 +29,20 @@ const REGEX_DATA = /^\d{4}-\d{2}-\d{2}$/;
 const MAX_OPCOES_ENQUETE = 4;
 const MIN_OPCOES_ENQUETE = 2;
 
+/** Preseleciona o tipo do post — pedido do usuário (caixa "O que está
+ * rolando..." no topo do feed, ver `CompositorRapido.tsx`): tocar em
+ * "Foto" ou "Enquete" ali já abre esta tela com o tipo certo marcado,
+ * em vez de sempre cair em "Texto" e a pessoa ter que trocar na mão. */
+function tipoValido(valor: unknown): valor is TipoPost {
+  return typeof valor === 'string' && (TIPOS as string[]).includes(valor);
+}
+
 export default function NovoPost() {
   const { profile } = useAuth();
   const queryClient = useQueryClient();
+  const { tipo: tipoInicial } = useLocalSearchParams<{ tipo?: string }>();
 
-  const [tipo, setTipo] = useState<TipoPost>('texto');
+  const [tipo, setTipo] = useState<TipoPost>(tipoValido(tipoInicial) ? tipoInicial : 'texto');
   const [conteudo, setConteudo] = useState('');
   const [dataEvento, setDataEvento] = useState('');
   const [imagemUri, setImagemUri] = useState<string | null>(null);
@@ -159,7 +168,7 @@ export default function NovoPost() {
               className={`min-h-11 flex-row items-center justify-center gap-1.5 rounded-md border px-4 ${
                 tipo === opcao
                   ? 'border-primary bg-primary/10 dark:border-primary-dark'
-                  : 'border-slate-700'
+                  : 'border-slate-200'
               }`}
             >
               <Ionicons
@@ -167,7 +176,7 @@ export default function NovoPost() {
                 size={15}
                 color={tipo === opcao ? '#8B5CF6' : '#94A3B8'}
               />
-              <Text className="text-sm text-slate-100">{ROTULO_TIPO_POST[opcao]}</Text>
+              <Text className="text-sm text-slate-900">{ROTULO_TIPO_POST[opcao]}</Text>
             </Pressable>
           ))}
         </View>

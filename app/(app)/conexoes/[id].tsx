@@ -55,9 +55,9 @@ export default function Conexoes() {
             >
               <FotoPerfil caminho={pessoa.foto_url} nome={pessoa.nome} tamanho={44} />
               <View className="flex-1">
-                <Text className="text-base font-medium text-slate-100">{pessoa.nome}</Text>
+                <Text className="text-base font-medium text-slate-900">{pessoa.nome}</Text>
                 {pessoa.nome_usuario ? (
-                  <Text className="text-xs text-slate-400">@{pessoa.nome_usuario}</Text>
+                  <Text className="text-xs text-slate-500">@{pessoa.nome_usuario}</Text>
                 ) : null}
               </View>
             </Pressable>

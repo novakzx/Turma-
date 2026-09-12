@@ -65,14 +65,14 @@ function LinhaComentario({
   onApagar: () => void;
 }) {
   return (
-    <View className="gap-1 border-b border-slate-800 py-3">
+    <View className="gap-1 border-b border-slate-200 py-3">
       <View className="flex-row items-center justify-between">
-        <Text className="text-sm font-semibold text-slate-100">
+        <Text className="text-sm font-semibold text-slate-900">
           {comentario.profiles?.nome ?? 'Aluno'}
         </Text>
-        <Text className="text-xs text-slate-400">{formatarData(comentario.criado_em)}</Text>
+        <Text className="text-xs text-slate-500">{formatarData(comentario.criado_em)}</Text>
       </View>
-      <TextoComMencoes texto={comentario.conteudo} className="text-sm text-slate-300" />
+      <TextoComMencoes texto={comentario.conteudo} className="text-sm text-slate-700" />
       <View className="flex-row items-center gap-3">
         <BotaoDenunciar tipoConteudo="comentario" conteudoId={comentario.id} />
         {podeApagar ? (
@@ -172,7 +172,7 @@ export default function DetalhePost() {
       className="flex-1 bg-background dark:bg-background-dark"
       contentContainerClassName="gap-3 px-6 pb-10 pt-6"
       ListHeaderComponent={
-        <View className="gap-3 border-b border-slate-800 pb-4">
+        <View className="gap-3 border-b border-slate-200 pb-4">
           <View className="flex-row items-center gap-3">
             <Pressable
               onPress={() =>
@@ -190,10 +190,10 @@ export default function DetalhePost() {
               />
             </Pressable>
             <View className="flex-1 gap-1">
-              <Text className="text-base font-semibold text-slate-100">
+              <Text className="text-base font-semibold text-slate-900">
                 {post.profiles?.nome ?? 'Aluno'}
               </Text>
-              <Text className="text-xs text-slate-400">
+              <Text className="text-xs text-slate-500">
                 {formatarData(post.criado_em)} · {ROTULO_TIPO_POST[post.tipo]}
               </Text>
             </View>
@@ -224,7 +224,7 @@ export default function DetalhePost() {
 
           {post.conteudo ? (
             <View className="gap-2">
-              <TextoComMencoes texto={post.conteudo} className="text-base text-slate-200" />
+              <TextoComMencoes texto={post.conteudo} className="text-base text-slate-800" />
               <BotaoTraduzir texto={post.conteudo} />
             </View>
           ) : null}
@@ -235,7 +235,7 @@ export default function DetalhePost() {
 
           <BotaoDenunciar tipoConteudo="post" conteudoId={post.id} />
 
-          <Text className="mt-2 text-sm font-semibold text-slate-300">Comentários</Text>
+          <Text className="mt-2 text-sm font-semibold text-slate-700">Comentários</Text>
         </View>
       }
       data={comentariosQuery.data ?? []}
@@ -255,7 +255,7 @@ export default function DetalhePost() {
         ) : (
           <View className="flex-row items-center gap-1.5 py-4">
             <Ionicons name="chatbubble-outline" size={14} color="#94A3B8" />
-            <Text className="text-sm text-slate-400">
+            <Text className="text-sm text-slate-500">
               Ainda sem comentários. Sê o primeiro a comentar.
             </Text>
           </View>

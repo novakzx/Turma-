@@ -109,7 +109,7 @@ export default function CompletarCadastroScreen() {
           <Text className="text-3xl font-bold text-primary dark:text-primary-dark">
             Só mais um passo
           </Text>
-          <Text className="text-base text-slate-400">
+          <Text className="text-base text-slate-500">
             Sua conta {profile?.nome ? `de ${profile.nome} ` : ''}já existe — falta só completar o
             cadastro pra continuar.
           </Text>

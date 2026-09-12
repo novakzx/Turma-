@@ -60,7 +60,7 @@ export function SeletorEmoji({ onSelecionar }: { onSelecionar: (emoji: string) =
   return (
     <View
       style={{ height: 220 }}
-      className="border-t border-slate-800 bg-surface dark:bg-surface-dark"
+      className="border-t border-slate-200 bg-surface dark:bg-surface-dark"
     >
       <ScrollView contentContainerClassName="flex-row flex-wrap gap-1 p-2">
         {EMOJIS.map((emoji, indice) => (
@@ -69,7 +69,7 @@ export function SeletorEmoji({ onSelecionar }: { onSelecionar: (emoji: string) =
             onPress={() => onSelecionar(emoji)}
             accessibilityRole="button"
             accessibilityLabel={`Emoji ${emoji}`}
-            className="h-11 w-11 items-center justify-center rounded-md active:bg-slate-800"
+            className="h-11 w-11 items-center justify-center rounded-md active:bg-slate-100"
           >
             <Text style={{ fontSize: 24 }}>{emoji}</Text>
           </Pressable>

@@ -1,5 +1,4 @@
 import { Stack } from 'expo-router';
-import { useColorScheme } from 'nativewind';
 import { useEffect } from 'react';
 
 import { useAuth } from '@/features/auth/AuthProvider';
@@ -8,8 +7,6 @@ import { registrarPushWeb } from '@/features/notificacoes/webPush';
 
 export default function AppLayout() {
   const { session } = useAuth();
-  const { colorScheme } = useColorScheme();
-  const escuro = colorScheme === 'dark';
 
   useEffect(() => {
     if (!session) return;
@@ -30,17 +27,13 @@ export default function AppLayout() {
   return (
     <Stack
       screenOptions={{
-        // `headerShadowVisible: false` — sem isso o header nativo aplica
-        // uma borda/sombra inferior clara própria por padrão (pensada pra
-        // tema claro), que aparecia como linha branca sobre o fundo
-        // escuro (achado testando no preview mobile, relatado pelo
-        // usuário). `headerStyle` deste header não aceita
-        // `borderBottomWidth` direto (erro de tipo) — esta é a prop
-        // documentada do React Navigation pra isso.
+        // `headerShadowVisible: false` — a sombra padrão do React
+        // Navigation não bate com a sombra suave do resto do redesign v5
+        // (ver comentário em `app/_layout.tsx`).
         headerShadowVisible: false,
-        headerStyle: { backgroundColor: escuro ? '#05060A' : '#0B0E14' },
-        headerTintColor: '#F8FAFC',
-        contentStyle: { backgroundColor: escuro ? '#05060A' : '#0B0E14' },
+        headerStyle: { backgroundColor: '#FAF8FF' },
+        headerTintColor: '#131B2E',
+        contentStyle: { backgroundColor: '#FAF8FF' },
       }}
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

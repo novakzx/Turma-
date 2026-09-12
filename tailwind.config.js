@@ -46,13 +46,25 @@ module.exports = {
           DEFAULT: '#F87171',
           dark: '#FCA5A5',
         },
+        // Redesign v5 (pedido do usuário, com referência visual concreta
+        // em HTML/Material 3 anexada no pedido): claro de novo — as v3/v4
+        // eram dark-first (fundo preto/navy). Fundo lilás bem claro com
+        // cartão branco flutuando por cima (sombra suave, não borda) é a
+        // mesma receita da referência. `primary` continua o roxo vívido de
+        // sempre (identidade do Turma+ não mudou, só o fundo) — funciona
+        // igual de bem em cima de claro. Como `dark:` nunca ativa de
+        // verdade no alvo web (ver comentário histórico acima, ainda
+        // válido), todo texto solto `text-slate-100`/`border-slate-700`
+        // etc. (calibrado pra fundo escuro nas versões anteriores) foi
+        // trocado no app inteiro pelo equivalente calibrado pra fundo
+        // claro — sem isso o texto claro-sobre-claro ficaria ilegível.
         background: {
-          DEFAULT: '#0B0E14',
-          dark: '#05060A',
+          DEFAULT: '#FAF8FF',
+          dark: '#FAF8FF',
         },
         surface: {
-          DEFAULT: '#171B26',
-          dark: '#11141C',
+          DEFAULT: '#FFFFFF',
+          dark: '#FFFFFF',
         },
       },
     },

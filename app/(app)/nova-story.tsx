@@ -90,7 +90,7 @@ export default function NovaStory() {
       contentContainerClassName="gap-4 px-6 pb-10 pt-6"
     >
       <Text className="text-2xl font-bold text-primary dark:text-primary-dark">Nova story</Text>
-      <Text className="text-sm text-slate-400">
+      <Text className="text-sm text-slate-500">
         Fica visível por 24h pra quem te segue e pra sua turma.
       </Text>
 
@@ -103,7 +103,7 @@ export default function NovaStory() {
           resizeMode="cover"
         />
       ) : (
-        <View className="aspect-[9/16] max-h-[420px] w-full items-center justify-center rounded-lg bg-slate-800" />
+        <View className="aspect-[9/16] max-h-[420px] w-full items-center justify-center rounded-lg bg-slate-100" />
       )}
 
       <Button

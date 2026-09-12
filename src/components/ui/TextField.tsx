@@ -25,17 +25,17 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(function TextFiel
 ) {
   return (
     <View className="gap-1.5">
-      <Text className="text-sm font-medium text-slate-300">{label}</Text>
+      <Text className="text-sm font-medium text-slate-700">{label}</Text>
       <View
         className={`min-h-11 flex-row items-center gap-2 rounded-lg border bg-surface px-4 py-2 dark:bg-surface-dark ${
-          error ? 'border-danger dark:border-danger-dark' : 'border-slate-700'
+          error ? 'border-danger dark:border-danger-dark' : 'border-slate-200'
         }`}
       >
         {icon ? <Ionicons name={icon} size={18} color="#94A3B8" /> : null}
         <TextInput
           ref={ref}
           accessibilityLabel={accessibilityLabel ?? (error ? `${label}. Erro: ${error}` : label)}
-          className="min-h-11 flex-1 text-base text-slate-100"
+          className="min-h-11 flex-1 text-base text-slate-900"
           placeholderTextColor="#94A3B8"
           {...inputProps}
         />

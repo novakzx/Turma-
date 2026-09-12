@@ -9,13 +9,25 @@ import type { Post, PostComentario, TipoConteudoDenuncia, TipoPost } from './typ
 const BUCKET_MIDIA = 'posts-midia';
 
 export type PostComContadores = Post & {
-  profiles: { id: string; nome: string; foto_url: string | null; assinatura_ativa: boolean } | null;
+  profiles: {
+    id: string;
+    nome: string;
+    foto_url: string | null;
+    assinatura_ativa: boolean;
+    // `papel` só pra mostrar o badge "Professor"/"Coordenação" no card do
+    // post (pedido do usuário, referência visual anexada tem um badge
+    // "Oficial" ao lado do nome de contas institucionais) — não é usado
+    // pra nenhuma decisão de permissão aqui (isso continua sendo feito só
+    // no banco, via RLS/RPC, nunca confiando neste campo vindo do
+    // cliente).
+    papel: 'aluno' | 'professor' | 'coordenacao';
+  } | null;
   post_curtidas: { count: number }[];
   post_comentarios: { count: number }[];
 };
 
 const SELECT_POST_COM_CONTADORES =
-  '*, profiles(id, nome, foto_url, assinatura_ativa), post_curtidas(count), post_comentarios(count)';
+  '*, profiles(id, nome, foto_url, assinatura_ativa, papel), post_curtidas(count), post_comentarios(count)';
 
 /** Feed aberto pra qualquer conta do app (pedido do usuário — antes só
  * mostrava post da própria turma; RLS de `posts` também já libera geral,

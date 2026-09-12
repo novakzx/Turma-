@@ -34,13 +34,13 @@ function ItemSelecionavel({
       accessibilityRole="button"
       accessibilityState={{ selected: selecionado }}
       className={`min-h-11 flex-row items-center gap-2 rounded-lg border px-4 py-3 ${
-        selecionado ? 'border-primary bg-primary/10 dark:border-primary-dark' : 'border-slate-700'
+        selecionado ? 'border-primary bg-primary/10 dark:border-primary-dark' : 'border-slate-200'
       }`}
     >
       {icone ? (
         <Ionicons name={icone} size={16} color={selecionado ? '#8B5CF6' : '#94A3B8'} />
       ) : null}
-      <Text className="flex-1 text-base text-slate-100">{label}</Text>
+      <Text className="flex-1 text-base text-slate-900">{label}</Text>
       {selecionado ? <Ionicons name="checkmark-circle" size={20} color="#8B5CF6" /> : null}
     </Pressable>
   );
@@ -197,7 +197,7 @@ export function EscolaTurmaForm({
       <View className="gap-2">
         <View className="flex-row items-center gap-1.5">
           <Ionicons name="business-outline" size={16} color="#64748B" />
-          <Text className="text-sm font-medium text-slate-300">Escola</Text>
+          <Text className="text-sm font-medium text-slate-700">Escola</Text>
         </View>
         {escolasQuery.isLoading ? (
           <ActivityIndicator color="#8B5CF6" />
@@ -215,7 +215,7 @@ export function EscolaTurmaForm({
               placeholder="Digite o nome da escola..."
             />
             {escolasFiltradas.length === 0 ? (
-              <Text className="text-slate-400">Nenhuma escola encontrada com esse nome.</Text>
+              <Text className="text-slate-500">Nenhuma escola encontrada com esse nome.</Text>
             ) : (
               <View className="gap-2">
                 {escolasFiltradas.slice(0, 30).map((escola) => (
@@ -257,7 +257,7 @@ export function EscolaTurmaForm({
         <View className="gap-2">
           <View className="flex-row items-center gap-1.5">
             <Ionicons name="card-outline" size={16} color="#64748B" />
-            <Text className="text-sm font-medium text-slate-300">Verificação de estudante</Text>
+            <Text className="text-sm font-medium text-slate-700">Verificação de estudante</Text>
           </View>
           <TextField
             label="Número do cartão de estudante"
@@ -273,7 +273,7 @@ export function EscolaTurmaForm({
         <View className="gap-2">
           <View className="flex-row items-center gap-1.5">
             <Ionicons name="people-outline" size={16} color="#64748B" />
-            <Text className="text-sm font-medium text-slate-300">Turma</Text>
+            <Text className="text-sm font-medium text-slate-700">Turma</Text>
           </View>
           {turmasQuery.isLoading ? (
             <ActivityIndicator color="#8B5CF6" />
@@ -284,7 +284,7 @@ export function EscolaTurmaForm({
           ) : (
             <View className="gap-2">
               {(turmasQuery.data ?? []).length === 0 ? (
-                <Text className="text-slate-400">
+                <Text className="text-slate-500">
                   Essa escola ainda não tem turma cadastrada — fale com a coordenação.
                 </Text>
               ) : (
@@ -310,7 +310,7 @@ export function EscolaTurmaForm({
         <View className="gap-3 rounded-lg border border-accent/30 bg-accent/10 p-3 dark:border-accent-dark/30 dark:bg-accent-dark/10">
           <View className="flex-row items-start gap-2">
             <Ionicons name="help-circle-outline" size={18} color="#2DD4BF" />
-            <Text className="flex-1 text-sm text-slate-300">
+            <Text className="flex-1 text-sm text-slate-700">
               A idade que você informou no cadastro não bate com o {serieAnoParaChecar} — você
               repetiu de ano?
             </Text>
@@ -341,7 +341,7 @@ export function EscolaTurmaForm({
 
           {reprovou ? (
             <View className="gap-2">
-              <Text className="text-xs font-medium text-slate-400">Quais anos você reprovou?</Text>
+              <Text className="text-xs font-medium text-slate-500">Quais anos você reprovou?</Text>
               <View className="flex-row flex-wrap gap-2">
                 {Array.from({ length: 12 }, (_, i) => i + 1).map((ano) => {
                   const selecionado = anosReprovados.has(ano);
@@ -362,10 +362,10 @@ export function EscolaTurmaForm({
                       className={`min-h-11 min-w-11 items-center justify-center rounded-md border px-3 py-2 ${
                         selecionado
                           ? 'border-primary bg-primary/10 dark:border-primary-dark'
-                          : 'border-slate-700'
+                          : 'border-slate-200'
                       }`}
                     >
-                      <Text className="text-sm text-slate-200">{ano}º</Text>
+                      <Text className="text-sm text-slate-800">{ano}º</Text>
                     </Pressable>
                   );
                 })}
@@ -395,10 +395,10 @@ export function EscolaTurmaForm({
             </Pressable>
           </View>
         ) : (
-          <View className="gap-2 rounded-lg border border-slate-700 p-3">
+          <View className="gap-2 rounded-lg border border-slate-200 p-3">
             <View className="flex-row items-center gap-1.5">
               <Ionicons name="lock-closed-outline" size={14} color="#94A3B8" />
-              <Text className="flex-1 text-xs text-slate-400">
+              <Text className="flex-1 text-xs text-slate-500">
                 Essa turma foi criada por outro usuário — só o dono dela aprova quem entra.
               </Text>
             </View>

@@ -102,19 +102,19 @@ export function CaixaMensagem({
 
   if (desabilitado) {
     return (
-      <View className="flex-row items-center gap-1.5 border-t border-slate-800 p-3">
+      <View className="flex-row items-center gap-1.5 border-t border-slate-200 p-3">
         <Ionicons name="information-circle-outline" size={14} color="#94A3B8" />
-        <Text className="flex-1 text-xs text-slate-400">{mensagemDesabilitado}</Text>
+        <Text className="flex-1 text-xs text-slate-500">{mensagemDesabilitado}</Text>
       </View>
     );
   }
 
   return (
-    <View className="border-t border-slate-800">
+    <View className="border-t border-slate-200">
       {estadoGravacao.isRecording ? (
         <View className="flex-row items-center gap-3 p-3">
           <View className="h-2.5 w-2.5 rounded-full bg-danger dark:bg-danger-dark" />
-          <Text className="flex-1 text-sm text-slate-300">
+          <Text className="flex-1 text-sm text-slate-700">
             Gravando... {formatarDuracao(estadoGravacao.durationMillis)}
           </Text>
           <Pressable
@@ -155,7 +155,7 @@ export function CaixaMensagem({
               placeholder={placeholder}
               placeholderTextColor="#64748B"
               multiline
-              className="max-h-28 flex-1 py-2 text-base text-slate-100"
+              className="max-h-28 flex-1 py-2 text-base text-slate-900"
               onFocus={() => setMostrarEmoji(false)}
             />
             <Pressable

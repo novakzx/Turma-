@@ -8,6 +8,7 @@ import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { curtir, descurtir, listarMeusLikes, listarPosts } from '@/features/feed/api';
 import { CartaoPost } from '@/features/feed/CartaoPost';
+import { CompositorRapido } from '@/features/feed/CompositorRapido';
 import { StoriesBar } from '@/features/social/StoriesBar';
 
 export default function Feed() {
@@ -52,6 +53,7 @@ export default function Feed() {
       {(postsQuery.data ?? []).length === 0 ? (
         <>
           <StoriesBar />
+          <CompositorRapido />
           <EmptyState
             icon="newspaper-outline"
             titulo="Nenhum post ainda"
@@ -73,7 +75,8 @@ export default function Feed() {
           ListHeaderComponent={
             <>
               <StoriesBar />
-              <View className="h-1" />
+              <CompositorRapido />
+              <View className="h-2" />
             </>
           }
           renderItem={({ item, index }) => (
@@ -95,7 +98,7 @@ export default function Feed() {
         onPress={() => router.push('/novo-post')}
         accessibilityRole="button"
         accessibilityLabel="Novo post"
-        className="absolute bottom-24 right-6 h-14 w-14 items-center justify-center rounded-full bg-primary shadow-sm dark:bg-primary-dark"
+        className="absolute bottom-24 right-6 h-14 w-14 items-center justify-center rounded-full bg-primary shadow-lg dark:bg-primary-dark"
       >
         <Ionicons name="add" size={28} color="#FFFFFF" />
       </Pressable>

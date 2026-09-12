@@ -23,7 +23,7 @@ export function ImagemChat({
     return (
       <View
         style={{ width: 220, height: 220 }}
-        className="items-center justify-center rounded-lg bg-slate-700"
+        className="items-center justify-center rounded-lg bg-slate-100"
       >
         <ActivityIndicator />
       </View>

@@ -36,8 +36,8 @@ function Contador({
       accessibilityLabel={`${numero} ${label}`}
       className="min-w-16 items-center gap-0.5 px-2 py-1"
     >
-      <Text className="text-lg font-bold text-slate-100">{numero}</Text>
-      <Text className="text-xs text-slate-400">{label}</Text>
+      <Text className="text-lg font-bold text-slate-900">{numero}</Text>
+      <Text className="text-xs text-slate-500">{label}</Text>
     </Pressable>
   );
 }
@@ -82,10 +82,10 @@ export function CabecalhoPerfil({
       <FotoPerfil caminho={fotoUrl} nome={nome} tamanho={96} />
       <View className="items-center gap-1">
         <View className="flex-row items-center gap-1.5">
-          <Text className="text-2xl font-bold text-slate-100">{nome}</Text>
+          <Text className="text-2xl font-bold text-slate-900">{nome}</Text>
           {verificado ? <SeloVerificado tamanho={18} /> : null}
         </View>
-        {nomeUsuario ? <Text className="text-sm text-slate-400">@{nomeUsuario}</Text> : null}
+        {nomeUsuario ? <Text className="text-sm text-slate-500">@{nomeUsuario}</Text> : null}
         {papel ? (
           <View className="mt-1 flex-row items-center gap-1.5 rounded-md bg-primary/10 px-3 py-1 dark:bg-primary-dark/10">
             <Ionicons name={ICONE_PAPEL[papel]} size={14} color="#8B5CF6" />
@@ -94,7 +94,7 @@ export function CabecalhoPerfil({
             </Text>
           </View>
         ) : null}
-        {bio ? <Text className="mt-2 text-center text-sm text-slate-400">{bio}</Text> : null}
+        {bio ? <Text className="mt-2 text-center text-sm text-slate-500">{bio}</Text> : null}
         {link && /^https?:\/\//i.test(link) ? (
           <Pressable
             onPress={() => Linking.openURL(link)}

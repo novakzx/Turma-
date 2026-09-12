@@ -30,19 +30,19 @@ export function CampoConsentimento({
         accessibilityState={{ checked: marcado }}
         accessibilityLabel={label}
         className={`min-h-11 flex-row items-start gap-3 rounded-lg border p-3 ${
-          erro ? 'border-danger dark:border-danger-dark' : 'border-slate-700'
+          erro ? 'border-danger dark:border-danger-dark' : 'border-slate-200'
         }`}
       >
         <View
           className={`mt-0.5 h-6 w-6 items-center justify-center rounded-md border-2 ${
             marcado
               ? 'border-primary bg-primary dark:border-primary-dark dark:bg-primary-dark'
-              : 'border-slate-600'
+              : 'border-slate-300'
           }`}
         >
           {marcado ? <Ionicons name="checkmark" size={16} color="#FFFFFF" /> : null}
         </View>
-        <Text className="flex-1 text-sm text-slate-300">{label}</Text>
+        <Text className="flex-1 text-sm text-slate-700">{label}</Text>
       </Pressable>
 
       {textoCompleto ? (
@@ -59,8 +59,8 @@ export function CampoConsentimento({
       ) : null}
 
       {aberto && textoCompleto ? (
-        <ScrollView className="max-h-40 rounded-lg bg-slate-800/60 p-3">
-          <Text className="text-xs leading-5 text-slate-400">{textoCompleto}</Text>
+        <ScrollView className="max-h-40 rounded-lg bg-slate-100/60 p-3">
+          <Text className="text-xs leading-5 text-slate-500">{textoCompleto}</Text>
         </ScrollView>
       ) : null}
 

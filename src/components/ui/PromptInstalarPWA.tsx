@@ -99,10 +99,10 @@ export function PromptInstalarPWA() {
     <View className="mx-4 mt-4 flex-row items-start gap-3 rounded-xl border border-primary/30 bg-primary/10 p-4 dark:border-primary-dark/30 dark:bg-primary-dark/10">
       <Ionicons name="phone-portrait-outline" size={20} color="#8B5CF6" />
       <View className="flex-1 gap-2">
-        <Text className="text-sm font-semibold text-slate-100">
+        <Text className="text-sm font-semibold text-slate-900">
           Adicione o Turma+ à tela de início
         </Text>
-        <Text className="text-xs text-slate-400">
+        <Text className="text-xs text-slate-500">
           {mostrarInstrucaoIOS
             ? 'Toque no ícone de compartilhar do navegador e depois em "Adicionar à Tela de Início".'
             : 'Acesso mais rápido, tela cheia, sem barra de endereço.'}
@@ -120,9 +120,9 @@ export function PromptInstalarPWA() {
           <Pressable
             onPress={dispensar}
             accessibilityRole="button"
-            className="min-h-11 items-center justify-center rounded-md border border-slate-700 px-4"
+            className="min-h-11 items-center justify-center rounded-md border border-slate-200 px-4"
           >
-            <Text className="text-sm text-slate-300">Agora não</Text>
+            <Text className="text-sm text-slate-700">Agora não</Text>
           </Pressable>
         </View>
       </View>

@@ -45,7 +45,7 @@ export function FotoPerfil({
 
   if (buscarAssinada && (isLoading || !url)) {
     return (
-      <View style={estilo} className="items-center justify-center bg-slate-700">
+      <View style={estilo} className="items-center justify-center bg-slate-100">
         <ActivityIndicator color="#8B5CF6" />
       </View>
     );

@@ -68,11 +68,11 @@ function LinhaMateria({
   }
 
   return (
-    <View className="flex-row items-center gap-3 rounded-lg border border-slate-800 bg-surface p-3 dark:bg-surface-dark">
+    <View className="flex-row items-center gap-3 rounded-lg border border-slate-200 bg-surface p-3 dark:bg-surface-dark">
       <View className="h-10 w-10 items-center justify-center rounded-full bg-primary/10 dark:bg-primary-dark/10">
         <Ionicons name="book-outline" size={18} color="#8B5CF6" />
       </View>
-      <Text className="flex-1 text-base text-slate-100">{materia.nome}</Text>
+      <Text className="flex-1 text-base text-slate-900">{materia.nome}</Text>
       {podeEditar ? (
         <>
           <Pressable
@@ -189,9 +189,9 @@ export default function GerenciarMaterias() {
         ))
       )}
 
-      <View className="border-t border-slate-800 pt-4">
+      <View className="border-t border-slate-200 pt-4">
         {criando ? (
-          <View className="gap-2 rounded-lg border border-slate-800 bg-surface p-3 dark:bg-surface-dark">
+          <View className="gap-2 rounded-lg border border-slate-200 bg-surface p-3 dark:bg-surface-dark">
             <TextField
               label="Nome da matéria"
               icon="book-outline"

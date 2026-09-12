@@ -48,7 +48,7 @@ export default function LoginScreen() {
           </View>
           <View className="items-center gap-1">
             <Text className="text-3xl font-bold text-primary dark:text-primary-dark">Turma+</Text>
-            <Text className="text-base text-slate-400">Entra com seu usuário e senha.</Text>
+            <Text className="text-base text-slate-500">Entra com seu usuário e senha.</Text>
           </View>
         </View>
 

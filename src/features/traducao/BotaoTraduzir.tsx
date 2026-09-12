@@ -47,9 +47,9 @@ export function BotaoTraduzir({ texto }: { texto: string }) {
         <Text className="text-xs font-semibold uppercase tracking-wide text-primary dark:text-primary-dark">
           Tradução ({idioma})
         </Text>
-        <Text className="text-sm text-slate-200">{traducao}</Text>
+        <Text className="text-sm text-slate-800">{traducao}</Text>
         <Pressable onPress={() => setTraducao(null)} accessibilityRole="button">
-          <Text className="text-xs font-semibold text-slate-400">Ver original</Text>
+          <Text className="text-xs font-semibold text-slate-500">Ver original</Text>
         </Pressable>
       </View>
     );
@@ -64,9 +64,9 @@ export function BotaoTraduzir({ texto }: { texto: string }) {
             onPress={() => handleEscolherIdioma(opcao)}
             disabled={traduzirMutation.isPending}
             accessibilityRole="button"
-            className="min-h-11 items-center justify-center rounded-md border border-slate-700 px-3"
+            className="min-h-11 items-center justify-center rounded-md border border-slate-200 px-3"
           >
-            <Text className="text-xs text-slate-100">{opcao}</Text>
+            <Text className="text-xs text-slate-900">{opcao}</Text>
           </Pressable>
         ))}
       </View>
@@ -80,7 +80,7 @@ export function BotaoTraduzir({ texto }: { texto: string }) {
       disabled={traduzirMutation.isPending}
       accessibilityRole="button"
       accessibilityLabel="Traduzir — toque e segure pra escolher o idioma"
-      className="min-h-11 flex-row items-center gap-1 self-start rounded-md border border-slate-700 px-3"
+      className="min-h-11 flex-row items-center gap-1 self-start rounded-md border border-slate-200 px-3"
     >
       <Ionicons name="language-outline" size={14} color="#8B5CF6" />
       <Text className="text-xs font-semibold text-primary dark:text-primary-dark">

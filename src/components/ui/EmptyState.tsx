@@ -28,8 +28,8 @@ export function EmptyState({ titulo, descricao, onTentarNovo, icon }: EmptyState
       <View className="h-20 w-20 items-center justify-center rounded-full bg-primary/10 dark:bg-primary-dark/10">
         <Ionicons name={nomeIcone} size={36} color="#8B5CF6" />
       </View>
-      <Text className="text-center text-base font-medium text-slate-300">{titulo}</Text>
-      {descricao ? <Text className="text-center text-sm text-slate-400">{descricao}</Text> : null}
+      <Text className="text-center text-base font-medium text-slate-700">{titulo}</Text>
+      {descricao ? <Text className="text-center text-sm text-slate-500">{descricao}</Text> : null}
       {onTentarNovo ? (
         <View className="mt-3">
           <Button

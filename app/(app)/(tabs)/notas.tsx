@@ -36,11 +36,11 @@ function ChipMateria({
       accessibilityRole="button"
       accessibilityState={{ selected: selecionada }}
       className={`min-h-11 flex-row items-center justify-center gap-1.5 rounded-md border px-4 ${
-        selecionada ? 'border-primary bg-primary/10 dark:border-primary-dark' : 'border-slate-700'
+        selecionada ? 'border-primary bg-primary/10 dark:border-primary-dark' : 'border-slate-200'
       }`}
     >
       <Ionicons name="book-outline" size={15} color={selecionada ? '#8B5CF6' : '#94A3B8'} />
-      <Text className="text-sm text-slate-100">{nome}</Text>
+      <Text className="text-sm text-slate-900">{nome}</Text>
     </Pressable>
   );
 }
@@ -78,11 +78,11 @@ function LinhaAvaliacao({
   }
 
   return (
-    <View className="gap-2 rounded-lg border border-slate-800 bg-surface p-3 dark:bg-surface-dark">
+    <View className="gap-2 rounded-lg border border-slate-200 bg-surface p-3 dark:bg-surface-dark">
       <View className="flex-row items-center justify-between">
         <View className="flex-1">
-          <Text className="text-base font-medium text-slate-100">{avaliacao.nome}</Text>
-          <Text className="text-xs text-slate-400">
+          <Text className="text-base font-medium text-slate-900">{avaliacao.nome}</Text>
+          <Text className="text-xs text-slate-500">
             Peso {formatadorNota.format(avaliacao.peso)} ·{' '}
             {avaliacao.nota === null ? 'pendente' : `Nota ${formatadorNota.format(avaliacao.nota)}`}
           </Text>
@@ -285,14 +285,14 @@ export default function Notas() {
       ) : (
         <>
           {mediaAtual !== null ? (
-            <Text className="text-sm text-slate-400">
+            <Text className="text-sm text-slate-500">
               Média atual (só o que já tem nota): {formatadorNota.format(mediaAtual)}
             </Text>
           ) : null}
 
           <View className="gap-2">
             {(avaliacoesQuery.data?.length ?? 0) === 0 ? (
-              <Text className="text-sm text-slate-400">
+              <Text className="text-sm text-slate-500">
                 Nenhuma avaliação lançada nessa matéria ainda.
               </Text>
             ) : (
@@ -312,10 +312,10 @@ export default function Notas() {
             )}
           </View>
 
-          <View className="gap-3 rounded-xl border border-slate-800 bg-surface p-4 dark:bg-surface-dark">
+          <View className="gap-3 rounded-xl border border-slate-200 bg-surface p-4 dark:bg-surface-dark">
             <View className="flex-row items-center gap-1.5">
               <Ionicons name="add-circle-outline" size={16} color="#8B5CF6" />
-              <Text className="text-sm font-semibold text-slate-300">Nova avaliação</Text>
+              <Text className="text-sm font-semibold text-slate-700">Nova avaliação</Text>
             </View>
             <TextField
               label="Nome"
@@ -358,10 +358,10 @@ export default function Notas() {
             />
           </View>
 
-          <View className="gap-3 rounded-xl border border-slate-800 bg-surface p-4 dark:bg-surface-dark">
+          <View className="gap-3 rounded-xl border border-slate-200 bg-surface p-4 dark:bg-surface-dark">
             <View className="flex-row items-center gap-1.5">
               <Ionicons name="calculator-outline" size={16} color="#8B5CF6" />
-              <Text className="text-sm font-semibold text-slate-300">Quanto preciso tirar?</Text>
+              <Text className="text-sm font-semibold text-slate-700">Quanto preciso tirar?</Text>
             </View>
             <TextField
               label={`Média desejada (0-${notaMaxima})`}
@@ -393,7 +393,7 @@ export default function Notas() {
                 </Text>
               </View>
             ) : resultadoCalculo?.status === 'sem_pendentes' ? (
-              <Text className="text-sm text-slate-400">
+              <Text className="text-sm text-slate-500">
                 Todas as avaliações já têm nota lançada.
               </Text>
             ) : null}

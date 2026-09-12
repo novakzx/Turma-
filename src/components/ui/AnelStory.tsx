@@ -1,12 +1,13 @@
 import { useColorScheme } from 'nativewind';
 import { View, type ViewStyle } from 'react-native';
 
-/** Anel sólido ao redor do avatar quando há story ativa — redesenho "app
- * profissional" (pedido do usuário): o anel gradiente multicolor
- * (Instagram/WhatsApp) virou uma borda sólida na cor primária, mesma
- * linguagem visual sóbria do resto do app. Mantém o "respiro" entre o
- * anel e a foto (um círculo da cor do fundo por baixo do avatar) — sem
- * essa camada o anel encostaria direto na foto. */
+/** Anel sólido ao redor do avatar quando há story ativa — cor sólida da
+ * marca, mesma linguagem do resto do app (sem gradiente — pedido
+ * explícito "tire os fades"). Mantém o "respiro" entre o anel e a foto
+ * (um círculo da cor do fundo por baixo do avatar) — sem essa camada o
+ * anel encostaria direto na foto; a cor do respiro precisa acompanhar o
+ * fundo de verdade do app (redesign v5, claro) — fundo escuro aqui
+ * deixaria um circulo preto atrás de cada avatar. */
 export function AnelStory({
   tamanho,
   espessura = 3,
@@ -19,7 +20,7 @@ export function AnelStory({
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
   const corAnel = isDark ? '#A78BFA' : '#8B5CF6';
-  const fundoRespiro = isDark ? '#05060A' : '#0B0E14';
+  const fundoRespiro = '#FAF8FF';
   const tamanhoRespiro = tamanho + espessura;
   const tamanhoAnel = tamanhoRespiro + espessura;
 

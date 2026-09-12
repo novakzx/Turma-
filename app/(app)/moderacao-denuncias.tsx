@@ -37,7 +37,7 @@ function CartaoDenuncia({
   });
 
   return (
-    <View className="gap-3 rounded-xl border border-slate-800 bg-surface p-4 dark:bg-surface-dark">
+    <View className="gap-3 rounded-xl border border-slate-200 bg-surface p-4 dark:bg-surface-dark">
       <View className="flex-row items-center gap-2">
         <View className="flex-row items-center gap-1.5 rounded-md bg-accent/10 px-3 py-1 dark:bg-accent-dark/10">
           <Ionicons name="flag" size={12} color="#2DD4BF" />
@@ -49,25 +49,25 @@ function CartaoDenuncia({
       </View>
 
       <View className="gap-1">
-        <Text className="text-xs font-medium text-slate-400">Motivo da denúncia</Text>
-        <Text className="text-sm text-slate-200">{denuncia.motivo}</Text>
+        <Text className="text-xs font-medium text-slate-500">Motivo da denúncia</Text>
+        <Text className="text-sm text-slate-800">{denuncia.motivo}</Text>
       </View>
 
-      <View className="gap-1 rounded-lg bg-slate-800/50 p-3">
-        <Text className="text-xs font-medium text-slate-400">
+      <View className="gap-1 rounded-lg bg-slate-100/50 p-3">
+        <Text className="text-xs font-medium text-slate-500">
           Conteúdo denunciado
           {conteudoQuery.data?.autorNome ? ` — ${conteudoQuery.data.autorNome}` : ''}
         </Text>
         {conteudoQuery.isLoading ? (
           <Text className="text-sm text-slate-500">Carregando...</Text>
         ) : (
-          <Text className="text-sm text-slate-200">
+          <Text className="text-sm text-slate-800">
             {conteudoQuery.data?.conteudo ?? 'Conteúdo não disponível (foi apagado).'}
           </Text>
         )}
       </View>
 
-      <Text className="text-xs text-slate-400">
+      <Text className="text-xs text-slate-500">
         Status: {ROTULO_STATUS_DENUNCIA[denuncia.status]}
       </Text>
 
@@ -123,7 +123,7 @@ export default function ModeracaoDenuncias() {
     >
       <Text className="px-2 text-2xl font-bold text-primary dark:text-primary-dark">Denúncias</Text>
 
-      <View className="flex-row gap-1 rounded-md bg-slate-800 p-1">
+      <View className="flex-row gap-1 rounded-md bg-slate-100 p-1">
         {(['pendente', 'revisado', 'resolvido'] as StatusDenuncia[]).map((status) => (
           <Pressable
             key={status}
@@ -135,7 +135,7 @@ export default function ModeracaoDenuncias() {
             }`}
           >
             <Text
-              className={`text-xs font-semibold ${filtro === status ? 'text-white' : 'text-slate-400'}`}
+              className={`text-xs font-semibold ${filtro === status ? 'text-white' : 'text-slate-500'}`}
             >
               {ROTULO_STATUS_DENUNCIA[status]}
             </Text>

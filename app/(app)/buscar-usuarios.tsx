@@ -41,7 +41,7 @@ export default function BuscarUsuarios() {
       />
 
       {termo.trim().length > 0 && termo.trim().length < 2 ? (
-        <Text className="text-sm text-slate-400">Digite pelo menos 2 letras.</Text>
+        <Text className="text-sm text-slate-500">Digite pelo menos 2 letras.</Text>
       ) : buscaQuery.isLoading ? (
         <LoadingState />
       ) : termo.trim().length >= 2 && (buscaQuery.data ?? []).length === 0 ? (
@@ -58,13 +58,13 @@ export default function BuscarUsuarios() {
               onPress={() => router.push(`/perfil/${pessoa.id}`)}
               accessibilityRole="button"
               accessibilityLabel={pessoa.nome}
-              className="min-h-11 flex-row items-center gap-3 rounded-lg border border-slate-800 p-3"
+              className="min-h-11 flex-row items-center gap-3 rounded-lg border border-slate-200 p-3"
             >
               <FotoPerfil caminho={pessoa.foto_url} nome={pessoa.nome} tamanho={44} />
               <View className="flex-1">
-                <Text className="text-base font-medium text-slate-100">{pessoa.nome}</Text>
+                <Text className="text-base font-medium text-slate-900">{pessoa.nome}</Text>
                 {pessoa.nome_usuario ? (
-                  <Text className="text-xs text-slate-400">@{pessoa.nome_usuario}</Text>
+                  <Text className="text-xs text-slate-500">@{pessoa.nome_usuario}</Text>
                 ) : null}
               </View>
             </Pressable>

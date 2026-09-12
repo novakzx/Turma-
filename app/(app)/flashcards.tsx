@@ -74,13 +74,13 @@ function ModoRevisao({ cartoes, onTerminou }: { cartoes: Flashcard[]; onTerminou
 
   return (
     <View className="flex-1 justify-center gap-4 p-4">
-      <Text className="text-center text-xs text-slate-400">
+      <Text className="text-center text-xs text-slate-500">
         Cartão {indice + 1} de {cartoes.length}
       </Text>
-      <View className="min-h-40 justify-center gap-3 rounded-xl border border-slate-800 bg-surface p-6 dark:bg-surface-dark">
-        <Text className="text-lg font-semibold text-slate-100">{cartao.pergunta}</Text>
+      <View className="min-h-40 justify-center gap-3 rounded-xl border border-slate-200 bg-surface p-6 dark:bg-surface-dark">
+        <Text className="text-lg font-semibold text-slate-900">{cartao.pergunta}</Text>
         {mostrarResposta ? (
-          <Text className="text-base text-slate-400">{cartao.resposta}</Text>
+          <Text className="text-base text-slate-500">{cartao.resposta}</Text>
         ) : null}
       </View>
 
@@ -145,10 +145,10 @@ function ListaPorMateria({ materiaId }: { materiaId: string }) {
       {cartoesQuery.data.map((cartao) => (
         <View
           key={cartao.id}
-          className="gap-1 rounded-lg border border-slate-800 bg-surface p-4 dark:bg-surface-dark"
+          className="gap-1 rounded-lg border border-slate-200 bg-surface p-4 dark:bg-surface-dark"
         >
-          <Text className="text-sm font-semibold text-slate-100">{cartao.pergunta}</Text>
-          <Text className="text-sm text-slate-400">{cartao.resposta}</Text>
+          <Text className="text-sm font-semibold text-slate-900">{cartao.pergunta}</Text>
+          <Text className="text-sm text-slate-500">{cartao.resposta}</Text>
           <View className="flex-row items-center justify-between pt-1">
             <Text className="text-xs text-slate-500">
               Próxima revisão:{' '}
@@ -195,7 +195,7 @@ export default function Flashcards() {
 
   return (
     <View className="flex-1 bg-background dark:bg-background-dark">
-      <View className="flex-row gap-2 border-b border-slate-800 p-3">
+      <View className="flex-row gap-2 border-b border-slate-200 p-3">
         {(['revisar', 'todos'] as const).map((opcao) => (
           <Pressable
             key={opcao}
@@ -205,10 +205,10 @@ export default function Flashcards() {
             className={`min-h-11 flex-1 items-center justify-center rounded-md border ${
               aba === opcao
                 ? 'border-primary bg-primary/10 dark:border-primary-dark'
-                : 'border-slate-700'
+                : 'border-slate-200'
             }`}
           >
-            <Text className="text-sm font-semibold text-slate-100">
+            <Text className="text-sm font-semibold text-slate-900">
               {opcao === 'revisar' ? 'Revisar agora' : 'Meus cartões'}
             </Text>
           </Pressable>
@@ -242,10 +242,10 @@ export default function Flashcards() {
                     className={`min-h-11 items-center justify-center rounded-md border px-4 ${
                       materiaAtual === materia.id
                         ? 'border-primary bg-primary/10 dark:border-primary-dark'
-                        : 'border-slate-700'
+                        : 'border-slate-200'
                     }`}
                   >
-                    <Text className="text-sm text-slate-100">{materia.nome}</Text>
+                    <Text className="text-sm text-slate-900">{materia.nome}</Text>
                   </Pressable>
                 ))}
               </View>

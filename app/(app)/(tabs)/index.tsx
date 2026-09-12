@@ -11,6 +11,7 @@ import {
   listarOrdenados,
   proximoEvento,
 } from '@/features/calendario/feriados';
+import { GradeMes } from '@/features/calendario/GradeMes';
 import { gerarIcs, mesclarEventos, type EventoCalendario } from '@/features/calendario/regras';
 import { listarTodasAvaliacoesComData } from '@/features/notas/api';
 
@@ -50,7 +51,7 @@ function CartaoEvento({ item, index }: { item: EventoCalendario; index: number }
   return (
     <EntradaAnimada
       index={index}
-      className="gap-2 rounded-xl border border-slate-800 bg-surface p-4 dark:bg-surface-dark"
+      className="gap-2 rounded-2xl bg-surface p-4 shadow-sm dark:bg-surface-dark"
     >
       <View className="flex-row items-center gap-3">
         <View
@@ -66,16 +67,16 @@ function CartaoEvento({ item, index }: { item: EventoCalendario; index: number }
           >
             {ROTULO_TIPO[item.tipo]}
           </Text>
-          <Text className="text-base font-semibold text-slate-100">{item.titulo}</Text>
+          <Text className="text-base font-semibold text-slate-900">{item.titulo}</Text>
         </View>
       </View>
-      <Text className="text-sm text-slate-400">{formatarPeriodo(item)}</Text>
+      <Text className="text-sm text-slate-500">{formatarPeriodo(item)}</Text>
       {item.regresso ? (
         <Text className="text-xs text-slate-500">
           Regresso às aulas: {FORMATO_DATA.format(new Date(item.regresso))}
         </Text>
       ) : null}
-      {item.descricao ? <Text className="text-sm text-slate-400">{item.descricao}</Text> : null}
+      {item.descricao ? <Text className="text-sm text-slate-500">{item.descricao}</Text> : null}
     </EntradaAnimada>
   );
 }
@@ -149,13 +150,13 @@ export default function CalendarioFeriados() {
         ListHeaderComponent={
           <View className="mb-1 gap-3">
             <View className="flex-row items-center justify-between">
-              <Text className="text-sm text-slate-400">Ano letivo {ANO_LETIVO}</Text>
+              <Text className="text-sm text-slate-500">Ano letivo {ANO_LETIVO}</Text>
               <Pressable
                 onPress={() => exportarMutation.mutate()}
                 disabled={exportarMutation.isPending}
                 accessibilityRole="button"
                 accessibilityLabel="Exportar calendário"
-                className="min-h-11 flex-row items-center gap-1.5 rounded-md border border-slate-700 px-3"
+                className="min-h-11 flex-row items-center gap-1.5 rounded-full bg-slate-100 px-3"
               >
                 <Ionicons name="download-outline" size={14} color="#8B5CF6" />
                 <Text className="text-xs font-semibold text-primary dark:text-primary-dark">
@@ -164,6 +165,7 @@ export default function CalendarioFeriados() {
               </Pressable>
             </View>
             <CabecalhoDestaque />
+            <GradeMes eventos={eventos} />
           </View>
         }
         renderItem={({ item, index }) => <CartaoEvento item={item} index={index} />}

@@ -86,28 +86,28 @@ function RootNavigator() {
     // fisicamente o botão "Criar conta" no fim de um formulário longo —
     // o clique nem chegava no botão, sem erro nenhum no console.
     <View className="flex-1">
-      {/* Redesign "dark-first" (pedido do usuário): fundo é sempre escuro
+      {/* Redesign v5 (claro, pedido do usuário): fundo é sempre claro
           agora (não um tema opcional — ver tailwind.config.js), então a
-          barra de status sempre precisa de ícone claro. Deixar isso
-          reagir a `isDark` de novo faria o ícone ficar escuro-sobre-escuro
+          barra de status sempre precisa de ícone escuro. Deixar isso
+          reagir a `isDark` de novo faria o ícone ficar claro-sobre-claro
           (invisível) sempre que `colorScheme` resolvesse "light" — que é
           o padrão do sistema pra quem nunca trocou o tema. */}
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
       <BannerOffline />
       <PromptInstalarPWA />
       <View className="flex-1">
         <Stack
           screenOptions={{
             // `headerShadowVisible: false` — o header do React Navigation
-            // traz uma borda/sombra inferior clara própria por padrão;
-            // sem desligar isso ela aparece como linha branca sobre o
-            // fundo escuro. Este header em si nunca chega a renderizar de
+            // traz uma borda/sombra inferior própria por padrão; sem
+            // desligar isso ela aparece como linha duplicada sobre o
+            // fundo claro. Este header em si nunca chega a renderizar de
             // verdade (todo filho aqui usa `headerShown: false` e tem o
             // próprio Stack/Tabs) — mantido consistente mesmo assim.
             headerShadowVisible: false,
-            headerStyle: { backgroundColor: isDark ? '#05060A' : '#0B0E14' },
-            headerTintColor: '#F8FAFC',
-            contentStyle: { backgroundColor: isDark ? '#05060A' : '#0B0E14' },
+            headerStyle: { backgroundColor: '#FAF8FF' },
+            headerTintColor: '#131B2E',
+            contentStyle: { backgroundColor: '#FAF8FF' },
           }}
         >
           <Stack.Protected guard={!session}>

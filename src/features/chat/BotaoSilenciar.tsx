@@ -32,7 +32,7 @@ export function BotaoSilenciar({ perfilId }: { perfilId: string }) {
     return (
       <View className="flex-row items-center gap-1">
         <Ionicons name="volume-mute" size={14} color="#94A3B8" />
-        <Text className="text-xs text-slate-400">Usuário silenciado</Text>
+        <Text className="text-xs text-slate-500">Usuário silenciado</Text>
       </View>
     );
   }
@@ -46,7 +46,7 @@ export function BotaoSilenciar({ perfilId }: { perfilId: string }) {
         className="min-h-11 min-w-11 flex-row items-center gap-1 px-2"
       >
         <Ionicons name="volume-mute-outline" size={14} color="#94A3B8" />
-        <Text className="text-xs text-slate-400">Silenciar</Text>
+        <Text className="text-xs text-slate-500">Silenciar</Text>
       </Pressable>
     );
   }
@@ -73,7 +73,7 @@ export function BotaoSilenciar({ perfilId }: { perfilId: string }) {
           accessibilityRole="button"
           className="min-h-11 justify-center px-2"
         >
-          <Text className="text-xs text-slate-400">Cancelar</Text>
+          <Text className="text-xs text-slate-500">Cancelar</Text>
         </Pressable>
       </View>
       {erro ? <Text className="text-xs text-danger dark:text-danger-dark">{erro}</Text> : null}

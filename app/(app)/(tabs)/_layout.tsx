@@ -1,16 +1,23 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs, router } from 'expo-router';
 import { useColorScheme } from 'nativewind';
-import { Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const ICONE_POR_ROTA: Record<string, keyof typeof Ionicons.glyphMap> = {
-  index: 'calendar',
-  feed: 'newspaper',
-  chat: 'chatbubbles',
-  estudo: 'sparkles',
-  notas: 'calculator',
-  perfil: 'person-circle',
+import { TopHeader } from '@/components/ui/TopHeader';
+
+// Redesign "Instagram" (pedido do usuário): ícone contorno quando inativo,
+// preenchido quando ativo — mesma linguagem do Instagram/Threads em vez de
+// só trocar a cor do ícone parado.
+const ICONES_POR_ROTA: Record<
+  string,
+  { ativo: keyof typeof Ionicons.glyphMap; inativo: keyof typeof Ionicons.glyphMap }
+> = {
+  index: { ativo: 'calendar', inativo: 'calendar-outline' },
+  feed: { ativo: 'newspaper', inativo: 'newspaper-outline' },
+  chat: { ativo: 'chatbubbles', inativo: 'chatbubbles-outline' },
+  estudo: { ativo: 'sparkles', inativo: 'sparkles-outline' },
+  notas: { ativo: 'calculator', inativo: 'calculator-outline' },
+  perfil: { ativo: 'person-circle', inativo: 'person-circle-outline' },
 };
 
 // Altura só do conteúdo da barra (ícone + legenda + respiro), sem contar
@@ -54,17 +61,29 @@ export default function TabsLayout() {
         // linha branca por cima do fundo escuro (achado testando de
         // verdade no preview mobile, relatado pelo usuário).
         headerShadowVisible: false,
-        headerStyle: { backgroundColor: escuro ? '#05060A' : '#0B0E14' },
-        headerTintColor: '#F8FAFC',
-        tabBarActiveTintColor: '#A78BFA',
-        tabBarInactiveTintColor: '#64748B',
+        headerStyle: { backgroundColor: '#FAF8FF' },
+        headerTintColor: '#131B2E',
+        // `headerTitle` vira o `TopHeader` inteiro (logo + sino + avatar,
+        // pedido do usuário: "deixe o site igual as fotos") em vez de só
+        // texto — sem isso o container de título do React Navigation
+        // reserva um respiro fixo dos dois lados (pensado pra um texto
+        // centralizado), que cortaria o layout `justify-between` do
+        // `TopHeader`. `headerLeft: () => null` e as larguras zeradas
+        // abaixo liberam a barra inteira pro `TopHeader` controlar.
+        headerLeft: () => null,
+        headerLeftContainerStyle: { width: 0 },
+        headerRightContainerStyle: { width: 0 },
+        headerTitleContainerStyle: { flex: 1, marginHorizontal: 0 },
+        headerTitleAlign: 'left',
+        tabBarActiveTintColor: escuro ? '#A78BFA' : '#8B5CF6',
+        tabBarInactiveTintColor: '#94A3B8',
         tabBarShowLabel: true,
         tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
         tabBarStyle: {
           height: ALTURA_CONTEUDO_BARRA + insets.bottom,
           borderTopWidth: 1,
-          borderTopColor: escuro ? '#11141C' : '#171B26',
-          backgroundColor: escuro ? '#05060A' : '#0B0E14',
+          borderTopColor: '#EDEBFA',
+          backgroundColor: '#FFFFFF',
           elevation: 0,
           shadowOpacity: 0,
           paddingTop: 6,
@@ -84,8 +103,13 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: 'Feriados',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name={ICONE_POR_ROTA.index} size={size} color={color} />
+          headerTitle: () => <TopHeader subtitulo="Feriados" />,
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? ICONES_POR_ROTA.index.ativo : ICONES_POR_ROTA.index.inativo}
+              size={size}
+              color={color}
+            />
           ),
         }}
       />
@@ -93,18 +117,22 @@ export default function TabsLayout() {
         name="feed"
         options={{
           title: 'Feed',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name={ICONE_POR_ROTA.feed} size={size} color={color} />
+          headerTitle: () => (
+            <TopHeader
+              subtitulo="Feed"
+              acaoExtra={{
+                icone: 'search-outline',
+                label: 'Pesquisar usuários',
+                aoPressionar: () => router.push('/buscar-usuarios'),
+              }}
+            />
           ),
-          headerRight: () => (
-            <Pressable
-              onPress={() => router.push('/buscar-usuarios')}
-              accessibilityRole="button"
-              accessibilityLabel="Pesquisar usuários"
-              className="min-h-11 min-w-11 items-center justify-center px-2"
-            >
-              <Ionicons name="search-outline" size={22} color={escuro ? '#A78BFA' : '#8B5CF6'} />
-            </Pressable>
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? ICONES_POR_ROTA.feed.ativo : ICONES_POR_ROTA.feed.inativo}
+              size={size}
+              color={color}
+            />
           ),
         }}
       />
@@ -112,8 +140,13 @@ export default function TabsLayout() {
         name="chat"
         options={{
           title: 'Chat',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name={ICONE_POR_ROTA.chat} size={size} color={color} />
+          headerTitle: () => <TopHeader subtitulo="Chat" />,
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? ICONES_POR_ROTA.chat.ativo : ICONES_POR_ROTA.chat.inativo}
+              size={size}
+              color={color}
+            />
           ),
         }}
       />
@@ -121,8 +154,13 @@ export default function TabsLayout() {
         name="estudo"
         options={{
           title: 'Estudo',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name={ICONE_POR_ROTA.estudo} size={size} color={color} />
+          headerTitle: () => <TopHeader subtitulo="Turma IA" />,
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? ICONES_POR_ROTA.estudo.ativo : ICONES_POR_ROTA.estudo.inativo}
+              size={size}
+              color={color}
+            />
           ),
         }}
       />
@@ -130,8 +168,13 @@ export default function TabsLayout() {
         name="notas"
         options={{
           title: 'Notas',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name={ICONE_POR_ROTA.notas} size={size} color={color} />
+          headerTitle: () => <TopHeader subtitulo="Notas" />,
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? ICONES_POR_ROTA.notas.ativo : ICONES_POR_ROTA.notas.inativo}
+              size={size}
+              color={color}
+            />
           ),
         }}
       />
@@ -139,8 +182,13 @@ export default function TabsLayout() {
         name="perfil"
         options={{
           title: 'Perfil',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name={ICONE_POR_ROTA.perfil} size={size} color={color} />
+          headerTitle: () => <TopHeader subtitulo="Perfil" />,
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? ICONES_POR_ROTA.perfil.ativo : ICONES_POR_ROTA.perfil.inativo}
+              size={size}
+              color={color}
+            />
           ),
         }}
       />

@@ -145,7 +145,7 @@ function LinhaMensagem({
         className={`overflow-hidden rounded-lg ${mensagem.midia_tipo === 'imagem' ? 'p-1' : 'px-4 py-2.5'} ${cantoExterno}${
           souEu
             ? 'bg-primary dark:bg-primary-dark'
-            : 'border border-slate-800 bg-surface dark:bg-surface-dark'
+            : 'border border-slate-200 bg-surface dark:bg-surface-dark'
         }`}
       >
         {mensagem.midia_tipo === 'imagem' && mensagem.midia_url ? (
@@ -155,13 +155,13 @@ function LinhaMensagem({
             caminho={mensagem.midia_url}
             obterUrl={obterUrlAssinadaConversa}
             corIcone={souEu ? '#FFFFFF' : '#8B5CF6'}
-            corTexto={souEu ? 'text-white' : 'text-slate-100'}
+            corTexto={souEu ? 'text-white' : 'text-slate-900'}
           />
         ) : null}
         {mensagem.conteudo ? (
           <TextoComMencoes
             texto={mensagem.conteudo}
-            className={souEu ? 'text-white' : 'text-slate-100'}
+            className={souEu ? 'text-white' : 'text-slate-900'}
             mencaoClassName={souEu ? 'font-semibold text-white underline' : undefined}
           />
         ) : null}
@@ -202,11 +202,11 @@ function CabecalhoConversa({
   // dentro do header do React Navigation segue esse padrão em todo o app
   // (ver headerTintColor/ícones do headerRight em `(tabs)/_layout.tsx`),
   // porque esse cabeçalho já é estilizado via `headerStyle` inline. Fixo
-  // em claro de propósito (redesign "dark-first", pedido do usuário): o
-  // fundo do header é sempre escuro agora (ver tailwind.config.js), então
-  // não existe mais um caso "fundo claro" que precisasse de texto escuro
-  // aqui — antes disso, o `colorScheme` decidia entre os dois.
-  const corTexto = '#F8FAFC';
+  // em escuro de propósito (redesign v5, claro): o fundo do header é
+  // sempre claro agora (ver tailwind.config.js), então não existe mais um
+  // caso "fundo escuro" que precisasse de texto claro aqui — antes disso,
+  // o `colorScheme` decidia entre os dois.
+  const corTexto = '#131B2E';
 
   return (
     <Pressable
@@ -435,10 +435,10 @@ export default function DetalheConversa() {
 
       {ehPedidoPendente ? (
         <View
-          className="gap-2 border-t border-slate-800 p-4"
+          className="gap-2 border-t border-slate-200 p-4"
           style={{ paddingBottom: insets.bottom + 16 }}
         >
-          <Text className="text-sm text-slate-400">
+          <Text className="text-sm text-slate-500">
             Essa pessoa ainda não te segue — é um pedido de mensagem.
           </Text>
           <View className="flex-row gap-2">

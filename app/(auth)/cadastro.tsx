@@ -137,9 +137,9 @@ export default function CadastroScreen() {
         <Text className="text-center text-2xl font-bold text-primary dark:text-primary-dark">
           Confirme seu e-mail
         </Text>
-        <Text className="text-center text-base text-slate-400">
+        <Text className="text-center text-base text-slate-500">
           Mandamos um link de confirmação pra{' '}
-          <Text className="font-semibold text-slate-200">{email.trim()}</Text>. Abre sua caixa de
+          <Text className="font-semibold text-slate-800">{email.trim()}</Text>. Abre sua caixa de
           entrada (e o spam, só por garantia) e toca no link pra ativar sua conta.
         </Text>
         <View className="mt-2 w-full">
@@ -164,7 +164,7 @@ export default function CadastroScreen() {
           <Text className="text-3xl font-bold text-primary dark:text-primary-dark">
             Criar conta
           </Text>
-          <Text className="text-base text-slate-400">
+          <Text className="text-base text-slate-500">
             É rápido — depois você escolhe sua escola e turma.
           </Text>
         </View>

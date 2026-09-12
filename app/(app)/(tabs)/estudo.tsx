@@ -57,12 +57,14 @@ function ChipMateria({
       onPress={onPress}
       accessibilityRole="button"
       accessibilityState={{ selected: selecionada }}
-      className={`min-h-11 flex-row items-center justify-center gap-1.5 rounded-md border px-4 ${
-        selecionada ? 'border-primary bg-primary/10 dark:border-primary-dark' : 'border-slate-700'
+      className={`min-h-11 flex-row items-center justify-center gap-1.5 rounded-full px-4 ${
+        selecionada ? 'bg-primary dark:bg-primary-dark' : 'bg-slate-100'
       }`}
     >
-      <Ionicons name="book-outline" size={15} color={selecionada ? '#8B5CF6' : '#94A3B8'} />
-      <Text className="text-sm text-slate-100">{nome}</Text>
+      <Ionicons name="book-outline" size={15} color={selecionada ? '#FFFFFF' : '#464555'} />
+      <Text className={`text-sm font-medium ${selecionada ? 'text-white' : 'text-slate-700'}`}>
+        {nome}
+      </Text>
     </Pressable>
   );
 }
@@ -80,17 +82,17 @@ function CartaoEstatisticaSemanal({ alunoId }: { alunoId: string }) {
   const { totalPerguntas, materiasRevisadas, diaMaisAtivo } = query.data;
 
   return (
-    <View className="mx-4 mt-4 gap-3 rounded-xl border border-slate-800 bg-surface p-4 dark:bg-surface-dark">
+    <View className="mx-4 mt-4 gap-3 rounded-xl border border-slate-200 bg-surface p-4 dark:bg-surface-dark">
       <View className="flex-row items-center gap-2">
         <Ionicons name="stats-chart" size={16} color="#8B5CF6" />
-        <Text className="text-sm font-semibold text-slate-100">Sua semana de estudo</Text>
+        <Text className="text-sm font-semibold text-slate-900">Sua semana de estudo</Text>
       </View>
       <View className="flex-row justify-around">
         <View className="items-center gap-0.5">
           <Text className="text-xl font-bold text-primary dark:text-primary-dark">
             {totalPerguntas}
           </Text>
-          <Text className="text-xs text-slate-400">
+          <Text className="text-xs text-slate-500">
             {totalPerguntas === 1 ? 'pergunta' : 'perguntas'}
           </Text>
         </View>
@@ -98,15 +100,15 @@ function CartaoEstatisticaSemanal({ alunoId }: { alunoId: string }) {
           <Text className="text-xl font-bold text-primary dark:text-primary-dark">
             {materiasRevisadas}
           </Text>
-          <Text className="text-xs text-slate-400">
+          <Text className="text-xs text-slate-500">
             {materiasRevisadas === 1 ? 'matéria revisada' : 'matérias revisadas'}
           </Text>
         </View>
       </View>
       {diaMaisAtivo ? (
-        <Text className="text-center text-xs text-slate-400">
+        <Text className="text-center text-xs text-slate-500">
           Seu dia mais ativo foi{' '}
-          <Text className="font-semibold text-slate-300">{diaMaisAtivo}</Text>.
+          <Text className="font-semibold text-slate-700">{diaMaisAtivo}</Text>.
         </Text>
       ) : null}
     </View>
@@ -158,28 +160,28 @@ function BolhaMensagem({
       ) : null}
       <View className="shrink gap-1.5">
         <View
-          className={`shrink rounded-lg px-4 py-2.5 ${
+          className={`shrink px-4 py-2.5 ${
             doAluno
-              ? 'bg-primary dark:bg-primary-dark'
-              : 'border border-slate-800 bg-surface dark:bg-surface-dark'
+              ? 'rounded-2xl rounded-br-md bg-primary dark:bg-primary-dark'
+              : 'rounded-2xl rounded-bl-md bg-surface shadow-sm dark:bg-surface-dark'
           }`}
         >
-          <Text className={doAluno ? 'text-white' : 'text-slate-100'}>{enunciado}</Text>
+          <Text className={doAluno ? 'text-white' : 'text-slate-900'}>{enunciado}</Text>
         </View>
 
         {gabarito ? (
           mostrarGabarito ? (
-            <View className="shrink rounded-lg border border-accent/30 bg-accent/5 px-4 py-2.5 dark:border-accent-dark/30 dark:bg-accent-dark/10">
+            <View className="shrink rounded-xl bg-accent/10 px-4 py-2.5 dark:bg-accent-dark/10">
               <Text className="mb-1 text-xs font-semibold uppercase tracking-wide text-accent dark:text-accent-dark">
                 Gabarito
               </Text>
-              <Text className="text-slate-100">{gabarito}</Text>
+              <Text className="text-slate-900">{gabarito}</Text>
             </View>
           ) : (
             <Pressable
               onPress={() => setMostrarGabarito(true)}
               accessibilityRole="button"
-              className="min-h-11 flex-row items-center gap-1 self-start rounded-md border border-accent/40 px-3 dark:border-accent-dark/40"
+              className="min-h-11 flex-row items-center gap-1 self-start rounded-full bg-accent/10 px-3 dark:bg-accent-dark/15"
             >
               <Ionicons name="key-outline" size={14} color="#2DD4BF" />
               <Text className="text-xs font-semibold text-accent dark:text-accent-dark">
@@ -197,7 +199,7 @@ function BolhaMensagem({
             onPress={() => flashcardMutation.mutate()}
             disabled={flashcardMutation.isPending || flashcardMutation.isSuccess}
             accessibilityRole="button"
-            className="min-h-11 flex-row items-center gap-1 self-start rounded-md border border-slate-700 px-3"
+            className="min-h-11 flex-row items-center gap-1 self-start rounded-full bg-slate-100 px-3"
           >
             <Ionicons
               name={flashcardMutation.isSuccess ? 'checkmark' : 'albums-outline'}
@@ -306,7 +308,7 @@ export default function Estudo() {
       className="flex-1 bg-background dark:bg-background-dark"
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View className="gap-2 border-b border-slate-800 py-3">
+      <View className="gap-2 border-b border-slate-100 bg-surface py-3 dark:bg-surface-dark">
         <View className="flex-row items-center gap-2 pl-3 pr-3">
           {/* Rolagem horizontal em vez de quebrar linha (`flex-wrap`) —
               pedido do usuário: com as 2 fileiras de chip (matéria + modo)
@@ -332,7 +334,7 @@ export default function Estudo() {
             onPress={() => router.push('/flashcards')}
             accessibilityRole="button"
             accessibilityLabel="Flashcards"
-            className="min-h-11 min-w-11 items-center justify-center rounded-md border border-slate-700"
+            className="min-h-11 min-w-11 items-center justify-center rounded-full bg-slate-100"
           >
             <Ionicons name="albums-outline" size={18} color="#8B5CF6" />
           </Pressable>
@@ -349,22 +351,20 @@ export default function Estudo() {
                 onPress={() => setModo(opcao)}
                 accessibilityRole="button"
                 accessibilityState={{ selected: modo === opcao }}
-                className={`min-h-11 flex-row items-center justify-center gap-1 rounded-md border px-3 ${
-                  modo === opcao
-                    ? 'border-accent bg-accent/10 dark:border-accent-dark'
-                    : 'border-slate-700'
+                className={`min-h-11 flex-row items-center justify-center gap-1 rounded-full px-3 ${
+                  modo === opcao ? 'bg-accent/15 dark:bg-accent-dark/20' : 'bg-slate-100'
                 }`}
               >
                 <Ionicons
                   name={ICONE_MODO[opcao]}
                   size={14}
-                  color={modo === opcao ? '#2DD4BF' : '#94A3B8'}
+                  color={modo === opcao ? '#0D9488' : '#464555'}
                 />
-                <Text className="text-xs text-slate-100">{ROTULO_MODO[opcao]}</Text>
+                <Text className="text-xs font-medium text-slate-700">{ROTULO_MODO[opcao]}</Text>
               </Pressable>
             ))}
             {modo === 'prova' && segundosRestantesProva !== null ? (
-              <View className="flex-row items-center gap-1 rounded-md bg-danger/10 px-3 py-1.5 dark:bg-danger-dark/10">
+              <View className="flex-row items-center gap-1 rounded-full bg-danger/10 px-3 py-1.5 dark:bg-danger-dark/10">
                 <Ionicons name="timer-outline" size={14} color="#F87171" />
                 <Text className="text-xs font-semibold text-danger dark:text-danger-dark">
                   {formatarTempo(segundosRestantesProva)}
@@ -423,13 +423,13 @@ export default function Estudo() {
         // somar o inset de segurança do rodapé (home indicator no
         // iPhone), mesmo padrão de `sala/[id].tsx`/`conversa/[id].tsx`.
         <View
-          className="gap-2 border-t border-slate-800 p-3"
+          className="gap-2 border-t border-slate-100 bg-surface p-3 shadow-sm dark:bg-surface-dark"
           style={{ paddingBottom: insets.bottom + 12 }}
         >
           {enviarMutation.isPending ? (
             <View className="flex-row items-center gap-1.5">
               <ActivityIndicator size="small" color="#8B5CF6" />
-              <Text className="text-sm text-slate-400">
+              <Text className="text-sm text-slate-500">
                 A IA está a pensar... pode demorar alguns segundos.
               </Text>
             </View>

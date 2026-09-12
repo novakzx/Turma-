@@ -17,7 +17,7 @@ export default function OnboardingScreen() {
           <Text className="text-center text-2xl font-bold text-primary dark:text-primary-dark">
             Escolha sua escola e turma
           </Text>
-          <Text className="text-center text-base text-slate-400">
+          <Text className="text-center text-base text-slate-500">
             Isso decide quais avisos e turmas você vê no app.
           </Text>
         </View>

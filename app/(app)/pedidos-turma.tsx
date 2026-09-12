@@ -58,17 +58,17 @@ export default function PedidosTurma() {
       {pedidos.map((pedido) => (
         <View
           key={pedido.id}
-          className="gap-3 rounded-xl border border-slate-800 bg-surface p-4 dark:bg-surface-dark"
+          className="gap-3 rounded-xl border border-slate-200 bg-surface p-4 dark:bg-surface-dark"
         >
           <View className="flex-row items-center gap-3">
             <View className="h-10 w-10 items-center justify-center rounded-full bg-primary/10 dark:bg-primary-dark/10">
               <Ionicons name="person-add-outline" size={18} color="#8B5CF6" />
             </View>
             <View className="flex-1">
-              <Text className="text-base font-semibold text-slate-100">
+              <Text className="text-base font-semibold text-slate-900">
                 {pedido.profiles?.nome ?? 'Alguém'}
               </Text>
-              <Text className="text-xs text-slate-400">
+              <Text className="text-xs text-slate-500">
                 quer entrar em {pedido.turmas?.serie_ano} · {pedido.turmas?.nome}
               </Text>
             </View>
@@ -78,7 +78,7 @@ export default function PedidosTurma() {
               onPress={() => responderMutation.mutate({ id: pedido.id, aprovar: false })}
               accessibilityRole="button"
               accessibilityLabel="Recusar"
-              className="min-h-11 flex-1 flex-row items-center justify-center gap-1.5 rounded-md border border-slate-700"
+              className="min-h-11 flex-1 flex-row items-center justify-center gap-1.5 rounded-md border border-slate-200"
             >
               <Ionicons name="close" size={16} color="#F87171" />
               <Text className="text-sm text-danger dark:text-danger-dark">Recusar</Text>

@@ -23,16 +23,14 @@ type ButtonProps = PressableProps & {
 };
 
 /**
- * Botão padrão do app: retângulo com cantos discretos, sem sombra
- * colorida, ícone opcional e um micro-encolher no toque — redesenho
- * "app profissional" (pedido do usuário) trocando a pílula arredondada +
- * elevação colorida da Fase 6 por um visual mais sóbrio de dashboard
- * corporativo (Stripe/Linear como referência, não Instagram/Duolingo).
- * Desligado quando o sistema pede "reduzir movimento" (brief seção 8).
- * Só fica desabilitado durante a requisição (`loading`) — nunca antes
- * disso por causa de validação ("desabilita só durante a requisição...
- * nunca trave o botão antes disso"). A validação de formulário mostra
- * erro inline no clique.
+ * Botão padrão do app — redesign "Instagram/Twitter/Duolingo" (pedido do
+ * usuário): pílula bem arredondada, cor sólida (sem gradiente — pedido
+ * explícito "tire os fades, deixe mais profissional"; a versão anterior
+ * deste redesign usava o gradiente de marca aqui, mas ficou "chamativo
+ * demais" em vez de profissional). Micro-encolher no toque mantido igual.
+ * Desligado quando o sistema pede "reduzir movimento" (brief seção 8). Só
+ * fica desabilitado durante a requisição (`loading`) — nunca antes disso
+ * por causa de validação.
  */
 export function Button({
   label,
@@ -87,12 +85,12 @@ export function Button({
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
       style={estiloAnimado}
-      className={`min-h-11 flex-row items-center justify-center gap-2 rounded-lg px-5 py-3 ${
+      className={`min-h-11 flex-row items-center justify-center gap-2 rounded-full px-5 py-3 ${
         isPrimary
-          ? 'bg-primary dark:bg-primary-dark'
+          ? 'bg-primary shadow-sm dark:bg-primary-dark'
           : isGhost
             ? 'bg-transparent'
-            : 'border border-slate-700 bg-surface dark:bg-surface-dark'
+            : 'border border-slate-200 bg-surface dark:bg-surface-dark'
       } ${isDisabled ? 'opacity-60' : ''}`}
       {...pressableProps}
     >

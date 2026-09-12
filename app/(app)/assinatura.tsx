@@ -86,8 +86,8 @@ export default function Assinatura() {
         <View className="h-16 w-16 items-center justify-center rounded-full bg-primary/10 dark:bg-primary-dark/10">
           <Ionicons name="sparkles" size={28} color="#8B5CF6" />
         </View>
-        <Text className="text-2xl font-bold text-slate-100">Turma+ Premium</Text>
-        <Text className="text-center text-sm text-slate-400">
+        <Text className="text-2xl font-bold text-slate-900">Turma+ Premium</Text>
+        <Text className="text-center text-sm text-slate-500">
           R$1,99/mês · cancele quando quiser
         </Text>
       </View>
@@ -95,7 +95,7 @@ export default function Assinatura() {
       {params.sucesso === '1' ? (
         <View className="flex-row items-center gap-2 rounded-xl border border-accent/30 bg-accent/5 p-4 dark:border-accent-dark/30 dark:bg-accent-dark/10">
           <Ionicons name="hourglass-outline" size={18} color="#2DD4BF" />
-          <Text className="flex-1 text-sm text-slate-200">
+          <Text className="flex-1 text-sm text-slate-800">
             {assinante
               ? 'Assinatura confirmada — bem-vindo ao Premium!'
               : 'Pagamento recebido — confirmando sua assinatura, só um instante...'}
@@ -104,22 +104,22 @@ export default function Assinatura() {
       ) : null}
 
       {params.cancelado === '1' && !assinante ? (
-        <View className="rounded-xl border border-slate-800 bg-surface p-4 dark:bg-surface-dark">
-          <Text className="text-sm text-slate-400">
+        <View className="rounded-xl border border-slate-200 bg-surface p-4 dark:bg-surface-dark">
+          <Text className="text-sm text-slate-500">
             Checkout cancelado — sem problema, você pode assinar quando quiser.
           </Text>
         </View>
       ) : null}
 
-      <View className="gap-4 rounded-xl border border-slate-800 bg-surface p-4 dark:bg-surface-dark">
+      <View className="gap-4 rounded-xl border border-slate-200 bg-surface p-4 dark:bg-surface-dark">
         {BENEFICIOS.map((b) => (
           <View key={b.titulo} className="flex-row items-start gap-3">
             <View className="h-9 w-9 items-center justify-center rounded-full bg-accent/10 dark:bg-accent-dark/10">
               <Ionicons name={b.icone} size={18} color="#2DD4BF" />
             </View>
             <View className="flex-1 gap-0.5">
-              <Text className="text-sm font-semibold text-slate-100">{b.titulo}</Text>
-              <Text className="text-xs text-slate-400">{b.descricao}</Text>
+              <Text className="text-sm font-semibold text-slate-900">{b.titulo}</Text>
+              <Text className="text-xs text-slate-500">{b.descricao}</Text>
             </View>
           </View>
         ))}
@@ -136,7 +136,7 @@ export default function Assinatura() {
             </Text>
           </View>
           {profile?.assinatura_valido_ate ? (
-            <Text className="text-center text-xs text-slate-400">
+            <Text className="text-center text-xs text-slate-500">
               Renova em{' '}
               {new Intl.DateTimeFormat('pt-BR', { dateStyle: 'long' }).format(
                 new Date(profile.assinatura_valido_ate),
