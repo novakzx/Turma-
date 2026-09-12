@@ -3,7 +3,7 @@ import { Tabs, router } from 'expo-router';
 import { useColorScheme } from 'nativewind';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { TopHeader } from '@/components/ui/TopHeader';
+import { HeaderDireita, HeaderEsquerda } from '@/components/ui/TopHeader';
 
 // Redesign "Instagram" (pedido do usuário): ícone contorno quando inativo,
 // preenchido quando ativo — mesma linguagem do Instagram/Threads em vez de
@@ -63,18 +63,14 @@ export default function TabsLayout() {
         headerShadowVisible: false,
         headerStyle: { backgroundColor: '#FAF8FF' },
         headerTintColor: '#131B2E',
-        // `headerTitle` vira o `TopHeader` inteiro (logo + sino + avatar,
-        // pedido do usuário: "deixe o site igual as fotos") em vez de só
-        // texto — sem isso o container de título do React Navigation
-        // reserva um respiro fixo dos dois lados (pensado pra um texto
-        // centralizado), que cortaria o layout `justify-between` do
-        // `TopHeader`. `headerLeft: () => null` e as larguras zeradas
-        // abaixo liberam a barra inteira pro `TopHeader` controlar.
-        headerLeft: () => null,
-        headerLeftContainerStyle: { width: 0 },
-        headerRightContainerStyle: { width: 0 },
-        headerTitleContainerStyle: { flex: 1, marginHorizontal: 0 },
-        headerTitleAlign: 'left',
+        // `headerLeft`/`headerRight` (não um `headerTitle` esticando a
+        // barra inteira) — cada um do tamanho do próprio conteúdo, sem
+        // forçar `width: 0`/`flex: 1` nos containers. Essa era a v1 deste
+        // header e ficou "bugada" no Safari de verdade do iPhone (relatado
+        // pelo usuário, não reproduzido no emulador de mobile do Chrome —
+        // ver `TopHeader.tsx`); `headerTitle: () => null` tira o título
+        // central padrão do meio, que senão sobraria vazio ali.
+        headerTitle: () => null,
         tabBarActiveTintColor: escuro ? '#A78BFA' : '#8B5CF6',
         tabBarInactiveTintColor: '#94A3B8',
         tabBarShowLabel: true,
@@ -103,7 +99,8 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: 'Feriados',
-          headerTitle: () => <TopHeader subtitulo="Feriados" />,
+          headerLeft: () => <HeaderEsquerda subtitulo="Feriados" />,
+          headerRight: () => <HeaderDireita />,
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
               name={focused ? ICONES_POR_ROTA.index.ativo : ICONES_POR_ROTA.index.inativo}
@@ -117,9 +114,9 @@ export default function TabsLayout() {
         name="feed"
         options={{
           title: 'Feed',
-          headerTitle: () => (
-            <TopHeader
-              subtitulo="Feed"
+          headerLeft: () => <HeaderEsquerda subtitulo="Feed" />,
+          headerRight: () => (
+            <HeaderDireita
               acaoExtra={{
                 icone: 'search-outline',
                 label: 'Pesquisar usuários',
@@ -140,7 +137,8 @@ export default function TabsLayout() {
         name="chat"
         options={{
           title: 'Chat',
-          headerTitle: () => <TopHeader subtitulo="Chat" />,
+          headerLeft: () => <HeaderEsquerda subtitulo="Chat" />,
+          headerRight: () => <HeaderDireita />,
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
               name={focused ? ICONES_POR_ROTA.chat.ativo : ICONES_POR_ROTA.chat.inativo}
@@ -154,7 +152,8 @@ export default function TabsLayout() {
         name="estudo"
         options={{
           title: 'Estudo',
-          headerTitle: () => <TopHeader subtitulo="Turma IA" />,
+          headerLeft: () => <HeaderEsquerda subtitulo="Turma IA" />,
+          headerRight: () => <HeaderDireita />,
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
               name={focused ? ICONES_POR_ROTA.estudo.ativo : ICONES_POR_ROTA.estudo.inativo}
@@ -168,7 +167,8 @@ export default function TabsLayout() {
         name="notas"
         options={{
           title: 'Notas',
-          headerTitle: () => <TopHeader subtitulo="Notas" />,
+          headerLeft: () => <HeaderEsquerda subtitulo="Notas" />,
+          headerRight: () => <HeaderDireita />,
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
               name={focused ? ICONES_POR_ROTA.notas.ativo : ICONES_POR_ROTA.notas.inativo}
@@ -182,7 +182,8 @@ export default function TabsLayout() {
         name="perfil"
         options={{
           title: 'Perfil',
-          headerTitle: () => <TopHeader subtitulo="Perfil" />,
+          headerLeft: () => <HeaderEsquerda subtitulo="Perfil" />,
+          headerRight: () => <HeaderDireita />,
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
               name={focused ? ICONES_POR_ROTA.perfil.ativo : ICONES_POR_ROTA.perfil.inativo}
