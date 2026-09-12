@@ -136,6 +136,13 @@ export default function Notas() {
   const [novoPeso, setNovoPeso] = useState('');
   const [novaNota, setNovaNota] = useState('');
   const [erroForm, setErroForm] = useState<string | null>(null);
+  // Formulário de "Nova avaliação" escondido por padrão (pedido do
+  // usuário, "deixe o sistema de notas mais fácil") — antes ficava
+  // sempre aberto embaixo da lista, então quem só queria ver a média ou
+  // conferir uma nota já lançada tinha que rolar passando por 3 campos
+  // de formulário toda vez. Abre sozinho se a matéria ainda não tem
+  // avaliação nenhuma (nesse caso é a primeira coisa que precisa fazer).
+  const [novaAvaliacaoAberta, setNovaAvaliacaoAberta] = useState(false);
 
   const materiasQuery = useQuery({
     queryKey: ['materias', profile?.turma_id],
@@ -164,6 +171,7 @@ export default function Notas() {
       setNovoNome('');
       setNovoPeso('');
       setNovaNota('');
+      setNovaAvaliacaoAberta(false);
       invalidarAvaliacoes();
     },
     onError: (error) => setErroForm(mensagemDeErro(error)),
@@ -285,9 +293,16 @@ export default function Notas() {
       ) : (
         <>
           {mediaAtual !== null ? (
-            <Text className="text-sm text-slate-500">
-              Média atual (só o que já tem nota): {formatadorNota.format(mediaAtual)}
-            </Text>
+            <View className="flex-row items-center gap-3 rounded-xl bg-primary/10 p-4 dark:bg-primary-dark/10">
+              <Ionicons name="stats-chart" size={22} color="#8B5CF6" />
+              <View className="flex-1">
+                <Text className="text-xs text-slate-500">Sua média atual</Text>
+                <Text className="text-2xl font-bold text-primary dark:text-primary-dark">
+                  {formatadorNota.format(mediaAtual)}
+                  <Text className="text-sm font-normal text-slate-500"> / {notaMaxima}</Text>
+                </Text>
+              </View>
+            </View>
           ) : null}
 
           <View className="gap-2">
@@ -312,51 +327,87 @@ export default function Notas() {
             )}
           </View>
 
-          <View className="gap-3 rounded-xl border border-slate-200 bg-surface p-4 dark:bg-surface-dark">
-            <View className="flex-row items-center gap-1.5">
-              <Ionicons name="add-circle-outline" size={16} color="#8B5CF6" />
-              <Text className="text-sm font-semibold text-slate-700">Nova avaliação</Text>
+          {/* Escondido atrás de um botão (pedido do usuário, "notas mais
+              fácil") — só abre o formulário de 3 campos quando alguém
+              realmente vai lançar uma avaliação nova, em vez de deixar
+              sempre visível ocupando espaço antes disso. Abre sozinho
+              quando a matéria ainda não tem avaliação nenhuma — nesse
+              caso é a única coisa que dá pra fazer na tela mesmo. */}
+          {!novaAvaliacaoAberta && (avaliacoesQuery.data?.length ?? 0) > 0 ? (
+            <Pressable
+              onPress={() => setNovaAvaliacaoAberta(true)}
+              accessibilityRole="button"
+              className="min-h-11 flex-row items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-300 bg-surface p-4 dark:bg-surface-dark"
+            >
+              <Ionicons name="add-circle-outline" size={18} color="#8B5CF6" />
+              <Text className="text-sm font-semibold text-primary dark:text-primary-dark">
+                Nova avaliação
+              </Text>
+            </Pressable>
+          ) : (
+            <View className="gap-3 rounded-xl border border-slate-200 bg-surface p-4 dark:bg-surface-dark">
+              <View className="flex-row items-center justify-between">
+                <View className="flex-row items-center gap-1.5">
+                  <Ionicons name="add-circle-outline" size={16} color="#8B5CF6" />
+                  <Text className="text-sm font-semibold text-slate-700">Nova avaliação</Text>
+                </View>
+                <Pressable
+                  onPress={() => {
+                    setNovaAvaliacaoAberta(false);
+                    setErroForm(null);
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Cancelar"
+                  className="min-h-11 min-w-11 items-center justify-center"
+                >
+                  <Ionicons name="close" size={18} color="#94A3B8" />
+                </Pressable>
+              </View>
+              <TextField
+                label="Nome"
+                value={novoNome}
+                onChangeText={setNovoNome}
+                placeholder="Teste 2"
+              />
+              <View className="flex-row gap-3">
+                <View className="flex-1">
+                  <TextField
+                    label="Peso"
+                    value={novoPeso}
+                    onChangeText={setNovoPeso}
+                    keyboardType="decimal-pad"
+                    placeholder="30"
+                  />
+                </View>
+                <View className="flex-1">
+                  <TextField
+                    label={`Nota (0-${notaMaxima}, opcional)`}
+                    value={novaNota}
+                    onChangeText={setNovaNota}
+                    keyboardType="decimal-pad"
+                    placeholder="pendente"
+                  />
+                </View>
+              </View>
+              <Text className="text-xs text-slate-500">
+                Peso é quanto essa avaliação vale na média final — se todas valem o mesmo, usa
+                sempre o mesmo número (ex.: 1) em cada uma.
+              </Text>
+              {erroForm ? (
+                <View className="flex-row items-center gap-1.5">
+                  <Ionicons name="alert-circle" size={14} color="#F87171" />
+                  <Text className="text-sm text-danger dark:text-danger-dark">{erroForm}</Text>
+                </View>
+              ) : null}
+              <Button
+                label="Adicionar"
+                icon="add"
+                variant="secondary"
+                onPress={handleAdicionarAvaliacao}
+                loading={criarMutation.isPending}
+              />
             </View>
-            <TextField
-              label="Nome"
-              value={novoNome}
-              onChangeText={setNovoNome}
-              placeholder="Teste 2"
-            />
-            <View className="flex-row gap-3">
-              <View className="flex-1">
-                <TextField
-                  label="Peso"
-                  value={novoPeso}
-                  onChangeText={setNovoPeso}
-                  keyboardType="decimal-pad"
-                  placeholder="30"
-                />
-              </View>
-              <View className="flex-1">
-                <TextField
-                  label={`Nota (0-${notaMaxima}, opcional)`}
-                  value={novaNota}
-                  onChangeText={setNovaNota}
-                  keyboardType="decimal-pad"
-                  placeholder="pendente"
-                />
-              </View>
-            </View>
-            {erroForm ? (
-              <View className="flex-row items-center gap-1.5">
-                <Ionicons name="alert-circle" size={14} color="#F87171" />
-                <Text className="text-sm text-danger dark:text-danger-dark">{erroForm}</Text>
-              </View>
-            ) : null}
-            <Button
-              label="Adicionar"
-              icon="add"
-              variant="secondary"
-              onPress={handleAdicionarAvaliacao}
-              loading={criarMutation.isPending}
-            />
-          </View>
+          )}
 
           <View className="gap-3 rounded-xl border border-slate-200 bg-surface p-4 dark:bg-surface-dark">
             <View className="flex-row items-center gap-1.5">
