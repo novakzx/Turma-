@@ -49,10 +49,12 @@ export function formatarDataEvento(iso: string) {
  * funciona, só sem o pop do coração). */
 function ImagemComToqueDuplo({
   caminho,
+  urlPreAssinada,
   curtido,
   onCurtir,
 }: {
   caminho: string;
+  urlPreAssinada?: string | null;
   curtido: boolean;
   onCurtir: () => void;
 }) {
@@ -92,7 +94,7 @@ function ImagemComToqueDuplo({
       accessibilityRole="imagebutton"
       accessibilityLabel="Imagem do post — toque duas vezes pra curtir"
     >
-      <ImagemPost caminho={caminho} />
+      <ImagemPost caminho={caminho} urlPreAssinada={urlPreAssinada} />
       <Animated.View
         pointerEvents="none"
         style={estiloCoracao}
@@ -233,6 +235,7 @@ export function CartaoPost({
       >
         <FotoPerfil
           caminho={post.profiles?.foto_url ?? null}
+          urlPreAssinada={post.profiles?.urlFotoAssinada}
           nome={post.profiles?.nome ?? '?'}
           tamanho={36}
         />
@@ -276,7 +279,12 @@ export function CartaoPost({
       ) : null}
 
       {post.tipo === 'foto' && post.midia_url ? (
-        <ImagemComToqueDuplo caminho={post.midia_url} curtido={curtido} onCurtir={onCurtir} />
+        <ImagemComToqueDuplo
+          caminho={post.midia_url}
+          urlPreAssinada={post.urlMidiaAssinada}
+          curtido={curtido}
+          onCurtir={onCurtir}
+        />
       ) : null}
 
       {post.tipo === 'enquete' ? (

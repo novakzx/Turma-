@@ -8,6 +8,10 @@ export type PerfilResumo = {
   nome: string;
   nome_usuario: string | null;
   foto_url: string | null;
+  /** URL já assinada do avatar — só preenchida por quem busca em lote
+   * (ver `comUrlsDeAutorAssinadas` em `social/api.ts`); os demais
+   * chamadores deixam `undefined` e `<FotoPerfil>` busca sozinha. */
+  urlFotoAssinada?: string | null;
 };
 
 export type PerfilPublico = PerfilResumo & {

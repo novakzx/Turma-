@@ -1,12 +1,18 @@
 import * as ImagePicker from 'expo-image-picker';
 
 import { lerBytesDeMidiaLocal } from '@/lib/lerMidiaLocal';
+import { assinarUrlsEmLote } from '@/lib/storageAssinado';
 import { supabase } from '@/lib/supabase';
 
 import { calcularResultadoEnquete, type ResultadoEnquete } from './regras';
 import type { Post, PostComentario, TipoConteudoDenuncia, TipoPost } from './types';
 
 const BUCKET_MIDIA = 'posts-midia';
+// Mesmo bucket de `src/features/perfil/api.ts` (`BUCKET_FOTOS` lá) —
+// duplicado aqui de propósito (mesmo padrão já usado nas Edge Functions
+// pra `ORIGENS_PERMITIDAS`) pra não criar um import cruzado entre
+// features só por causa de uma string.
+const BUCKET_FOTOS_PERFIL = 'perfil-fotos';
 
 export type PostComContadores = Post & {
   profiles: {
@@ -21,13 +27,58 @@ export type PostComContadores = Post & {
     // no banco, via RLS/RPC, nunca confiando neste campo vindo do
     // cliente).
     papel: 'aluno' | 'professor' | 'coordenacao';
+    /** URL já assinada do avatar — preenchida em lote por
+     * `comUrlsDeImagemAssinadas` (ver comentário lá). */
+    urlFotoAssinada?: string | null;
   } | null;
   post_curtidas: { count: number }[];
   post_comentarios: { count: number }[];
+  /** URL já assinada da foto do post (só quando `tipo === 'foto'`) —
+   * preenchida em lote por `comUrlsDeImagemAssinadas`. */
+  urlMidiaAssinada?: string | null;
 };
 
 const SELECT_POST_COM_CONTADORES =
   '*, profiles(id, nome, foto_url, assinatura_ativa, papel), post_curtidas(count), post_comentarios(count)';
+
+/**
+ * Assina em lote (2 chamadas de rede no total, uma por bucket — ver
+ * `assinarUrlsEmLote`) todas as fotos de post e avatares de uma lista de
+ * posts de uma vez, em vez de cada `<ImagemPost>`/`<FotoPerfil>` pedir a
+ * própria URL assinada de forma independente. Achado do usuário
+ * ("demora muito pra carregar as imagens ao entrar no app"): um feed com
+ * 10 posts com foto + 10 avatares virava até 20 requisições de
+ * assinatura antes de qualquer imagem sequer começar a baixar os
+ * próprios bytes.
+ */
+async function comUrlsDeImagemAssinadas(
+  posts: PostComContadores[],
+): Promise<PostComContadores[]> {
+  const caminhosMidia = posts
+    .filter((p) => p.tipo === 'foto' && p.midia_url)
+    .map((p) => p.midia_url as string);
+  const caminhosFotos = posts
+    .map((p) => p.profiles?.foto_url)
+    .filter((c): c is string => !!c);
+
+  const [urlsMidia, urlsFotos] = await Promise.all([
+    assinarUrlsEmLote(BUCKET_MIDIA, caminhosMidia),
+    assinarUrlsEmLote(BUCKET_FOTOS_PERFIL, caminhosFotos),
+  ]);
+
+  return posts.map((post) => ({
+    ...post,
+    urlMidiaAssinada: post.midia_url ? (urlsMidia.get(post.midia_url) ?? null) : null,
+    profiles: post.profiles
+      ? {
+          ...post.profiles,
+          urlFotoAssinada: post.profiles.foto_url
+            ? (urlsFotos.get(post.profiles.foto_url) ?? null)
+            : null,
+        }
+      : null,
+  }));
+}
 
 /** Feed aberto pra qualquer conta do app (pedido do usuário — antes só
  * mostrava post da própria turma; RLS de `posts` também já libera geral,
@@ -40,7 +91,7 @@ export async function listarPosts(): Promise<PostComContadores[]> {
     .select(SELECT_POST_COM_CONTADORES)
     .order('criado_em', { ascending: false });
   if (error) throw error;
-  return data as unknown as PostComContadores[];
+  return comUrlsDeImagemAssinadas(data as unknown as PostComContadores[]);
 }
 
 /** "Ver as publicações" no perfil (brief da Fase 6+: perfil editável) —
@@ -53,7 +104,7 @@ export async function listarPostsDoAutor(autorId: string): Promise<PostComContad
     .eq('autor_id', autorId)
     .order('criado_em', { ascending: false });
   if (error) throw error;
-  return data as unknown as PostComContadores[];
+  return comUrlsDeImagemAssinadas(data as unknown as PostComContadores[]);
 }
 
 export async function buscarPost(postId: string): Promise<PostComContadores> {
@@ -63,7 +114,8 @@ export async function buscarPost(postId: string): Promise<PostComContadores> {
     .eq('id', postId)
     .single();
   if (error) throw error;
-  return data as unknown as PostComContadores;
+  const [comUrl] = await comUrlsDeImagemAssinadas([data as unknown as PostComContadores]);
+  return comUrl;
 }
 
 /** Quais desses posts o próprio usuário já curtiu — pra pintar o botão de

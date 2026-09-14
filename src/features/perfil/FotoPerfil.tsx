@@ -20,20 +20,27 @@ function iniciais(nome: string) {
  * (em `editar-perfil.tsx`, antes do upload) — é uma URI `file://`/`blob:`
  * de verdade, não um caminho de Storage, então não passa por
  * `obterUrlAssinadaFoto`; tem prioridade sobre `caminho`.
+ *
+ * `urlPreAssinada` é o caminho novo (pedido do usuário — "demora muito
+ * pra carregar as imagens"): quando quem chama já assinou a URL em lote
+ * (ver `comUrlsDeImagemAssinadas` em `feed/api.ts`), passa ela pronta
+ * aqui e nenhuma requisição extra acontece pra esse avatar.
  */
 export function FotoPerfil({
   caminho,
   previewUri,
+  urlPreAssinada,
   nome,
   tamanho = 96,
 }: {
   caminho: string | null;
   previewUri?: string | null;
+  urlPreAssinada?: string | null;
   nome: string;
   tamanho?: number;
 }) {
-  const buscarAssinada = !previewUri && !!caminho;
-  const { data: url, isLoading } = useQuery({
+  const buscarAssinada = !previewUri && !urlPreAssinada && !!caminho;
+  const { data: urlBuscada, isLoading } = useQuery({
     queryKey: ['url-assinada-foto-perfil', caminho],
     queryFn: () => obterUrlAssinadaFoto(caminho as string),
     enabled: buscarAssinada,
@@ -41,9 +48,9 @@ export function FotoPerfil({
   });
 
   const estilo = { height: tamanho, width: tamanho, borderRadius: tamanho / 2 };
-  const uriFinal = previewUri ?? url;
+  const uriFinal = previewUri ?? urlPreAssinada ?? urlBuscada;
 
-  if (buscarAssinada && (isLoading || !url)) {
+  if (buscarAssinada && (isLoading || !uriFinal)) {
     return (
       <View style={estilo} className="items-center justify-center bg-slate-100">
         <ActivityIndicator color="#8B5CF6" />

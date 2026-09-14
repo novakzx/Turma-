@@ -16,11 +16,13 @@ const TAMANHO_AVATAR = 60;
 function BolinhaStory({
   nome,
   fotoUrl,
+  urlFotoAssinada,
   temStory,
   onPress,
 }: {
   nome: string;
   fotoUrl: string | null;
+  urlFotoAssinada?: string | null;
   temStory: boolean;
   onPress: () => void;
 }) {
@@ -33,10 +35,20 @@ function BolinhaStory({
     >
       {temStory ? (
         <AnelStory tamanho={TAMANHO_AVATAR}>
-          <FotoPerfil caminho={fotoUrl} nome={nome} tamanho={TAMANHO_AVATAR} />
+          <FotoPerfil
+            caminho={fotoUrl}
+            urlPreAssinada={urlFotoAssinada}
+            nome={nome}
+            tamanho={TAMANHO_AVATAR}
+          />
         </AnelStory>
       ) : (
-        <FotoPerfil caminho={fotoUrl} nome={nome} tamanho={TAMANHO_AVATAR + 8} />
+        <FotoPerfil
+          caminho={fotoUrl}
+          urlPreAssinada={urlFotoAssinada}
+          nome={nome}
+          tamanho={TAMANHO_AVATAR + 8}
+        />
       )}
       <Text numberOfLines={1} className="w-16 text-center text-xs text-slate-500">
         {nome.split(' ')[0]}
@@ -119,6 +131,7 @@ export function StoriesBar() {
           key={autorId}
           nome={stories[0].profiles?.nome ?? 'Alguém'}
           fotoUrl={stories[0].profiles?.foto_url ?? null}
+          urlFotoAssinada={stories[0].profiles?.urlFotoAssinada}
           temStory
           onPress={() => router.push(`/story/${autorId}`)}
         />

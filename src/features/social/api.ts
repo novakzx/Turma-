@@ -1,11 +1,34 @@
 import { lerBytesDeMidiaLocal } from '@/lib/lerMidiaLocal';
+import { assinarUrlsEmLote } from '@/lib/storageAssinado';
 import { supabase } from '@/lib/supabase';
 
 import type { PerfilPublico, PerfilResumo, StoryComAutor } from './types';
 
 const BUCKET_STORIES = 'stories-midia';
+// Mesmo bucket de `src/features/perfil/api.ts` — duplicado aqui de
+// propósito, mesmo padrão de `feed/api.ts` (ver comentário lá).
+const BUCKET_FOTOS_PERFIL = 'perfil-fotos';
 
 const SELECT_PERFIL_RESUMO = 'id, nome, nome_usuario, foto_url';
+
+/** Assina em lote os avatares dos autores de uma lista de stories (uma
+ * chamada de rede pra todos, não uma por bolinha) — pedido do usuário,
+ * "demora muito pra carregar as imagens ao entrar no app": a barra de
+ * stories aparece assim que o Feed/Perfil abre, então era literalmente
+ * a primeira leva de avatares brigando por rede logo na entrada. */
+async function comUrlsDeAutorAssinadas(stories: StoryComAutor[]): Promise<StoryComAutor[]> {
+  const caminhos = stories.map((s) => s.profiles?.foto_url).filter((c): c is string => !!c);
+  const urls = await assinarUrlsEmLote(BUCKET_FOTOS_PERFIL, caminhos);
+  return stories.map((s) => ({
+    ...s,
+    profiles: s.profiles
+      ? {
+          ...s.profiles,
+          urlFotoAssinada: s.profiles.foto_url ? (urls.get(s.profiles.foto_url) ?? null) : null,
+        }
+      : null,
+  }));
+}
 
 export async function seguir(seguidorId: string, seguidoId: string) {
   const { error } = await supabase
@@ -104,7 +127,7 @@ export async function listarStoriesVisiveis(): Promise<StoryComAutor[]> {
     .select(`*, profiles(${SELECT_PERFIL_RESUMO})`)
     .order('criado_em', { ascending: false });
   if (error) throw error;
-  return data as unknown as StoryComAutor[];
+  return comUrlsDeAutorAssinadas(data as unknown as StoryComAutor[]);
 }
 
 export async function listarStoriesDoAutor(autorId: string): Promise<StoryComAutor[]> {
