@@ -11,7 +11,7 @@ App (Expo/React Native, iOS/Android/Web) ── EXPO_PUBLIC_SUPABASE_ANON_KEY (p
         │
         ├── REST + Realtime (PostgREST/Postgres) ── protegido por RLS em toda tabela
         │
-        └── supabase.functions.invoke('chat-estudo') ── única Edge Function chamada direto pelo app
+        └── supabase.functions.invoke('chat-estudo' | 'login-por-usuario' | ...) ── Edge Functions chamadas direto pelo app
 
 Postgres (trigger AFTER INSERT em `avisos`) ──┐
 pg_cron (aviso-clima, hoje desligado) ────────┼── x-webhook-secret (Vault) ──> Edge Functions internas
@@ -24,9 +24,11 @@ Nenhuma chave secreta de verdade (service role, Gemini) tem prefixo `EXPO_PUBLIC
 
 ## 2. Autenticação
 
-- Supabase Auth (e-mail + senha, e Google OAuth). Login por **nome de usuário** na UI é só uma camada de UX: resolve @usuário → e-mail via uma RPC dedicada (`email_por_nome_usuario`) antes de chamar `signInWithPassword` — o Supabase em si sempre autentica por e-mail.
+- Supabase Auth (e-mail + senha, e Google OAuth). Login por **nome de usuário** na UI é só uma camada de UX — o Supabase em si sempre autentica por e-mail.
+- **Login por @usuário roda inteiro server-side** (Edge Function `login-por-usuario`, service role): resolve @usuário → e-mail internamente e chama o endpoint de login do GoTrue por baixo, devolvendo só a sessão (tokens) pro navegador — o e-mail nunca trafega numa resposta que o cliente (ou alguém inspecionando a rede) consiga ler.
+  - **Histórico (corrigido em `login_sem_vazar_email_e_limita_grupo`)**: até essa migration, a resolução @usuário → e-mail rodava numa RPC pública (`email_por_nome_usuario`, `security definer`, chamável por `anon`) direto do navegador, protegida só por rate limit (20/10min por IP). Funcionava, mas era uma mitigação, não uma correção: um atacante com algumas dezenas de IPs ainda colhia e-mail real de aluno menor de idade em massa, só mais devagar. Auditoria de segurança pedida pelo usuário identificou isso como o achado mais sério — o acesso público a essa RPC foi revogado (fica só chamável por `service_role`, e mesmo essa via foi trocada pela `resolver_email_login`, nunca exposta a `anon`/`authenticated`).
 - Confirmação de e-mail obrigatória (`Confirm email` ligado no projeto). `signUp()` distingue "conta nova, aguardando confirmação" de "e-mail já cadastrado" usando o sinal documentado do próprio Supabase (`user.identities` vazio = conta pré-existente) — nunca lista se um e-mail existe ou não de forma explícita (evita enumeração de conta).
-- `email_por_nome_usuario` e `nome_usuario_disponivel` são RPCs `security definer` chamáveis **sem sessão** (têm que ser — resolvem login e checam @usuário disponível antes de existir conta). Ambas têm rate limit por IP real (`private.aplica_rate_limit`, ver §7) desde a migration `rate_limit_lookup_usuario` — sem isso, a primeira devolvia e-mail de verdade pra qualquer @usuário adivinhado, sem limite nenhum (colheita de PII em massa).
+- `resolver_email_login` (chamável só por `service_role`, nunca pelo navegador) e `nome_usuario_disponivel` (RPC `security definer` chamável sem sessão — tem que ser, checa @usuário disponível antes de existir conta) têm rate limit por IP real (`private.aplica_rate_limit`, ver §7).
 - **Pendente de configuração manual** (não existe endpoint de API pra isso, só o Dashboard): ligar "Leaked Password Protection" em Studio → Authentication → Policies (checagem contra HaveIBeenPwned na senha de cadastro).
 - Sessão fica em `AsyncStorage`/`localStorage` (padrão do SDK do Supabase pra apps mobile/web sem servidor próprio) — é a mesma troca de arquitetura que qualquer app 100% client+BaaS faz; mitigado por RLS em toda tabela (um token roubado só pode fazer o que o próprio dono da conta poderia).
 
@@ -38,6 +40,7 @@ Regra de ouro deste projeto: **nenhuma decisão de autorização é feita só no
 - Policies usam funções auxiliares no schema `private` (`current_papel()`, `current_escola_id()`, `current_turma_id()`, `is_staff()`) que leem `auth.uid()` e o `profiles` correspondente no servidor — nunca um campo mandado pelo cliente.
 - `profiles.papel` não é editável pelo próprio usuário (sem policy de `UPDATE` pra essa coluna) — impede autopromoção pra `professor`/`coordenacao`.
 - RPCs `security definer` que mudam estado (`criar_conversa_direta`, `criar_conversa_grupo`, `adicionar_participante_grupo`, `responder_pedido_entrada_turma`, `silenciar_usuario`) checam `auth.uid() is null` explicitamente e revalidam a permissão de negócio (dono do grupo, staff da escola certa, etc.) **dentro** da função — nunca assumem que quem chamou tinha esse direito só porque a UI escondia o botão.
+- `criar_conversa_grupo` limita o array de participantes a 50 por chamada e tem rate limit de 10 grupos criados por usuário a cada 10 minutos (`login_sem_vazar_email_e_limita_grupo`) — antes não tinha nenhum dos dois, abrindo espaço pra um array gigante numa chamada só ou spam de convites de grupo pra outros alunos.
 - Storage (`posts-midia`, `perfil-fotos`, `stories-midia`) é **privado**; leitura via `createSignedUrl` com policy de `SELECT` restrita ao escopo certo (turma/escola) — link direto nunca é adivinhável.
 
 ## 4. Gestão de segredos
@@ -68,8 +71,9 @@ Este projeto ainda não tem um programa formal de disclosure (sem bug bounty, se
 | Onde                                    | Limite                                       | Por quê                                                                                                                                                                             |
 | --------------------------------------- | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `chat-estudo` (Edge Function)           | 15 mensagens / 5 min por usuário autenticado | Chamada à API Gemini custa dinheiro de verdade — sem limite, um script vira gasto ilimitado. Contagem via RLS do próprio usuário (`chat_ia_mensagens`), imune a bypass client-side. |
-| `email_por_nome_usuario` (RPC anônima)  | 20 tentativas / 10 min por IP                | Devolve e-mail real — sem limite, script varria @usuários e colhia e-mails em massa.                                                                                                |
+| `login-por-usuario` (Edge Function, via `resolver_email_login` internamente) | 20 tentativas / 10 min por IP | Mesmo motivo de antes (evitar enumeração/colheita), agora sem o e-mail sair do servidor — ver §2. |
 | `nome_usuario_disponivel` (RPC anônima) | 60 tentativas / 5 min por IP                 | Mesmo vetor de enumeração, limite mais generoso (chamada a cada tecla no cadastro).                                                                                                 |
+| `criar_conversa_grupo` (RPC autenticada) | 10 grupos / 10 min por usuário               | Sem limite, um usuário podia criar dezenas de grupos por segundo pra floodar convite em outros alunos.                                                                              |
 
 IP vem de `cf-connecting-ip` (header posto pela borda Cloudflare do próprio Supabase — não pelo chamador, diferente de `x-forwarded-for`) via `current_setting('request.headers', true)`, testado de verdade com curl direto no `/rest/v1/rpc` antes de confiar no mecanismo (ver migration `rate_limit_lookup_usuario`).
 

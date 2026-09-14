@@ -1,6 +1,7 @@
 import * as WebBrowser from 'expo-web-browser';
 import { Platform } from 'react-native';
 
+import { mensagemDoErroDaFuncao } from '@/lib/erroEdgeFunction';
 import { supabase } from '@/lib/supabase';
 
 import type { MetadadosCadastro, Profile } from './types';
@@ -106,26 +107,39 @@ export async function nomeUsuarioDisponivel(nomeUsuario: string): Promise<boolea
   return data;
 }
 
-/** Login do Supabase só aceita e-mail, não usuário — resolve nome de
- * usuário pro e-mail interno (RPC `security definer`, mesma razão da
- * `nome_usuario_disponivel`: quem ainda não tem sessão não pode
- * consultar `profiles` direto pela RLS normal) antes de chamar
- * `signInWithPassword`. Usuário inexistente cai no mesmo erro genérico
- * de "credenciais inválidas" do próprio Supabase — não dá pista de qual
- * dos dois (usuário ou senha) está errado. */
+/**
+ * Login do Supabase só aceita e-mail, não usuário. Até aqui a resolução
+ * de @usuário → e-mail rodava numa RPC pública (`email_por_nome_usuario`)
+ * chamada direto do navegador — funcionava, mas devolvia o e-mail REAL
+ * de qualquer @usuário pra quem perguntasse (só rate-limitado por IP,
+ * ver SECURITY.md antigo). Auditoria de segurança pedida pelo usuário
+ * achou isso como o item mais sério: e-mail de aluno menor de idade,
+ * colhível em massa por alguém com IPs suficientes.
+ *
+ * Agora o fluxo inteiro (resolver @usuário → e-mail → autenticar)
+ * roda dentro da Edge Function `login-por-usuario` (service role) — o
+ * e-mail nunca sai do servidor, o navegador só recebe a sessão pronta
+ * (tokens) se a senha bater. `email_por_nome_usuario` teve o acesso
+ * público revogado na mesma migration (`login_sem_vazar_email`).
+ */
 export async function signIn(params: { nomeUsuario: string; senha: string }) {
-  const { data: email, error: erroResolvendo } = await supabase.rpc('email_por_nome_usuario', {
-    p_nome_usuario: params.nomeUsuario,
+  const { data, error } = await supabase.functions.invoke<{
+    access_token: string;
+    refresh_token: string;
+  }>('login-por-usuario', {
+    body: { nomeUsuario: params.nomeUsuario, senha: params.senha },
   });
-  if (erroResolvendo) throw erroResolvendo;
-  if (!email) throw new Error('Invalid login credentials');
+  if (error) throw new Error(await mensagemDoErroDaFuncao(error));
+  if (!data?.access_token || !data.refresh_token) {
+    throw new Error('Usuário ou senha incorretos.');
+  }
 
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password: params.senha,
+  const { data: sessaoData, error: erroSessao } = await supabase.auth.setSession({
+    access_token: data.access_token,
+    refresh_token: data.refresh_token,
   });
-  if (error) throw error;
-  return data;
+  if (erroSessao) throw erroSessao;
+  return sessaoData;
 }
 
 /**

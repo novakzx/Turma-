@@ -1,0 +1,16 @@
+-- BUG introduzido pela migration `login_sem_vazar_email` (aplicada logo
+-- antes desta): `create or replace function private.aplica_rate_limit(text,
+-- integer, interval, text default null)` NÃO substitui a função original
+-- de 3 parâmetros — Postgres trata assinaturas com número de parâmetros
+-- diferente como funções SEPARADAS (mesmo com o 4º tendo valor default).
+-- Resultado: duas funções `aplica_rate_limit` coexistindo, e toda chamada
+-- com exatamente 3 argumentos (`nome_usuario_disponivel`, usada a cada
+-- tecla no cadastro) virou ambígua — "function
+-- private.aplica_rate_limit(unknown, integer, interval) is not unique".
+-- Isso quebrou o cadastro na hora (achado testando de ponta a ponta antes
+-- de considerar a correção de segurança pronta — ver auditoria pedida
+-- pelo usuário).
+--
+-- Fix: apaga a versão antiga de 3 parâmetros — só sobra a de 4 (com
+-- default), que atende igual toda chamada de 3 argumentos que já existia.
+drop function if exists private.aplica_rate_limit(text, integer, interval);
