@@ -8,6 +8,80 @@ export type Database = {
   };
   public: {
     Tables: {
+      apresentacao_slides: {
+        Row: {
+          apresentacao_id: string;
+          id: string;
+          midia_url: string | null;
+          ordem: number;
+          titulo: string;
+          topicos: string[];
+        };
+        Insert: {
+          apresentacao_id: string;
+          id?: string;
+          midia_url?: string | null;
+          ordem: number;
+          titulo: string;
+          topicos?: string[];
+        };
+        Update: {
+          apresentacao_id?: string;
+          id?: string;
+          midia_url?: string | null;
+          ordem?: number;
+          titulo?: string;
+          topicos?: string[];
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'apresentacao_slides_apresentacao_id_fkey';
+            columns: ['apresentacao_id'];
+            isOneToOne: false;
+            referencedRelation: 'apresentacoes';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      apresentacoes: {
+        Row: {
+          aluno_id: string;
+          criado_em: string;
+          id: string;
+          materia_id: string;
+          topico: string;
+        };
+        Insert: {
+          aluno_id: string;
+          criado_em?: string;
+          id?: string;
+          materia_id: string;
+          topico: string;
+        };
+        Update: {
+          aluno_id?: string;
+          criado_em?: string;
+          id?: string;
+          materia_id?: string;
+          topico?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'apresentacoes_aluno_id_fkey';
+            columns: ['aluno_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'apresentacoes_materia_id_fkey';
+            columns: ['materia_id'];
+            isOneToOne: false;
+            referencedRelation: 'materias';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       avaliacoes: {
         Row: {
           aluno_id: string;
