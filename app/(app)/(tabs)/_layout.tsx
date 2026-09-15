@@ -1,9 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs, router } from 'expo-router';
-import { useColorScheme } from 'nativewind';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { HeaderDireita, HeaderEsquerda } from '@/components/ui/TopHeader';
+import { useTema } from '@/features/configuracoes/TemaProvider';
 
 // Redesign "Instagram" (pedido do usuário): ícone contorno quando inativo,
 // preenchido quando ativo — mesma linguagem do Instagram/Threads em vez de
@@ -34,10 +34,10 @@ const ALTURA_CONTEUDO_BARRA = 64;
  * substitui a pílula flutuante com sombra da Fase 6 (estilo Duolingo/
  * Instagram) por uma barra reta, docada na borda inferior de verdade,
  * com uma linha de borda fina em vez de elevação/sombra — visual de
- * dashboard corporativo. Cor de ícone/label segue o mesmo
- * `useColorScheme()` do NativeWind usado no resto do app (`app/
- * _layout.tsx`), já que `tabBarStyle` é um style object puro do
- * react-navigation, fora do alcance do `className`.
+ * dashboard corporativo. Cor de ícone/label segue o mesmo `useTema()`
+ * usado no resto do app (`app/_layout.tsx`/`TemaProvider.tsx`), já que
+ * `tabBarStyle` é um style object puro do react-navigation, fora do
+ * alcance do `className`.
  *
  * Altura e `paddingBottom` calculados à mão (em vez de deixar o
  * `@react-navigation/bottom-tabs` calcular sozinho, que seria o caminho
@@ -48,8 +48,7 @@ const ALTURA_CONTEUDO_BARRA = 64;
  * depender desse caminho interno quebrado.
  */
 export default function TabsLayout() {
-  const { colorScheme } = useColorScheme();
-  const escuro = colorScheme === 'dark';
+  const { escuro, cores } = useTema();
   const insets = useSafeAreaInsets();
 
   return (
@@ -61,8 +60,8 @@ export default function TabsLayout() {
         // linha branca por cima do fundo escuro (achado testando de
         // verdade no preview mobile, relatado pelo usuário).
         headerShadowVisible: false,
-        headerStyle: { backgroundColor: '#FAF8FF' },
-        headerTintColor: '#131B2E',
+        headerStyle: { backgroundColor: escuro ? '#0B0E14' : '#FAF8FF' },
+        headerTintColor: escuro ? '#F1F5F9' : '#131B2E',
         // `headerLeft`/`headerRight` (não um `headerTitle` esticando a
         // barra inteira) — cada um do tamanho do próprio conteúdo, sem
         // forçar `width: 0`/`flex: 1` nos containers. Essa era a v1 deste
@@ -71,15 +70,15 @@ export default function TabsLayout() {
         // ver `TopHeader.tsx`); `headerTitle: () => null` tira o título
         // central padrão do meio, que senão sobraria vazio ali.
         headerTitle: () => null,
-        tabBarActiveTintColor: escuro ? '#A78BFA' : '#8B5CF6',
-        tabBarInactiveTintColor: '#94A3B8',
+        tabBarActiveTintColor: cores.primary,
+        tabBarInactiveTintColor: cores.mutado,
         tabBarShowLabel: true,
         tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
         tabBarStyle: {
           height: ALTURA_CONTEUDO_BARRA + insets.bottom,
           borderTopWidth: 1,
-          borderTopColor: '#EDEBFA',
-          backgroundColor: '#FFFFFF',
+          borderTopColor: escuro ? '#262D39' : '#EDEBFA',
+          backgroundColor: escuro ? '#171B26' : '#FFFFFF',
           elevation: 0,
           shadowOpacity: 0,
           paddingTop: 6,

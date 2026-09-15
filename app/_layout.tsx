@@ -12,7 +12,6 @@ import '@/features/widget/task';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useColorScheme } from 'nativewind';
 import { ActivityIndicator, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -21,6 +20,7 @@ import { AvisosWeb } from '@/components/ui/AvisosWeb';
 import { BannerOffline } from '@/components/ui/BannerOffline';
 import { PromptInstalarPWA } from '@/components/ui/PromptInstalarPWA';
 import { AuthProvider, useAuth } from '@/features/auth/AuthProvider';
+import { TemaProvider, useTema } from '@/features/configuracoes/TemaProvider';
 import { OFFLINE_PERSIST_OPTIONS } from '@/lib/offlinePersist';
 import { queryClient } from '@/lib/queryClient';
 
@@ -35,37 +35,22 @@ import { queryClient } from '@/lib/queryClient';
  * mudam (login, logout, fim de cadastro/onboarding) — nenhuma navegação
  * manual é necessária nas telas.
  *
- * Nota (ver README > "Limitações conhecidas"): no preview web deste SDK,
- * `useColorScheme()` já lê "dark" do sistema corretamente (dá pra ver no
- * header nativo abaixo, que é estilizado por esse valor), mas a classe
- * "dark" que as classes `dark:` do NativeWind dependem não chega a ser
- * aplicada no <html> — é uma limitação do target web desta versão da
- * lib, não do app. Tentativa de corrigir à mão (aplicar a classe no
- * `document.documentElement` manualmente) testada e **não funcionou**:
- * mesmo com a classe presente de verdade no `<html>` (confirmado via
- * DevTools), nada mudou visualmente — o NativeWind pro alvo web resolve
- * qual variante de estilo usar internamente (via um store próprio de
- * color scheme), não por cascata de CSS batendo com `.dark` no DOM, então
- * forçar a classe no DOM não tem efeito nenhum nesse mecanismo. Precisaria
- * de correção na própria lib (fora do escopo de um ajuste de UI pontual).
- * No target real (iOS/Android via Expo Go/EAS) o mesmo hook aciona a
- * classe corretamente, que é o caminho documentado.
+ * Modo escuro de verdade (pedido do usuário) roda por `<TemaProvider>`
+ * (ver `src/features/configuracoes/TemaProvider.tsx`) — não pelo
+ * `useColorScheme()` do NativeWind: as classes `dark:` dele são inertes
+ * no alvo web (confirmado ao vivo, ver comentário grande em
+ * `src/lib/global.css`), então o tema aqui é resolvido via variável CSS
+ * (web) / `vars()` (nativo), ambos lidos da mesma paleta em
+ * `src/lib/temaCores.ts`.
  */
 function RootNavigator() {
-  // Sem toggle de tema em Configurações mais (o app não tem modo escuro
-  // de propósito desde o redesign v5 — ver tailwind.config.js; escolher
-  // "Escuro" ali não mudava nada visualmente, e isso é exatamente o
-  // "modo escuro bugado" relatado pelo usuário). `colorScheme` ainda
-  // resolve certo pelo `useColorScheme()` do NativeWind, só que agora só
-  // reflete o sistema — não tem mais preferência salva pra restaurar.
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { escuro, cores } = useTema();
   const { session, profile, isLoadingSession, isLoadingProfile } = useAuth();
 
   if (isLoadingSession || (!!session && isLoadingProfile)) {
     return (
-      <View className="flex-1 items-center justify-center bg-background dark:bg-background-dark">
-        <ActivityIndicator color={isDark ? '#A78BFA' : '#8B5CF6'} />
+      <View className="flex-1 items-center justify-center bg-background">
+        <ActivityIndicator color={cores.primary} />
       </View>
     );
   }
@@ -83,13 +68,12 @@ function RootNavigator() {
     // fisicamente o botão "Criar conta" no fim de um formulário longo —
     // o clique nem chegava no botão, sem erro nenhum no console.
     <View className="flex-1">
-      {/* Redesign v5 (claro, pedido do usuário): fundo é sempre claro
-          agora (não um tema opcional — ver tailwind.config.js), então a
-          barra de status sempre precisa de ícone escuro. Deixar isso
-          reagir a `isDark` de novo faria o ícone ficar claro-sobre-claro
-          (invisível) sempre que `colorScheme` resolvesse "light" — que é
-          o padrão do sistema pra quem nunca trocou o tema. */}
-      <StatusBar style="dark" />
+      {/* `style` do ícone da barra de status (bateria/hora do sistema) —
+          "dark" pede ícone escuro (fundo claro), "light" pede ícone claro
+          (fundo escuro). Trocado pra reagir a `escuro` de verdade agora
+          que o tema muda de fato — antes ficava travado em "dark" porque
+          o fundo também estava travado em claro. */}
+      <StatusBar style={escuro ? 'light' : 'dark'} />
       <BannerOffline />
       <PromptInstalarPWA />
       <View className="flex-1">
@@ -98,13 +82,13 @@ function RootNavigator() {
             // `headerShadowVisible: false` — o header do React Navigation
             // traz uma borda/sombra inferior própria por padrão; sem
             // desligar isso ela aparece como linha duplicada sobre o
-            // fundo claro. Este header em si nunca chega a renderizar de
+            // fundo. Este header em si nunca chega a renderizar de
             // verdade (todo filho aqui usa `headerShown: false` e tem o
             // próprio Stack/Tabs) — mantido consistente mesmo assim.
             headerShadowVisible: false,
-            headerStyle: { backgroundColor: '#FAF8FF' },
-            headerTintColor: '#131B2E',
-            contentStyle: { backgroundColor: '#FAF8FF' },
+            headerStyle: { backgroundColor: escuro ? '#0B0E14' : '#FAF8FF' },
+            headerTintColor: escuro ? '#F1F5F9' : '#131B2E',
+            contentStyle: { backgroundColor: escuro ? '#0B0E14' : '#FAF8FF' },
           }}
         >
           <Stack.Protected guard={!session}>
@@ -137,9 +121,11 @@ export default function RootLayout() {
             fora). Troca de `QueryClientProvider` puro por este wrapper é
             só isso — resto do app usa `useQuery`/`useMutation` igual. */}
         <PersistQueryClientProvider client={queryClient} persistOptions={OFFLINE_PERSIST_OPTIONS}>
-          <AuthProvider>
-            <RootNavigator />
-          </AuthProvider>
+          <TemaProvider>
+            <AuthProvider>
+              <RootNavigator />
+            </AuthProvider>
+          </TemaProvider>
         </PersistQueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

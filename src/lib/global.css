@@ -2,26 +2,107 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ==========================================================================
+   Tokens de cor do tema (claro/escuro) — pedido do usuário ("e tambem a
+   versao escura"), depois de confirmar que ele queria um modo escuro de
+   verdade, não só o toggle antigo (removido antes por estar morto — ver
+   commit "remove o seletor de tema quebrado").
+
+   Achado que molda esta implementação: `dark:` do NativeWind é inerte no
+   alvo **web** — testado ao vivo (script de teste temporário: classe
+   "dark" confirmada presente em `<html>` via DevTools, `colorScheme`
+   confirmado "dark" via `useColorScheme()`, e MESMO ASSIM nenhuma cor
+   `dark:*` mudava — nem em stylesheet nem em style computado, a regra
+   simplesmente não é gerada pro alvo web desta versão da lib). Por isso
+   o tema aqui NÃO depende de nenhuma classe `dark:` — cada token vira uma
+   variável CSS, referenciada direto em `tailwind.config.js`
+   (`primary: 'var(--color-primary)'` etc.), e só o VALOR da variável
+   muda com o tema. Isso funciona por cascata normal de CSS (nada a ver
+   com o mecanismo de variante quebrado) — cobre `html`/`body` também,
+   que uma solução baseada em classe nunca cobriria.
+
+   Três camadas, sem JavaScript nenhum pra evitar o flash da cor errada
+   no primeiro parágrafo (CSP deste projeto bloqueia `<script>` inline —
+   ver SECURITY.md §8 — então a única forma sem flash é isto ser CSS puro):
+   1) `:root` — claro, o padrão pra quem nunca abriu o app.
+   2) `@media (prefers-color-scheme: dark)` — sistema em escuro, aplica
+      sozinho, sem esperar o app carregar (só se a pessoa não tiver
+      escolhido "Claro" explicitamente em Configurações).
+   3) `:root[data-theme]` — preferência explícita salva em Configurações
+      (`aplicarTemaNoDocumento` em `src/features/configuracoes/tema.ts`),
+      sempre vence sobre o sistema.
+
+   No alvo nativo (iOS/Android, sem `<html>`/CSS nenhum) estas variáveis
+   não existem — lá o mesmo valor chega via `vars()` do NativeWind,
+   aplicado na raiz do app (`TemaProvider`), que é a API oficial da lib
+   pra variável de CSS multiplataforma (funciona nos dois alvos, ao
+   contrário de `dark:`). */
+:root {
+  --color-background: #faf8ff;
+  --color-surface: #ffffff;
+  --color-primary: #8b5cf6;
+  --color-accent: #2dd4bf;
+  --color-success: #22c55e;
+  --color-danger: #f87171;
+  --color-slate-100: #f1f5f9;
+  --color-slate-200: #e2e8f0;
+  --color-slate-300: #cbd5e1;
+  --color-slate-500: #64748b;
+  --color-slate-600: #475569;
+  --color-slate-700: #334155;
+  --color-slate-800: #1e293b;
+  --color-slate-900: #0f172a;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --color-background: #0b0e14;
+    --color-surface: #171b26;
+    --color-primary: #a78bfa;
+    --color-accent: #5eead4;
+    --color-success: #4ade80;
+    --color-danger: #fca5a5;
+    --color-slate-100: #1c2230;
+    --color-slate-200: #262d39;
+    --color-slate-300: #334155;
+    --color-slate-500: #98a1af;
+    --color-slate-600: #adb5c2;
+    --color-slate-700: #c3cad4;
+    --color-slate-800: #e2e8f0;
+    --color-slate-900: #e8ebf0;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  --color-background: #0b0e14;
+  --color-surface: #171b26;
+  --color-primary: #a78bfa;
+  --color-accent: #5eead4;
+  --color-success: #4ade80;
+  --color-danger: #fca5a5;
+  --color-slate-100: #1c2230;
+  --color-slate-200: #262d39;
+  --color-slate-300: #334155;
+  --color-slate-500: #98a1af;
+  --color-slate-600: #adb5c2;
+  --color-slate-700: #c3cad4;
+  --color-slate-800: #e2e8f0;
+  --color-slate-900: #e8ebf0;
+  color-scheme: dark;
+}
+
 /* `html`/`body` no alvo web nunca tiveram cor de fundo própria (React
    Native Web deixa isso pros componentes `View`) — sem isso, qualquer
    canto que esses componentes não cobrem de verdade (o "elástico" de
    overscroll no Safari/Chrome mobile, ou um instante de resize) mostra
    o branco padrão do navegador por trás, mesmo com todo o app pintado
-   por cima. Achado testando de verdade no preview mobile (relatado
-   originalmente com o app ainda escuro: "lá embaixo o bar navigation tá
-   bugado"). Mesma cor do token `background` (ver tailwind.config.js) —
-   não dá pra referenciar a classe Tailwind aqui (é CSS puro fora do
-   NativeWind), por isso o hex repetido. Ficou esquecido escuro (`#0B0E14`,
-   cor do redesign anterior) quando o app inteiro virou claro no redesign
-   v5 — esse hex desatualizado é exatamente o que aparecia como "modo
-   escuro" bugado no elástico do scroll do iPhone (relatado pelo
-   usuário): tudo em volta já claro, só esse canto ainda escuro.
-   `color-scheme: light` evita um bug parecido, mas de origem diferente
-   — sem essa declaração, o Safari/Chrome escurecem sozinhos controles
-   nativos (scrollbar, cursor em campo de senha) quando o sistema está em
-   modo escuro, mesmo com todo o resto da página em claro. */
+   por cima. Agora referencia a variável (não mais um hex fixo) — sem
+   isso o elástico do scroll ficaria sempre claro mesmo com o app inteiro
+   em modo escuro, o mesmo tipo de bug relatado antes ("lá embaixo o bar
+   navigation tá bugado"), só que invertido. */
 html,
 body {
-  background-color: #faf8ff;
-  color-scheme: light;
+  background-color: var(--color-background);
 }

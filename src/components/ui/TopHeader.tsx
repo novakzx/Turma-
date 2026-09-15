@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 
 import { useAuth } from '@/features/auth/AuthProvider';
+import { useTema } from '@/features/configuracoes/TemaProvider';
 import { FotoPerfil } from '@/features/perfil/FotoPerfil';
 
 /**
@@ -52,6 +53,7 @@ export function HeaderDireita({
   acaoExtra?: { icone: keyof typeof Ionicons.glyphMap; label: string; aoPressionar: () => void };
 }) {
   const { profile } = useAuth();
+  const { cores } = useTema();
 
   return (
     <View className="flex-row items-center gap-1.5 pr-2">
@@ -62,7 +64,7 @@ export function HeaderDireita({
           accessibilityLabel={acaoExtra.label}
           className="h-10 w-10 items-center justify-center rounded-full bg-slate-100"
         >
-          <Ionicons name={acaoExtra.icone} size={19} color="#464555" />
+          <Ionicons name={acaoExtra.icone} size={19} color={cores.neutro} />
         </Pressable>
       ) : null}
       <Pressable
@@ -71,7 +73,7 @@ export function HeaderDireita({
         accessibilityLabel="Notificações e configurações"
         className="h-10 w-10 items-center justify-center rounded-full bg-slate-100"
       >
-        <Ionicons name="notifications-outline" size={19} color="#464555" />
+        <Ionicons name="notifications-outline" size={19} color={cores.neutro} />
       </Pressable>
       <Pressable
         onPress={() => router.push('/perfil')}

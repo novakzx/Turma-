@@ -9,8 +9,20 @@ import { TextField } from '@/components/ui/TextField';
 import { atualizarSenha, signOut } from '@/features/auth/api';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { mensagemDeErro } from '@/features/auth/errors';
+import { useTema } from '@/features/configuracoes/TemaProvider';
+import type { TemaPreferido } from '@/features/configuracoes/tema';
 import { atualizarPrivacidade } from '@/features/perfil/api';
 import { excluirMinhaConta, exportarMeusDados } from '@/features/perfil/dadosPessoais';
+
+const OPCOES_TEMA: {
+  valor: TemaPreferido;
+  rotulo: string;
+  icone: keyof typeof Ionicons.glyphMap;
+}[] = [
+  { valor: 'light', rotulo: 'Claro', icone: 'sunny-outline' },
+  { valor: 'dark', rotulo: 'Escuro', icone: 'moon-outline' },
+  { valor: 'system', rotulo: 'Sistema', icone: 'phone-portrait-outline' },
+];
 
 /** `window.confirm` no web, `Alert.alert` nativo — mesmo padrão já usado
  * em `perfil.tsx`/`gerenciar-materias.tsx` (`Alert.alert` não tem UI no
@@ -84,6 +96,7 @@ function CartaoAcaoExpansivel({
 export default function Configuracoes() {
   const { profile } = useAuth();
   const queryClient = useQueryClient();
+  const { temaPreferido, setTemaPreferido, cores } = useTema();
 
   const [secaoAberta, setSecaoAberta] = useState<'senha' | null>(null);
   const [novaSenha, setNovaSenha] = useState('');
@@ -146,6 +159,36 @@ export default function Configuracoes() {
       className="flex-1 bg-background dark:bg-background-dark"
       contentContainerClassName="gap-4 p-4 pb-10"
     >
+      <Secao titulo="Tema">
+        <View className="flex-row flex-wrap gap-2">
+          {OPCOES_TEMA.map((opcao) => {
+            const selecionada = temaPreferido === opcao.valor;
+            return (
+              <Pressable
+                key={opcao.valor}
+                onPress={() => setTemaPreferido(opcao.valor)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: selecionada }}
+                className={`min-h-11 flex-row items-center gap-1.5 rounded-md border px-4 ${
+                  selecionada ? 'border-primary bg-primary/10' : 'border-slate-200'
+                }`}
+              >
+                <Ionicons
+                  name={opcao.icone}
+                  size={16}
+                  color={selecionada ? cores.primary : cores.mutado}
+                />
+                <Text
+                  className={`text-sm ${selecionada ? 'font-semibold text-primary' : 'text-slate-900'}`}
+                >
+                  {opcao.rotulo}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </Secao>
+
       <Secao titulo="Privacidade">
         <View className="flex-row items-center justify-between">
           <View className="flex-1 flex-row items-center gap-3">
