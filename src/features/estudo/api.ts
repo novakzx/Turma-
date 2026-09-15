@@ -115,9 +115,25 @@ export async function escolherFotoAnotacao(): Promise<FotoEscolhida | null> {
 
   const resultado = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'] });
   if (resultado.canceled || resultado.assets.length === 0) return null;
+  const asset = resultado.assets[0];
 
-  const contexto = ImageManipulator.manipulate(resultado.assets[0].uri);
-  contexto.resize({ width: LARGURA_MAXIMA_FOTO, height: null });
+  const contexto = ImageManipulator.manipulate(asset.uri);
+  // BUG real relatado pelo usuário ("The index is not in the allowed
+  // range" ao anexar foto no PWA/iPhone): `height: null` (deixar a lib
+  // calcular a proporção sozinha) funciona no nativo, mas a
+  // implementação WEB do `expo-image-manipulator` usa `<canvas>` por
+  // baixo — passar altura `null`/inválida pro `drawImage` do canvas
+  // lança `IndexSizeError: The index is not in the allowed range`
+  // (bug conhecido da lib no alvo web, não documentado pela Expo).
+  // Corrigido calculando a altura à mão a partir da proporção original
+  // (`asset.width`/`height`, que o picker já devolve) — só
+  // redimensiona se a foto for maior que o alvo E o picker informou
+  // dimensão de verdade (pode vir `0` se o sistema não informar, nesse
+  // caso só comprime sem redimensionar em vez de arriscar quebrar).
+  if (asset.width > 0 && asset.width > LARGURA_MAXIMA_FOTO) {
+    const alturaProporcional = Math.round(asset.height * (LARGURA_MAXIMA_FOTO / asset.width));
+    contexto.resize({ width: LARGURA_MAXIMA_FOTO, height: alturaProporcional });
+  }
   const renderizada = await contexto.renderAsync();
   const salva = await renderizada.saveAsync({
     format: SaveFormat.JPEG,
