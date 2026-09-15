@@ -12,7 +12,7 @@ import '@/features/widget/task';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ActivityIndicator, Platform, View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -21,7 +21,6 @@ import { BannerOffline } from '@/components/ui/BannerOffline';
 import { PromptInstalarPWA } from '@/components/ui/PromptInstalarPWA';
 import { AuthProvider, useAuth } from '@/features/auth/AuthProvider';
 import { TemaProvider, useTema } from '@/features/configuracoes/TemaProvider';
-import { jaLancou } from '@/lib/lancamento';
 import { OFFLINE_PERSIST_OPTIONS } from '@/lib/offlinePersist';
 import { queryClient } from '@/lib/queryClient';
 
@@ -48,14 +47,7 @@ function RootNavigator() {
   const { escuro, cores } = useTema();
   const { session, profile, isLoadingSession, isLoadingProfile } = useAuth();
 
-  // Site "em breve" (pedido do usuário, até o lançamento em 20/09/2026):
-  // só no alvo web -- o app nativo continua acessível normalmente pra
-  // quem está testando/desenvolvendo, já que ninguém usa em produção
-  // ainda. Ver `src/lib/lancamento.ts`; não é um controle de segurança,
-  // só decide qual grupo de rotas mostrar.
-  const preLancamento = Platform.OS === 'web' && !jaLancou();
-
-  if (!preLancamento && (isLoadingSession || (!!session && isLoadingProfile))) {
+  if (isLoadingSession || (!!session && isLoadingProfile)) {
     return (
       <View className="flex-1 items-center justify-center bg-background">
         <ActivityIndicator color={cores.primary} />
@@ -82,8 +74,8 @@ function RootNavigator() {
           que o tema muda de fato — antes ficava travado em "dark" porque
           o fundo também estava travado em claro. */}
       <StatusBar style={escuro ? 'light' : 'dark'} />
-      {!preLancamento && <BannerOffline />}
-      {!preLancamento && <PromptInstalarPWA />}
+      <BannerOffline />
+      <PromptInstalarPWA />
       <View className="flex-1">
         <Stack
           screenOptions={{
@@ -99,28 +91,21 @@ function RootNavigator() {
             contentStyle: { backgroundColor: escuro ? '#0B0E14' : '#FAF8FF' },
           }}
         >
-          <Stack.Protected guard={preLancamento}>
-            <Stack.Screen name="(lancamento)" options={{ headerShown: false }} />
-          </Stack.Protected>
-          <Stack.Protected guard={!preLancamento && !session}>
+          <Stack.Protected guard={!session}>
             <Stack.Screen name="(auth)" options={{ headerShown: false }} />
           </Stack.Protected>
-          <Stack.Protected guard={!preLancamento && !!session && !cadastroCompleto}>
+          <Stack.Protected guard={!!session && !cadastroCompleto}>
             <Stack.Screen name="(completar-cadastro)" options={{ headerShown: false }} />
           </Stack.Protected>
-          <Stack.Protected
-            guard={!preLancamento && !!session && cadastroCompleto && !onboardingCompleto}
-          >
+          <Stack.Protected guard={!!session && cadastroCompleto && !onboardingCompleto}>
             <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
           </Stack.Protected>
-          <Stack.Protected
-            guard={!preLancamento && !!session && cadastroCompleto && onboardingCompleto}
-          >
+          <Stack.Protected guard={!!session && cadastroCompleto && onboardingCompleto}>
             <Stack.Screen name="(app)" options={{ headerShown: false }} />
           </Stack.Protected>
         </Stack>
       </View>
-      {!preLancamento && <AvisosWeb />}
+      <AvisosWeb />
     </View>
   );
 }
