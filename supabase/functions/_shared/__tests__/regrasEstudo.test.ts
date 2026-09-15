@@ -88,11 +88,11 @@ describe('montarPromptVisao', () => {
 });
 
 describe('MODELO_VISAO', () => {
-  // Trocado de um modelo Llama Vision da Meta pra este — o Llama exige
-  // aceitar uma licença que declara "não domiciliado na União Europeia",
-  // falso pra este projeto (Turma+ é de Portugal). Ver comentário na
-  // constante — nunca reverter pra um modelo Llama Vision da Meta.
-  it('é o LLaVA (não um modelo Llama Vision da Meta, por causa da licença EU)', () => {
-    expect(MODELO_VISAO).toBe('@cf/llava-hf/llava-1.5-7b-hf');
+  // Quarta tentativa: Llama Vision da Meta (licença EU) → LLaVA
+  // (Cloudflare, ruim lendo texto) → Moondream (Cloudflare, endpoint
+  // nunca respondia) → gemma4:31b (Ollama Cloud, pedido do usuário,
+  // testado ao vivo lendo 100% certo). Ver comentário na constante.
+  it('é o gemma4:31b via Ollama Cloud (não mais Cloudflare Workers AI)', () => {
+    expect(MODELO_VISAO).toBe('gemma4:31b');
   });
 });

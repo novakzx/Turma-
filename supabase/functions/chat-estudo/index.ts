@@ -5,6 +5,7 @@
 // `regrasEstudo.ts`). O app nunca vê `CF_API_TOKEN`; ela só existe como
 // secret desta função (`supabase secrets set CF_API_TOKEN=...` e
 // `CF_ACCOUNT_ID=...`).
+import { encodeBase64 } from 'jsr:@std/encoding@1/base64';
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
 import {
@@ -18,22 +19,29 @@ import {
 // Bucket privado das fotos de anotação (ver migration
 // `estudo_fotos_anotacao`) — path sempre "{aluno_id}/arquivo.ext".
 const BUCKET_FOTOS_ESTUDO = 'estudo-fotos';
-// O endpoint de visão da Cloudflare quer o campo `image` como array de
-// bytes (`[137, 80, 78, ...]`), não base64 (achado testando ao vivo —
-// ver comentário mais abaixo) — isso infla o tamanho uns 4x em JSON
-// (cada byte vira 1-3 dígitos + vírgula), bem mais caro que os ~33% do
-// base64. 2 MB de foto já viram ~8 MB de corpo de requisição, então o
-// teto aqui é bem mais conservador do que seria com base64. Ainda é
-// generoso pra uma foto de caderno comprimida com nitidez razoável;
-// acima disso, devolve um erro amigável em vez de mandar um payload
-// gigante pra Cloudflare e receber um erro obscuro de volta.
-const FOTO_TAMANHO_MAXIMO_BYTES = 2 * 1024 * 1024;
+// O Ollama Cloud (provedor do modelo de visão atual, ver `MODELO_VISAO`
+// em `regrasEstudo.ts`) quer a imagem em base64 puro (sem prefixo
+// `data:...;base64,`) dentro de `messages[].images` — infla o tamanho
+// uns 33% em JSON, bem menos que os ~300% do array de bytes que o
+// modelo anterior (LLaVA, na Cloudflare) exigia. 4 MB de foto original
+// vira uns 5,5 MB de corpo de requisição, folga generosa pra uma foto
+// de caderno comprimida no cliente (`escolherFotoAnotacao`,
+// tipicamente bem menor que isso). Acima disso, devolve um erro
+// amigável em vez de mandar um payload gigante e receber um erro
+// obscuro de volta.
+const FOTO_TAMANHO_MAXIMO_BYTES = 4 * 1024 * 1024;
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const CF_ACCOUNT_ID = Deno.env.get('CF_ACCOUNT_ID');
 const CF_API_TOKEN = Deno.env.get('CF_API_TOKEN');
+// Provedor separado do texto (Cloudflare acima) — só pro modelo de
+// visão, pedido do próprio usuário ("e um modelo ollama como posso
+// usar"). Chave gerada na conta Ollama Cloud dele, guardada só como
+// secret desta função (`supabase secrets set OLLAMA_API_KEY=...`),
+// nunca no código nem no app.
+const OLLAMA_API_KEY = Deno.env.get('OLLAMA_API_KEY');
 
 const HISTORICO_MAXIMO = 20;
 const MENSAGEM_TAMANHO_MAXIMO = 4000;
@@ -145,16 +153,19 @@ Deno.serve(async (req) => {
     // sem essa checagem um payload forjado com o caminho de outro aluno
     // faria esta função ler a foto de qualquer um.
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
-    // Array de bytes (`number[]`), não base64 — achado testando ao vivo:
-    // o endpoint nativo `/ai/run/{modelo}` recusa base64 pra este campo
-    // ("Tensor error: failed to decode u8"), mesmo a documentação da
-    // Cloudflare mostrando um exemplo com base64 em outro lugar (docs
-    // inconsistentes entre si). `Array.from(bytes)` é o formato
-    // confirmado funcionando pelo endpoint de verdade.
-    let fotoBytes: number[] | null = null;
+    let fotoBase64: string | null = null;
     if (fotoCaminho) {
       if (!fotoCaminho.startsWith(`${user.id}/`)) {
         return respostaJson({ error: 'Foto inválida.' }, 400, origin);
+      }
+      if (!OLLAMA_API_KEY) {
+        // Não é um erro de código — a chave da Ollama Cloud ainda não
+        // foi configurada (ver comentário em `OLLAMA_API_KEY` acima).
+        return respostaJson(
+          { error: 'IA de visão ainda não foi configurada (falta OLLAMA_API_KEY).' },
+          503,
+          origin,
+        );
       }
       const { data: fotoBlob, error: fotoError } = await admin.storage
         .from(BUCKET_FOTOS_ESTUDO)
@@ -169,7 +180,7 @@ Deno.serve(async (req) => {
           origin,
         );
       }
-      fotoBytes = Array.from(new Uint8Array(await fotoBlob.arrayBuffer()));
+      fotoBase64 = encodeBase64(await fotoBlob.arrayBuffer());
     }
 
     // Assinante do Turma+ Premium (R$1,99/mês, ver migration
@@ -250,57 +261,51 @@ Deno.serve(async (req) => {
       content: m.conteudo as string,
     }));
 
-    const modelo = fotoBytes ? MODELO_VISAO : escolherModelo(modo);
+    const modelo = fotoBase64 ? MODELO_VISAO : escolherModelo(modo);
     let textoResposta = '';
 
-    if (fotoBytes) {
-      // Endpoint NATIVO da Cloudflare (`/ai/run/{modelo}`), não o
-      // compatível OpenAI usado abaixo pro texto puro — o modelo de
-      // visão não é exposto por ali. Sem histórico de conversa aqui
-      // (o endpoint não tem conceito de "mensagens anteriores" pra
-      // esse modelo) — cada foto é uma pergunta isolada, o que é
-      // aceitável: ninguém manda foto atrás de foto na mesma dúvida.
+    if (fotoBase64) {
+      // API própria da Ollama Cloud (`ollama.com/api/chat`), não a
+      // Cloudflare usada pro texto abaixo — provedor diferente pro
+      // modelo de visão (ver `OLLAMA_API_KEY` e `MODELO_VISAO`). Sem
+      // histórico de conversa aqui, mesma razão de antes — cada foto é
+      // uma pergunta isolada, ninguém manda foto atrás de foto na
+      // mesma dúvida.
       const promptVisao = montarPromptVisao({ nomeMateria: materia.nome, pergunta: mensagem });
 
-      async function chamarCloudflareVisao() {
-        return fetch(
-          `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/ai/run/${MODELO_VISAO}`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${CF_API_TOKEN}`,
-            },
-            body: JSON.stringify({ image: fotoBytes, prompt: promptVisao }),
+      async function chamarOllamaVisao() {
+        return fetch('https://ollama.com/api/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${OLLAMA_API_KEY}`,
           },
-        );
+          body: JSON.stringify({
+            model: MODELO_VISAO,
+            messages: [{ role: 'user', content: promptVisao, images: [fotoBase64] }],
+            stream: false,
+          }),
+        });
       }
 
-      let respostaCloudflare = await chamarCloudflareVisao();
-      if (respostaCloudflare.status === 429 || respostaCloudflare.status === 503) {
+      let respostaOllama = await chamarOllamaVisao();
+      if (respostaOllama.status === 429 || respostaOllama.status === 503) {
         await new Promise((resolve) => setTimeout(resolve, 1500));
-        respostaCloudflare = await chamarCloudflareVisao();
+        respostaOllama = await chamarOllamaVisao();
       }
 
-      if (!respostaCloudflare.ok) {
-        const corpo = await respostaCloudflare.text();
-        console.error(
-          'chat-estudo: Cloudflare Workers AI (visão) recusou',
-          respostaCloudflare.status,
-          corpo,
-        );
+      if (!respostaOllama.ok) {
+        const corpo = await respostaOllama.text();
+        console.error('chat-estudo: Ollama Cloud (visão) recusou', respostaOllama.status, corpo);
         const mensagemErro =
-          respostaCloudflare.status === 429 || respostaCloudflare.status === 503
+          respostaOllama.status === 429 || respostaOllama.status === 503
             ? 'A IA está sobrecarregada agora — tenta de novo em alguns segundos.'
             : 'Não deu pra falar com a IA agora.';
         return respostaJson({ error: mensagemErro }, 502, origin);
       }
 
-      const dadosResposta = await respostaCloudflare.json();
-      textoResposta =
-        typeof dadosResposta?.result === 'string'
-          ? dadosResposta.result
-          : (dadosResposta?.result?.response ?? dadosResposta?.result?.description ?? '');
+      const dadosResposta = await respostaOllama.json();
+      textoResposta = dadosResposta?.message?.content ?? '';
     } else {
       const systemPrompt = montarPromptSistema({ nomeMateria: materia.nome, modo });
 
@@ -354,7 +359,7 @@ Deno.serve(async (req) => {
     }
 
     if (!textoResposta) {
-      console.error('chat-estudo: Cloudflare Workers AI sem texto na resposta');
+      console.error('chat-estudo: IA sem texto na resposta');
       return respostaJson({ error: 'A IA não conseguiu responder dessa vez.' }, 502, origin);
     }
 
