@@ -19,8 +19,8 @@ export function AnelStory({
 }) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
-  const corAnel = isDark ? '#A78BFA' : '#8B5CF6';
-  const fundoRespiro = '#FAF8FF';
+  const corAnel = isDark ? '#6D93C9' : '#385898';
+  const fundoRespiro = isDark ? '#0A0A0A' : '#FAFAFA';
   const tamanhoRespiro = tamanho + espessura;
   const tamanhoAnel = tamanhoRespiro + espessura;
 

@@ -97,7 +97,7 @@ export function PromptInstalarPWA() {
 
   return (
     <View className="mx-4 mt-4 flex-row items-start gap-3 rounded-xl border border-primary/30 bg-primary/10 p-4 dark:border-primary-dark/30 dark:bg-primary-dark/10">
-      <Ionicons name="phone-portrait-outline" size={20} color="#8B5CF6" />
+      <Ionicons name="phone-portrait-outline" size={20} color="#385898" />
       <View className="flex-1 gap-2">
         <Text className="text-sm font-semibold text-slate-900">
           Adicione o Turma+ à tela de início

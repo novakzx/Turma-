@@ -20,7 +20,7 @@ function CartaoSlide({
 }) {
   return (
     <View style={{ width: LARGURA_TELA }} className="flex-1 items-center justify-center p-4">
-      <View className="w-full max-w-md gap-4 rounded-2xl border border-slate-200 bg-surface p-5 shadow-sm dark:bg-surface-dark">
+      <View className="w-full max-w-md gap-4 rounded-lg border border-slate-200 bg-surface p-5 dark:bg-surface-dark">
         {imagemUrl ? (
           <Image
             source={{ uri: imagemUrl }}
@@ -30,7 +30,7 @@ function CartaoSlide({
           />
         ) : (
           <View className="h-48 w-full items-center justify-center rounded-xl bg-slate-100">
-            <Ionicons name="image-outline" size={32} color="#94A3B8" />
+            <Ionicons name="image-outline" size={32} color="#969696" />
           </View>
         )}
         <Text className="text-lg font-bold text-slate-900">{titulo}</Text>

@@ -132,7 +132,7 @@ export default function CadastroScreen() {
     return (
       <View className="flex-1 items-center justify-center gap-4 bg-background px-8 dark:bg-background-dark">
         <View className="h-20 w-20 items-center justify-center rounded-full bg-primary/10 dark:bg-primary-dark/10">
-          <Ionicons name="mail-unread-outline" size={36} color="#8B5CF6" />
+          <Ionicons name="mail-unread-outline" size={36} color="#385898" />
         </View>
         <Text className="text-center text-2xl font-bold text-primary dark:text-primary-dark">
           Confirme seu e-mail

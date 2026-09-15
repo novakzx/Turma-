@@ -78,7 +78,7 @@ function LinhaMensagem({
           <BolhaAudio
             caminho={mensagem.midia_url}
             obterUrl={obterUrlAssinadaSala}
-            corIcone={ehPropria ? '#FFFFFF' : '#8B5CF6'}
+            corIcone={ehPropria ? '#FFFFFF' : '#385898'}
             corTexto={ehPropria ? 'text-white' : 'text-slate-900'}
           />
         ) : null}
@@ -230,7 +230,7 @@ export default function SalaChat() {
             <Ionicons
               name={sala.trancada ? 'lock-closed' : 'lock-open-outline'}
               size={16}
-              color="#64748B"
+              color="#969696"
             />
             <Text className="text-sm text-slate-500">
               {sala.trancada ? 'Sala trancada' : 'Sala aberta'}

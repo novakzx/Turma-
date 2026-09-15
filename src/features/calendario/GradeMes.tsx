@@ -21,8 +21,8 @@ const NOMES_MES = [
 ];
 
 const COR_TIPO: Record<EventoCalendario['tipo'], string> = {
-  nacional: '#8B5CF6',
-  letivo: '#2DD4BF',
+  nacional: '#385898',
+  letivo: '#385898',
   avaliacao: '#F87171',
   regional: '#3B82F6',
   municipal: '#F59E0B',
@@ -90,7 +90,7 @@ export function GradeMes({ eventos }: { eventos: EventoCalendario[] }) {
   );
 
   return (
-    <View className="gap-3 rounded-2xl bg-surface p-4 shadow-sm dark:bg-surface-dark">
+    <View className="gap-3 rounded-lg border border-slate-200 bg-surface p-4 dark:bg-surface-dark">
       <View className="flex-row items-center justify-between">
         <Text className="text-base font-bold text-slate-900">
           {NOMES_MES[mesExibido.mes]} {mesExibido.ano}
@@ -102,7 +102,7 @@ export function GradeMes({ eventos }: { eventos: EventoCalendario[] }) {
             accessibilityLabel="Mês anterior"
             className="h-8 w-8 items-center justify-center rounded-full"
           >
-            <Ionicons name="chevron-back" size={16} color="#464555" />
+            <Ionicons name="chevron-back" size={16} color="#424242" />
           </Pressable>
           <Pressable
             onPress={() => mudarMes(1)}
@@ -110,7 +110,7 @@ export function GradeMes({ eventos }: { eventos: EventoCalendario[] }) {
             accessibilityLabel="Próximo mês"
             className="h-8 w-8 items-center justify-center rounded-full"
           >
-            <Ionicons name="chevron-forward" size={16} color="#464555" />
+            <Ionicons name="chevron-forward" size={16} color="#424242" />
           </Pressable>
         </View>
       </View>
@@ -155,7 +155,7 @@ export function GradeMes({ eventos }: { eventos: EventoCalendario[] }) {
       </View>
 
       {tiposUsados.length > 0 ? (
-        <View className="flex-row flex-wrap gap-x-4 gap-y-1 border-t border-slate-100 pt-3">
+        <View className="flex-row flex-wrap gap-x-4 gap-y-1 border-t border-slate-200 pt-3">
           {tiposUsados.map((tipo) => (
             <View key={tipo} className="flex-row items-center gap-1.5">
               <View className="h-2 w-2 rounded-full" style={{ backgroundColor: COR_TIPO[tipo] }} />

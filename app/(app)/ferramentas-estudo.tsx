@@ -27,10 +27,10 @@ function CartaoFerramenta({
   children: React.ReactNode;
 }) {
   return (
-    <View className="gap-3 rounded-2xl border border-slate-100 bg-surface p-4 shadow-sm dark:border-slate-100 dark:bg-surface-dark">
+    <View className="gap-3 rounded-lg border border-slate-200 bg-surface p-4 dark:border-slate-200 dark:bg-surface-dark">
       <View className="flex-row items-center gap-2">
         <View className="h-9 w-9 items-center justify-center rounded-full bg-primary/10 dark:bg-primary-dark/10">
-          <Ionicons name={icone} size={18} color="#8B5CF6" />
+          <Ionicons name={icone} size={18} color="#385898" />
         </View>
         <View className="flex-1">
           <Text className="text-base font-semibold text-slate-900">{titulo}</Text>

@@ -103,7 +103,7 @@ export function CaixaMensagem({
   if (desabilitado) {
     return (
       <View className="flex-row items-center gap-1.5 border-t border-slate-200 p-3">
-        <Ionicons name="information-circle-outline" size={14} color="#94A3B8" />
+        <Ionicons name="information-circle-outline" size={14} color="#969696" />
         <Text className="flex-1 text-xs text-slate-500">{mensagemDesabilitado}</Text>
       </View>
     );
@@ -131,7 +131,7 @@ export function CaixaMensagem({
             accessibilityLabel="Enviar áudio"
             className="min-h-11 min-w-11 items-center justify-center"
           >
-            <Ionicons name="checkmark-circle" size={28} color="#8B5CF6" />
+            <Ionicons name="checkmark-circle" size={28} color="#385898" />
           </Pressable>
         </View>
       ) : (
@@ -146,14 +146,14 @@ export function CaixaMensagem({
               <Ionicons
                 name={mostrarEmoji ? 'happy' : 'happy-outline'}
                 size={22}
-                color={mostrarEmoji ? '#8B5CF6' : '#94A3B8'}
+                color={mostrarEmoji ? '#385898' : '#969696'}
               />
             </Pressable>
             <TextInput
               value={texto}
               onChangeText={setTexto}
               placeholder={placeholder}
-              placeholderTextColor="#64748B"
+              placeholderTextColor="#969696"
               multiline
               className="max-h-28 flex-1 py-2 text-base text-slate-900"
               onFocus={() => setMostrarEmoji(false)}
@@ -164,7 +164,7 @@ export function CaixaMensagem({
               accessibilityLabel="Mandar foto"
               className="min-h-11 min-w-11 items-center justify-center"
             >
-              <Ionicons name="image-outline" size={22} color="#94A3B8" />
+              <Ionicons name="image-outline" size={22} color="#969696" />
             </Pressable>
           </View>
 

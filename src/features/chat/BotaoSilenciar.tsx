@@ -31,7 +31,7 @@ export function BotaoSilenciar({ perfilId }: { perfilId: string }) {
   if (feito) {
     return (
       <View className="flex-row items-center gap-1">
-        <Ionicons name="volume-mute" size={14} color="#94A3B8" />
+        <Ionicons name="volume-mute" size={14} color="#969696" />
         <Text className="text-xs text-slate-500">Usuário silenciado</Text>
       </View>
     );
@@ -45,7 +45,7 @@ export function BotaoSilenciar({ perfilId }: { perfilId: string }) {
         accessibilityLabel="Silenciar usuário"
         className="min-h-11 min-w-11 flex-row items-center gap-1 px-2"
       >
-        <Ionicons name="volume-mute-outline" size={14} color="#94A3B8" />
+        <Ionicons name="volume-mute-outline" size={14} color="#969696" />
         <Text className="text-xs text-slate-500">Silenciar</Text>
       </Pressable>
     );

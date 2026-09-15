@@ -37,59 +37,72 @@
    aplicado na raiz do app (`TemaProvider`), que é a API oficial da lib
    pra variável de CSS multiplataforma (funciona nos dois alvos, ao
    contrário de `dark:`). */
+/* Paleta "newspaper column" (pedido do usuário — "queria um design mais
+   simples tipo destes arquivos que mandei", referência: Threads —
+   quase monocromática, um único azul cromático (Meta Blue) pra link/
+   ênfase, nada de gradiente ou preenchimento colorido. `accent` aponta
+   pra MESMA variável que `primary` de propósito — a referência é
+   explícita: "the system is monochrome plus one blue", uma segunda cor
+   cromática quebraria a disciplina. `success`/`danger` continuam à
+   parte (vermelho do coração curtido, verde de sucesso) — são cores
+   FUNCIONAIS de feedback, não cromatismo de marca, a referência não
+   fala sobre elas. Dark mode não faz parte da referência (ela é
+   "Theme: light" só) — mantido como recurso já existente e testado do
+   app, com uma paleta escura equivalente (mesmo azul, fundo quase
+   preto) em vez de removido. */
 :root {
-  --color-background: #faf8ff;
-  --color-surface: #ffffff;
-  --color-primary: #8b5cf6;
-  --color-accent: #2dd4bf;
+  --color-background: #fafafa;
+  --color-surface: #fafafa;
+  --color-primary: #385898;
+  --color-accent: #385898;
   --color-success: #22c55e;
   --color-danger: #f87171;
-  --color-slate-100: #f1f5f9;
-  --color-slate-200: #e2e8f0;
-  --color-slate-300: #cbd5e1;
-  --color-slate-500: #64748b;
-  --color-slate-600: #475569;
-  --color-slate-700: #334155;
-  --color-slate-800: #1e293b;
-  --color-slate-900: #0f172a;
+  --color-slate-100: #efefef;
+  --color-slate-200: #d5d5d5;
+  --color-slate-300: #d5d5d5;
+  --color-slate-500: #969696;
+  --color-slate-600: #969696;
+  --color-slate-700: #424242;
+  --color-slate-800: #424242;
+  --color-slate-900: #000000;
   color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
-    --color-background: #0b0e14;
-    --color-surface: #171b26;
-    --color-primary: #a78bfa;
-    --color-accent: #5eead4;
+    --color-background: #0a0a0a;
+    --color-surface: #141414;
+    --color-primary: #6d93c9;
+    --color-accent: #6d93c9;
     --color-success: #4ade80;
     --color-danger: #fca5a5;
-    --color-slate-100: #1c2230;
-    --color-slate-200: #262d39;
-    --color-slate-300: #334155;
-    --color-slate-500: #98a1af;
-    --color-slate-600: #adb5c2;
-    --color-slate-700: #c3cad4;
-    --color-slate-800: #e2e8f0;
-    --color-slate-900: #e8ebf0;
+    --color-slate-100: #1a1a1a;
+    --color-slate-200: #2a2a2a;
+    --color-slate-300: #3a3a3a;
+    --color-slate-500: #8a8a8a;
+    --color-slate-600: #9a9a9a;
+    --color-slate-700: #b5b5b5;
+    --color-slate-800: #d5d5d5;
+    --color-slate-900: #f5f5f5;
     color-scheme: dark;
   }
 }
 
 :root[data-theme='dark'] {
-  --color-background: #0b0e14;
-  --color-surface: #171b26;
-  --color-primary: #a78bfa;
-  --color-accent: #5eead4;
+  --color-background: #0a0a0a;
+  --color-surface: #141414;
+  --color-primary: #6d93c9;
+  --color-accent: #6d93c9;
   --color-success: #4ade80;
   --color-danger: #fca5a5;
-  --color-slate-100: #1c2230;
-  --color-slate-200: #262d39;
-  --color-slate-300: #334155;
-  --color-slate-500: #98a1af;
-  --color-slate-600: #adb5c2;
-  --color-slate-700: #c3cad4;
-  --color-slate-800: #e2e8f0;
-  --color-slate-900: #e8ebf0;
+  --color-slate-100: #1a1a1a;
+  --color-slate-200: #2a2a2a;
+  --color-slate-300: #3a3a3a;
+  --color-slate-500: #8a8a8a;
+  --color-slate-600: #9a9a9a;
+  --color-slate-700: #b5b5b5;
+  --color-slate-800: #d5d5d5;
+  --color-slate-900: #f5f5f5;
   color-scheme: dark;
 }
 

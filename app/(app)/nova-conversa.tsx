@@ -177,7 +177,7 @@ export default function NovaConversa() {
                 <FotoPerfil caminho={pessoa.foto_url} nome={pessoa.nome} tamanho={40} />
                 <Text className="flex-1 text-base text-slate-900">{pessoa.nome}</Text>
                 {modoGrupo && selecionado ? (
-                  <Ionicons name="checkmark-circle" size={20} color="#8B5CF6" />
+                  <Ionicons name="checkmark-circle" size={20} color="#385898" />
                 ) : null}
               </Pressable>
             );

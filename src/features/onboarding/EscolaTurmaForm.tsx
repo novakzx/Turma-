@@ -38,10 +38,10 @@ function ItemSelecionavel({
       }`}
     >
       {icone ? (
-        <Ionicons name={icone} size={16} color={selecionado ? '#8B5CF6' : '#94A3B8'} />
+        <Ionicons name={icone} size={16} color={selecionado ? '#385898' : '#969696'} />
       ) : null}
       <Text className="flex-1 text-base text-slate-900">{label}</Text>
-      {selecionado ? <Ionicons name="checkmark-circle" size={20} color="#8B5CF6" /> : null}
+      {selecionado ? <Ionicons name="checkmark-circle" size={20} color="#385898" /> : null}
     </Pressable>
   );
 }
@@ -196,11 +196,11 @@ export function EscolaTurmaForm({
     <View className="gap-4">
       <View className="gap-2">
         <View className="flex-row items-center gap-1.5">
-          <Ionicons name="business-outline" size={16} color="#64748B" />
+          <Ionicons name="business-outline" size={16} color="#969696" />
           <Text className="text-sm font-medium text-slate-700">Escola</Text>
         </View>
         {escolasQuery.isLoading ? (
-          <ActivityIndicator color="#8B5CF6" />
+          <ActivityIndicator color="#385898" />
         ) : escolasQuery.isError ? (
           <Text className="text-danger dark:text-danger-dark">
             Não deu pra carregar as escolas. Tenta de novo mais tarde.
@@ -256,7 +256,7 @@ export function EscolaTurmaForm({
       {escolaId && !dominioNaoBate ? (
         <View className="gap-2">
           <View className="flex-row items-center gap-1.5">
-            <Ionicons name="card-outline" size={16} color="#64748B" />
+            <Ionicons name="card-outline" size={16} color="#969696" />
             <Text className="text-sm font-medium text-slate-700">Verificação de estudante</Text>
           </View>
           <TextField
@@ -272,11 +272,11 @@ export function EscolaTurmaForm({
       {escolaId && !dominioNaoBate ? (
         <View className="gap-2">
           <View className="flex-row items-center gap-1.5">
-            <Ionicons name="people-outline" size={16} color="#64748B" />
+            <Ionicons name="people-outline" size={16} color="#969696" />
             <Text className="text-sm font-medium text-slate-700">Turma</Text>
           </View>
           {turmasQuery.isLoading ? (
-            <ActivityIndicator color="#8B5CF6" />
+            <ActivityIndicator color="#385898" />
           ) : turmasQuery.isError ? (
             <Text className="text-danger dark:text-danger-dark">
               Não deu pra carregar as turmas. Tenta de novo mais tarde.
@@ -309,7 +309,7 @@ export function EscolaTurmaForm({
       {precisaPerguntarRepeticao ? (
         <View className="gap-3 rounded-lg border border-accent/30 bg-accent/10 p-3 dark:border-accent-dark/30 dark:bg-accent-dark/10">
           <View className="flex-row items-start gap-2">
-            <Ionicons name="help-circle-outline" size={18} color="#2DD4BF" />
+            <Ionicons name="help-circle-outline" size={18} color="#385898" />
             <Text className="flex-1 text-sm text-slate-700">
               A idade que você informou no cadastro não bate com o {serieAnoParaChecar} — você
               repetiu de ano?
@@ -378,7 +378,7 @@ export function EscolaTurmaForm({
       {turmaEhDeOutraPessoa ? (
         pedidoQuery.data ? (
           <View className="flex-row items-center gap-2 rounded-lg bg-accent/10 p-3 dark:bg-accent-dark/10">
-            <Ionicons name="time-outline" size={18} color="#2DD4BF" />
+            <Ionicons name="time-outline" size={18} color="#385898" />
             <Text className="flex-1 text-sm text-accent dark:text-accent-dark">
               Pedido enviado — aguardando o dono da turma aprovar.
             </Text>
@@ -391,13 +391,13 @@ export function EscolaTurmaForm({
               accessibilityRole="button"
               accessibilityLabel="Verificar de novo"
             >
-              <Ionicons name="refresh" size={18} color="#2DD4BF" />
+              <Ionicons name="refresh" size={18} color="#385898" />
             </Pressable>
           </View>
         ) : (
           <View className="gap-2 rounded-lg border border-slate-200 p-3">
             <View className="flex-row items-center gap-1.5">
-              <Ionicons name="lock-closed-outline" size={14} color="#94A3B8" />
+              <Ionicons name="lock-closed-outline" size={14} color="#969696" />
               <Text className="flex-1 text-xs text-slate-500">
                 Essa turma foi criada por outro usuário — só o dono dela aprova quem entra.
               </Text>

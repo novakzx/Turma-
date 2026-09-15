@@ -43,7 +43,7 @@ function LinhaPerfil({
   acao?: React.ReactNode;
 }) {
   return (
-    <View className="flex-row items-center gap-3 rounded-xl border border-slate-100 bg-surface p-3 dark:border-slate-100 dark:bg-surface-dark">
+    <View className="flex-row items-center gap-3 rounded-lg border border-slate-200 bg-surface p-3 dark:border-slate-200 dark:bg-surface-dark">
       {/* `acao` (quando presente) é outro `Pressable` — não pode ficar
           dentro deste, senão vira `<button>` dentro de `<button>` no web
           (HTML inválido, hidratação quebra — achado testando ao vivo).
@@ -173,7 +173,7 @@ export default function Notificacoes() {
   if (carregando) {
     return (
       <View className="flex-1 items-center justify-center bg-background dark:bg-background-dark">
-        <ActivityIndicator color="#8B5CF6" />
+        <ActivityIndicator color="#385898" />
       </View>
     );
   }

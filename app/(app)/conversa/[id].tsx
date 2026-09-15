@@ -154,7 +154,7 @@ function LinhaMensagem({
           <BolhaAudio
             caminho={mensagem.midia_url}
             obterUrl={obterUrlAssinadaConversa}
-            corIcone={souEu ? '#FFFFFF' : '#8B5CF6'}
+            corIcone={souEu ? '#FFFFFF' : '#385898'}
             corTexto={souEu ? 'text-white' : 'text-slate-900'}
           />
         ) : null}
@@ -220,7 +220,7 @@ function CabecalhoConversa({
     >
       {ehGrupo ? (
         <View className="h-8 w-8 items-center justify-center rounded-full bg-accent/10 dark:bg-accent-dark/10">
-          <Ionicons name="people" size={16} color="#2DD4BF" />
+          <Ionicons name="people" size={16} color="#385898" />
         </View>
       ) : (
         <FotoPerfil caminho={foto ?? null} nome={nome} tamanho={32} />
@@ -398,7 +398,7 @@ export default function DetalheConversa() {
                   accessibilityLabel="Participantes do grupo"
                   className="min-h-11 min-w-11 items-center justify-center"
                 >
-                  <Ionicons name="people-outline" size={22} color="#8B5CF6" />
+                  <Ionicons name="people-outline" size={22} color="#385898" />
                 </Pressable>
               )
             : undefined,

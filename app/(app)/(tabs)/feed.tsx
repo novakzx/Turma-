@@ -69,7 +69,7 @@ export default function Feed() {
             <RefreshControl
               refreshing={postsQuery.isRefetching}
               onRefresh={() => postsQuery.refetch()}
-              tintColor="#8B5CF6"
+              tintColor="#385898"
             />
           }
           ListHeaderComponent={
@@ -80,17 +80,14 @@ export default function Feed() {
             </>
           }
           renderItem={({ item, index }) => (
-            <View className="px-4">
-              <CartaoPost
-                post={item}
-                index={index}
-                curtido={likesQuery.data?.has(item.id) ?? false}
-                onCurtir={() => curtirMutation.mutate(item.id)}
-                onDescurtir={() => descurtirMutation.mutate(item.id)}
-              />
-            </View>
+            <CartaoPost
+              post={item}
+              index={index}
+              curtido={likesQuery.data?.has(item.id) ?? false}
+              onCurtir={() => curtirMutation.mutate(item.id)}
+              onDescurtir={() => descurtirMutation.mutate(item.id)}
+            />
           )}
-          ItemSeparatorComponent={() => <View className="h-3" />}
         />
       )}
 

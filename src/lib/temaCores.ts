@@ -4,41 +4,44 @@
  * dois lugares, já que um é CSS puro e o outro é `vars()` do NativeWind
  * pro nativo — não dá pra compartilhar o arquivo entre os dois formatos).
  *
- * Escuro reaproveita a paleta "dark-first" que o app já teve entre as
- * fases 3 e 4 (antes do redesign claro v5) — não inventada do zero.
+ * Paleta "newspaper column" (pedido do usuário — design de referência
+ * quase monocromático, um único azul (Meta Blue) de ênfase, ver
+ * `global.css` pro comentário completo). Escuro é um espelho monocromático
+ * da mesma ideia (fundo quase preto, mesmo azul clareado pra contraste),
+ * não faz parte da referência em si (que é só "Theme: light").
  */
 export const CORES_CLARO = {
-  '--color-background': '#FAF8FF',
-  '--color-surface': '#FFFFFF',
-  '--color-primary': '#8B5CF6',
-  '--color-accent': '#2DD4BF',
+  '--color-background': '#FAFAFA',
+  '--color-surface': '#FAFAFA',
+  '--color-primary': '#385898',
+  '--color-accent': '#385898',
   '--color-success': '#22C55E',
   '--color-danger': '#F87171',
-  '--color-slate-100': '#F1F5F9',
-  '--color-slate-200': '#E2E8F0',
-  '--color-slate-300': '#CBD5E1',
-  '--color-slate-500': '#64748B',
-  '--color-slate-600': '#475569',
-  '--color-slate-700': '#334155',
-  '--color-slate-800': '#1E293B',
-  '--color-slate-900': '#0F172A',
+  '--color-slate-100': '#EFEFEF',
+  '--color-slate-200': '#D5D5D5',
+  '--color-slate-300': '#D5D5D5',
+  '--color-slate-500': '#969696',
+  '--color-slate-600': '#969696',
+  '--color-slate-700': '#424242',
+  '--color-slate-800': '#424242',
+  '--color-slate-900': '#000000',
 } as const;
 
 export const CORES_ESCURO = {
-  '--color-background': '#0B0E14',
-  '--color-surface': '#171B26',
-  '--color-primary': '#A78BFA',
-  '--color-accent': '#5EEAD4',
+  '--color-background': '#0A0A0A',
+  '--color-surface': '#141414',
+  '--color-primary': '#6D93C9',
+  '--color-accent': '#6D93C9',
   '--color-success': '#4ADE80',
   '--color-danger': '#FCA5A5',
-  '--color-slate-100': '#1C2230',
-  '--color-slate-200': '#262D39',
-  '--color-slate-300': '#334155',
-  '--color-slate-500': '#98A1AF',
-  '--color-slate-600': '#ADB5C2',
-  '--color-slate-700': '#C3CAD4',
-  '--color-slate-800': '#E2E8F0',
-  '--color-slate-900': '#E8EBF0',
+  '--color-slate-100': '#1A1A1A',
+  '--color-slate-200': '#2A2A2A',
+  '--color-slate-300': '#3A3A3A',
+  '--color-slate-500': '#8A8A8A',
+  '--color-slate-600': '#9A9A9A',
+  '--color-slate-700': '#B5B5B5',
+  '--color-slate-800': '#D5D5D5',
+  '--color-slate-900': '#F5F5F5',
 } as const;
 
 /**
@@ -50,16 +53,16 @@ export const CORES_ESCURO = {
  */
 export function paletaIcones(escuro: boolean) {
   return {
-    primary: escuro ? '#A78BFA' : '#8B5CF6',
-    accent: escuro ? '#5EEAD4' : '#2DD4BF',
+    primary: escuro ? '#6D93C9' : '#385898',
+    accent: escuro ? '#6D93C9' : '#385898',
     success: escuro ? '#4ADE80' : '#22C55E',
     danger: escuro ? '#FCA5A5' : '#F87171',
     // slate-400 (não tem token de tema — só usado solto em ícone)
-    mutado: escuro ? '#98A1AF' : '#94A3B8',
+    mutado: escuro ? '#8A8A8A' : '#969696',
     // slate-500 (um pouco mais forte que `mutado`)
-    mutadoForte: escuro ? '#ADB5C2' : '#64748B',
+    mutadoForte: escuro ? '#9A9A9A' : '#969696',
     // tom escuro customizado (ícone tipo "voltar"/chevron)
-    neutro: escuro ? '#C3CAD4' : '#464555',
+    neutro: escuro ? '#B5B5B5' : '#424242',
     branco: '#FFFFFF',
   };
 }

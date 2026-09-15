@@ -42,22 +42,28 @@ export function BotaoDenunciar({
   if (enviado) {
     return (
       <View className="flex-row items-center gap-1">
-        <Ionicons name="checkmark-circle" size={14} color="#94A3B8" />
+        <Ionicons name="checkmark-circle" size={14} color="#969696" />
         <Text className="text-xs text-slate-500">Denúncia enviada</Text>
       </View>
     );
   }
 
+  // Ícone discreto ("...") em vez de um botão "Denunciar" com texto visível
+  // — pedido do usuário (referência: o menu de três pontos do Threads,
+  // silencioso até alguém tocar nele). Como hoje só existe UMA ação aqui
+  // (denunciar), abre direto o formulário em vez de um menu intermediário
+  // de item único — o próprio formulário já tem "Cancelar", cumprindo o
+  // mesmo papel de "posso desistir" sem inventar chrome de menu pra uma
+  // lista de 1 item.
   if (!aberto) {
     return (
       <Pressable
         onPress={() => setAberto(true)}
         accessibilityRole="button"
-        accessibilityLabel="Denunciar"
-        className="min-h-11 min-w-11 flex-row items-center gap-1 px-2"
+        accessibilityLabel="Mais opções — denunciar"
+        className="min-h-11 min-w-11 items-center justify-center"
       >
-        <Ionicons name="flag-outline" size={14} color="#94A3B8" />
-        <Text className="text-xs text-slate-500">Denunciar</Text>
+        <Ionicons name="ellipsis-horizontal" size={18} color="#969696" />
       </Pressable>
     );
   }

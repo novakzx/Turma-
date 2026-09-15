@@ -18,7 +18,7 @@ export function CompositorRapido() {
   const { profile } = useAuth();
 
   return (
-    <View className="mx-4 mt-3 gap-3 rounded-2xl bg-surface p-4 shadow-sm dark:bg-surface-dark">
+    <View className="mx-4 mt-3 gap-3 rounded-lg border border-slate-200 bg-surface p-4 dark:bg-surface-dark">
       <Pressable
         onPress={() => router.push('/novo-post')}
         accessibilityRole="button"
@@ -38,7 +38,7 @@ export function CompositorRapido() {
           accessibilityLabel="Publicar foto"
           className="min-h-11 flex-1 flex-row items-center justify-center gap-1.5 rounded-lg py-2 active:bg-slate-100"
         >
-          <Ionicons name="image-outline" size={18} color="#8B5CF6" />
+          <Ionicons name="image-outline" size={18} color="#385898" />
           <Text className="text-sm font-medium text-slate-700">Foto</Text>
         </Pressable>
         <Pressable
@@ -47,7 +47,7 @@ export function CompositorRapido() {
           accessibilityLabel="Criar enquete"
           className="min-h-11 flex-1 flex-row items-center justify-center gap-1.5 rounded-lg py-2 active:bg-slate-100"
         >
-          <Ionicons name="bar-chart-outline" size={18} color="#2DD4BF" />
+          <Ionicons name="bar-chart-outline" size={18} color="#385898" />
           <Text className="text-sm font-medium text-slate-700">Enquete</Text>
         </Pressable>
         <Pressable

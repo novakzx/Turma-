@@ -66,7 +66,7 @@ function ChipMateria({
         selecionada ? 'bg-primary dark:bg-primary-dark' : 'bg-slate-100'
       }`}
     >
-      <Ionicons name="book-outline" size={15} color={selecionada ? '#FFFFFF' : '#464555'} />
+      <Ionicons name="book-outline" size={15} color={selecionada ? '#FFFFFF' : '#424242'} />
       <Text className={`text-sm font-medium ${selecionada ? 'text-white' : 'text-slate-700'}`}>
         {nome}
       </Text>
@@ -89,7 +89,7 @@ function CartaoEstatisticaSemanal({ alunoId }: { alunoId: string }) {
   return (
     <View className="mx-4 mt-4 gap-3 rounded-xl border border-slate-200 bg-surface p-4 dark:bg-surface-dark">
       <View className="flex-row items-center gap-2">
-        <Ionicons name="stats-chart" size={16} color="#8B5CF6" />
+        <Ionicons name="stats-chart" size={16} color="#385898" />
         <Text className="text-sm font-semibold text-slate-900">Sua semana de estudo</Text>
       </View>
       <View className="flex-row justify-around">
@@ -134,7 +134,7 @@ function MiniaturaFoto({ caminho }: { caminho: string }) {
   if (isLoading || !url) {
     return (
       <View className="h-40 w-40 items-center justify-center rounded-xl bg-slate-100">
-        <ActivityIndicator size="small" color="#8B5CF6" />
+        <ActivityIndicator size="small" color="#385898" />
       </View>
     );
   }
@@ -188,7 +188,7 @@ function BolhaMensagem({
     >
       {!doAluno ? (
         <View className="h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent/10 dark:bg-accent-dark/10">
-          <Ionicons name="sparkles" size={14} color="#2DD4BF" />
+          <Ionicons name="sparkles" size={14} color="#385898" />
         </View>
       ) : null}
       <View className="shrink gap-1.5">
@@ -197,7 +197,7 @@ function BolhaMensagem({
           className={`shrink px-4 py-2.5 ${
             doAluno
               ? 'rounded-2xl rounded-br-md bg-primary dark:bg-primary-dark'
-              : 'rounded-2xl rounded-bl-md bg-surface shadow-sm dark:bg-surface-dark'
+              : 'rounded-2xl rounded-bl-md border border-slate-200 bg-surface dark:bg-surface-dark'
           }`}
         >
           <Text className={doAluno ? 'text-white' : 'text-slate-900'}>{enunciado}</Text>
@@ -217,7 +217,7 @@ function BolhaMensagem({
               accessibilityRole="button"
               className="min-h-11 flex-row items-center gap-1 self-start rounded-full bg-accent/10 px-3 dark:bg-accent-dark/15"
             >
-              <Ionicons name="key-outline" size={14} color="#2DD4BF" />
+              <Ionicons name="key-outline" size={14} color="#385898" />
               <Text className="text-xs font-semibold text-accent dark:text-accent-dark">
                 Ver gabarito
               </Text>
@@ -238,7 +238,7 @@ function BolhaMensagem({
             <Ionicons
               name={flashcardMutation.isSuccess ? 'checkmark' : 'albums-outline'}
               size={14}
-              color="#8B5CF6"
+              color="#385898"
             />
             <Text className="text-xs font-semibold text-primary dark:text-primary-dark">
               {flashcardMutation.isSuccess ? 'Flashcard criado' : 'Criar flashcard'}
@@ -385,7 +385,7 @@ export default function Estudo() {
       className="flex-1 bg-background dark:bg-background-dark"
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View className="gap-2 border-b border-slate-100 bg-surface py-3 dark:bg-surface-dark">
+      <View className="gap-2 border-b border-slate-200 bg-surface py-3 dark:bg-surface-dark">
         <View className="flex-row items-center gap-2 pl-3 pr-3">
           {/* Rolagem horizontal em vez de quebrar linha (`flex-wrap`) —
               pedido do usuário: com as 2 fileiras de chip (matéria + modo)
@@ -413,7 +413,7 @@ export default function Estudo() {
             accessibilityLabel="Ferramentas de cálculo"
             className="min-h-11 min-w-11 items-center justify-center rounded-full bg-slate-100"
           >
-            <Ionicons name="calculator-outline" size={18} color="#8B5CF6" />
+            <Ionicons name="calculator-outline" size={18} color="#385898" />
           </Pressable>
           <Pressable
             onPress={() => router.push('/flashcards')}
@@ -421,7 +421,7 @@ export default function Estudo() {
             accessibilityLabel="Flashcards"
             className="min-h-11 min-w-11 items-center justify-center rounded-full bg-slate-100"
           >
-            <Ionicons name="albums-outline" size={18} color="#8B5CF6" />
+            <Ionicons name="albums-outline" size={18} color="#385898" />
           </Pressable>
           <Pressable
             onPress={() => router.push('/apresentacoes')}
@@ -429,7 +429,7 @@ export default function Estudo() {
             accessibilityLabel="Apresentações"
             className="min-h-11 min-w-11 items-center justify-center rounded-full bg-slate-100"
           >
-            <Ionicons name="easel-outline" size={18} color="#8B5CF6" />
+            <Ionicons name="easel-outline" size={18} color="#385898" />
           </Pressable>
         </View>
         {materiaId ? (
@@ -451,7 +451,7 @@ export default function Estudo() {
                 <Ionicons
                   name={ICONE_MODO[opcao]}
                   size={14}
-                  color={modo === opcao ? '#0D9488' : '#464555'}
+                  color={modo === opcao ? '#0D9488' : '#424242'}
                 />
                 <Text className="text-xs font-medium text-slate-700">{ROTULO_MODO[opcao]}</Text>
               </Pressable>
@@ -516,12 +516,12 @@ export default function Estudo() {
         // somar o inset de segurança do rodapé (home indicator no
         // iPhone), mesmo padrão de `sala/[id].tsx`/`conversa/[id].tsx`.
         <View
-          className="gap-2 border-t border-slate-100 bg-surface p-3 shadow-sm dark:bg-surface-dark"
+          className="gap-2 border-t border-slate-200 bg-surface p-3 dark:bg-surface-dark"
           style={{ paddingBottom: insets.bottom + 12 }}
         >
           {enviarMutation.isPending ? (
             <View className="flex-row items-center gap-1.5">
-              <ActivityIndicator size="small" color="#8B5CF6" />
+              <ActivityIndicator size="small" color="#385898" />
               <Text className="text-sm text-slate-500">
                 {fotoEscolhida
                   ? 'A IA está a olhar a foto... pode demorar um pouco mais que o normal.'
@@ -548,7 +548,7 @@ export default function Estudo() {
                 accessibilityLabel="Remover foto"
                 className="min-h-11 min-w-11 items-center justify-center"
               >
-                <Ionicons name="close-circle" size={20} color="#94A3B8" />
+                <Ionicons name="close-circle" size={20} color="#969696" />
               </Pressable>
             </View>
           ) : null}
@@ -559,7 +559,7 @@ export default function Estudo() {
               accessibilityLabel="Anexar foto de anotação"
               className="min-h-11 min-w-11 items-center justify-center rounded-full bg-slate-100"
             >
-              <Ionicons name="camera-outline" size={20} color="#8B5CF6" />
+              <Ionicons name="camera-outline" size={20} color="#385898" />
             </Pressable>
             <View className="flex-1">
               <TextField

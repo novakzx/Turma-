@@ -42,8 +42,8 @@ const ROTULO_TIPO: Record<EventoCalendario['tipo'], string> = {
 };
 
 const COR_TIPO: Record<EventoCalendario['tipo'], string> = {
-  nacional: '#8B5CF6',
-  letivo: '#2DD4BF',
+  nacional: '#385898',
+  letivo: '#385898',
   avaliacao: '#F87171',
   regional: '#3B82F6',
   municipal: '#F59E0B',
@@ -62,7 +62,7 @@ function CartaoEvento({ item, index }: { item: EventoCalendario; index: number }
   return (
     <EntradaAnimada
       index={index}
-      className="gap-2 rounded-2xl bg-surface p-4 shadow-sm dark:bg-surface-dark"
+      className="gap-2 rounded-lg border border-slate-200 bg-surface p-4 dark:bg-surface-dark"
     >
       <View className="flex-row items-center gap-3">
         <View
@@ -110,7 +110,7 @@ function CabecalhoDestaque() {
       : `${FORMATO_DATA.format(new Date(dataAlvo))} – ${FORMATO_DATA.format(new Date(proximo.fim))}`;
 
   return (
-    <View className="mb-1 gap-1 rounded-xl bg-primary p-5 shadow-sm dark:bg-primary-dark">
+    <View className="mb-1 gap-1 rounded-lg bg-primary p-5 dark:bg-primary-dark">
       <Text className="text-xs font-semibold uppercase tracking-wide text-white/80">
         Próximo — {quando}
       </Text>
@@ -170,7 +170,7 @@ export default function CalendarioFeriados() {
                 accessibilityLabel="Exportar calendário"
                 className="min-h-11 flex-row items-center gap-1.5 rounded-full bg-slate-100 px-3"
               >
-                <Ionicons name="download-outline" size={14} color="#8B5CF6" />
+                <Ionicons name="download-outline" size={14} color="#385898" />
                 <Text className="text-xs font-semibold text-primary dark:text-primary-dark">
                   {exportarMutation.isPending ? 'Exportando...' : 'Exportar'}
                 </Text>

@@ -29,14 +29,14 @@ function LinhaSala({ sala, index }: { sala: Sala; index: number }) {
         onPress={() => router.push(`/sala/${sala.id}`)}
         accessibilityRole="button"
         accessibilityLabel={`Abrir sala ${sala.nome}`}
-        className="min-h-11 flex-row items-center gap-3 rounded-2xl bg-surface p-3 shadow-sm active:opacity-80 dark:bg-surface-dark"
+        className="min-h-11 flex-row items-center gap-3 rounded-lg border border-slate-200 bg-surface p-3 active:opacity-80 dark:bg-surface-dark"
       >
         <View className="h-10 w-10 items-center justify-center rounded-full bg-primary/10 dark:bg-primary-dark/10">
-          <Ionicons name={ICONE_TIPO_SALA[sala.tipo]} size={20} color="#8B5CF6" />
+          <Ionicons name={ICONE_TIPO_SALA[sala.tipo]} size={20} color="#385898" />
         </View>
         <Text className="flex-1 text-base font-medium text-slate-900">{sala.nome}</Text>
-        {sala.trancada ? <Ionicons name="lock-closed" size={16} color="#94A3B8" /> : null}
-        <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
+        {sala.trancada ? <Ionicons name="lock-closed" size={16} color="#969696" /> : null}
+        <Ionicons name="chevron-forward" size={18} color="#969696" />
       </Pressable>
     </EntradaAnimada>
   );
@@ -110,7 +110,7 @@ function LinhaConversa({ conversa, index }: { conversa: ConversaComResumo; index
       >
         {conversa.tipo === 'grupo' ? (
           <View className="h-14 w-14 items-center justify-center rounded-full bg-accent/10 dark:bg-accent-dark/10">
-            <Ionicons name="people" size={26} color="#2DD4BF" />
+            <Ionicons name="people" size={26} color="#385898" />
           </View>
         ) : (
           <FotoPerfil caminho={foto} nome={nome} tamanho={56} />
@@ -129,7 +129,7 @@ function LinhaConversa({ conversa, index }: { conversa: ConversaComResumo; index
                     conversa.ultimaMensagem.midia_tipo === 'audio' ? 'mic-outline' : 'image-outline'
                   }
                   size={13}
-                  color="#94A3B8"
+                  color="#969696"
                 />
                 <Text className="text-sm text-slate-500">
                   {conversa.ultimaMensagem.midia_tipo === 'audio' ? 'Áudio' : 'Foto'}
@@ -315,9 +315,9 @@ export default function Chat() {
             />
           ) : null}
 
-          <View className="gap-2 border-t border-slate-100 pt-4">
+          <View className="gap-2 border-t border-slate-200 pt-4">
             {criandoAssunto ? (
-              <View className="gap-2 rounded-2xl bg-surface p-3 shadow-sm dark:bg-surface-dark">
+              <View className="gap-2 rounded-lg border border-slate-200 bg-surface p-3 dark:bg-surface-dark">
                 <TextField
                   label="Nome do assunto (ex.: Dúvidas de matemática)"
                   icon="bulb-outline"

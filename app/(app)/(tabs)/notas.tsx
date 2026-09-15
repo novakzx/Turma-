@@ -39,7 +39,7 @@ function ChipMateria({
         selecionada ? 'border-primary bg-primary/10 dark:border-primary-dark' : 'border-slate-200'
       }`}
     >
-      <Ionicons name="book-outline" size={15} color={selecionada ? '#8B5CF6' : '#94A3B8'} />
+      <Ionicons name="book-outline" size={15} color={selecionada ? '#385898' : '#969696'} />
       <Text className="text-sm text-slate-900">{nome}</Text>
     </Pressable>
   );
@@ -94,7 +94,7 @@ function LinhaAvaliacao({
             accessibilityLabel={`Lançar nota de ${avaliacao.nome}`}
             className="min-h-11 min-w-11 flex-row items-center gap-1 rounded-md bg-primary/10 px-3 dark:bg-primary-dark/20"
           >
-            <Ionicons name="add-circle-outline" size={16} color="#8B5CF6" />
+            <Ionicons name="add-circle-outline" size={16} color="#385898" />
             <Text className="text-primary dark:text-primary-dark">Lançar</Text>
           </Pressable>
         ) : null}
@@ -294,7 +294,7 @@ export default function Notas() {
         <>
           {mediaAtual !== null ? (
             <View className="flex-row items-center gap-3 rounded-xl bg-primary/10 p-4 dark:bg-primary-dark/10">
-              <Ionicons name="stats-chart" size={22} color="#8B5CF6" />
+              <Ionicons name="stats-chart" size={22} color="#385898" />
               <View className="flex-1">
                 <Text className="text-xs text-slate-500">Sua média atual</Text>
                 <Text className="text-2xl font-bold text-primary dark:text-primary-dark">
@@ -339,7 +339,7 @@ export default function Notas() {
               accessibilityRole="button"
               className="min-h-11 flex-row items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-300 bg-surface p-4 dark:bg-surface-dark"
             >
-              <Ionicons name="add-circle-outline" size={18} color="#8B5CF6" />
+              <Ionicons name="add-circle-outline" size={18} color="#385898" />
               <Text className="text-sm font-semibold text-primary dark:text-primary-dark">
                 Nova avaliação
               </Text>
@@ -348,7 +348,7 @@ export default function Notas() {
             <View className="gap-3 rounded-xl border border-slate-200 bg-surface p-4 dark:bg-surface-dark">
               <View className="flex-row items-center justify-between">
                 <View className="flex-row items-center gap-1.5">
-                  <Ionicons name="add-circle-outline" size={16} color="#8B5CF6" />
+                  <Ionicons name="add-circle-outline" size={16} color="#385898" />
                   <Text className="text-sm font-semibold text-slate-700">Nova avaliação</Text>
                 </View>
                 <Pressable
@@ -360,7 +360,7 @@ export default function Notas() {
                   accessibilityLabel="Cancelar"
                   className="min-h-11 min-w-11 items-center justify-center"
                 >
-                  <Ionicons name="close" size={18} color="#94A3B8" />
+                  <Ionicons name="close" size={18} color="#969696" />
                 </Pressable>
               </View>
               <TextField
@@ -411,7 +411,7 @@ export default function Notas() {
 
           <View className="gap-3 rounded-xl border border-slate-200 bg-surface p-4 dark:bg-surface-dark">
             <View className="flex-row items-center gap-1.5">
-              <Ionicons name="calculator-outline" size={16} color="#8B5CF6" />
+              <Ionicons name="calculator-outline" size={16} color="#385898" />
               <Text className="text-sm font-semibold text-slate-700">Quanto preciso tirar?</Text>
             </View>
             <TextField
@@ -423,7 +423,7 @@ export default function Notas() {
             />
             {resultadoCalculo?.status === 'ok' ? (
               <View className="flex-row items-center gap-2 rounded-lg bg-primary/10 p-3 dark:bg-primary-dark/10">
-                <Ionicons name="trending-up" size={20} color="#8B5CF6" />
+                <Ionicons name="trending-up" size={20} color="#385898" />
                 <Text className="flex-1 text-base font-semibold text-primary dark:text-primary-dark">
                   Você precisa de {formatadorNota.format(resultadoCalculo.notaNecessaria)} nas
                   avaliações que faltam.

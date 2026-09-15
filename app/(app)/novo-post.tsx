@@ -174,7 +174,7 @@ export default function NovoPost() {
               <Ionicons
                 name={ICONE_TIPO_POST[opcao]}
                 size={15}
-                color={tipo === opcao ? '#8B5CF6' : '#94A3B8'}
+                color={tipo === opcao ? '#385898' : '#969696'}
               />
               <Text className="text-sm text-slate-900">{ROTULO_TIPO_POST[opcao]}</Text>
             </Pressable>
@@ -226,7 +226,7 @@ export default function NovoPost() {
                     accessibilityLabel={`Remover opção ${indice + 1}`}
                     className="min-h-11 min-w-11 items-center justify-center"
                   >
-                    <Ionicons name="close-circle-outline" size={22} color="#94A3B8" />
+                    <Ionicons name="close-circle-outline" size={22} color="#969696" />
                   </Pressable>
                 ) : null}
               </View>

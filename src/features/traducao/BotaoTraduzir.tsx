@@ -82,7 +82,7 @@ export function BotaoTraduzir({ texto }: { texto: string }) {
       accessibilityLabel="Traduzir — toque e segure pra escolher o idioma"
       className="min-h-11 flex-row items-center gap-1 self-start rounded-md border border-slate-200 px-3"
     >
-      <Ionicons name="language-outline" size={14} color="#8B5CF6" />
+      <Ionicons name="language-outline" size={14} color="#385898" />
       <Text className="text-xs font-semibold text-primary dark:text-primary-dark">
         {traduzirMutation.isPending ? 'Traduzindo...' : `Traduzir${idioma ? ` (${idioma})` : ''}`}
       </Text>

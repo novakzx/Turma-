@@ -134,7 +134,7 @@ export function EnquetePost({ postId }: { postId: string }) {
   if (enqueteQuery.isLoading || !enqueteQuery.data) {
     return (
       <View className="items-center py-4">
-        <ActivityIndicator color="#8B5CF6" />
+        <ActivityIndicator color="#385898" />
       </View>
     );
   }
@@ -170,7 +170,7 @@ export function EnquetePost({ postId }: { postId: string }) {
             ) : null}
             <View className="flex-row items-center justify-between px-4 py-2.5">
               <View className="flex-1 flex-row items-center gap-1.5 pr-2">
-                {escolhida ? <Ionicons name="checkmark-circle" size={16} color="#8B5CF6" /> : null}
+                {escolhida ? <Ionicons name="checkmark-circle" size={16} color="#385898" /> : null}
                 <Text className="shrink text-sm text-slate-900">{opcao.texto}</Text>
               </View>
               {jaVotou ? (
@@ -225,7 +225,7 @@ export function CartaoPost({
   return (
     <EntradaAnimada
       index={index}
-      className="gap-2 overflow-hidden rounded-3xl border border-slate-100 bg-surface pb-3 shadow-sm dark:border-slate-100 dark:bg-surface-dark"
+      className="gap-2 border-b border-slate-200 bg-surface pb-4 dark:border-slate-200 dark:bg-surface-dark"
     >
       <Pressable
         onPress={irParaPerfilDoAutor}
@@ -258,7 +258,7 @@ export function CartaoPost({
             {post.tipo !== 'texto' ? (
               <>
                 <Text className="text-xs text-slate-500">·</Text>
-                <Ionicons name={ICONE_TIPO_POST[post.tipo]} size={11} color="#2DD4BF" />
+                <Ionicons name={ICONE_TIPO_POST[post.tipo]} size={11} color="#385898" />
                 <Text className="text-xs font-medium text-accent dark:text-accent-dark">
                   {ROTULO_TIPO_POST[post.tipo]}
                   {post.tipo === 'evento' && post.data_evento
@@ -298,7 +298,7 @@ export function CartaoPost({
           onPress={curtido ? onDescurtir : onCurtir}
           accessibilityRole="button"
           accessibilityLabel={curtido ? 'Descurtir' : 'Curtir'}
-          className="min-h-11 flex-row items-center gap-1 rounded-md px-3 py-2 active:bg-primary/5"
+          className="min-h-11 flex-row items-center gap-1 px-3 py-2"
         >
           {/* Coração vermelho quando curtido — convenção quase universal
               (Instagram e afins), mais reconhecível de longe que a cor
@@ -306,7 +306,7 @@ export function CartaoPost({
           <Ionicons
             name={curtido ? 'heart' : 'heart-outline'}
             size={18}
-            color={curtido ? '#F87171' : '#94A3B8'}
+            color={curtido ? '#F87171' : '#969696'}
           />
           <Text className={curtido ? 'text-danger dark:text-danger-dark' : 'text-slate-500'}>
             {totalCurtidas}
@@ -316,9 +316,9 @@ export function CartaoPost({
           onPress={() => router.push(`/post/${post.id}`)}
           accessibilityRole="button"
           accessibilityLabel="Ver comentários"
-          className="min-h-11 flex-row items-center gap-1 rounded-md px-3 py-2 active:bg-primary/5"
+          className="min-h-11 flex-row items-center gap-1 px-3 py-2"
         >
-          <Ionicons name="chatbubble-outline" size={17} color="#94A3B8" />
+          <Ionicons name="chatbubble-outline" size={17} color="#969696" />
           <Text className="text-slate-500">{totalComentarios}</Text>
         </Pressable>
         <View className="flex-1" />

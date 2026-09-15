@@ -215,7 +215,7 @@ export default function DetalhePost() {
 
           {post.tipo === 'evento' && post.data_evento ? (
             <View className="flex-row items-center gap-1.5 self-start rounded-md bg-primary/10 px-3 py-1 dark:bg-primary-dark/10">
-              <Ionicons name="calendar" size={14} color="#8B5CF6" />
+              <Ionicons name="calendar" size={14} color="#385898" />
               <Text className="text-sm font-medium text-primary dark:text-primary-dark">
                 {formatarDataEvento(post.data_evento)}
               </Text>
@@ -254,7 +254,7 @@ export default function DetalhePost() {
           <LoadingState />
         ) : (
           <View className="flex-row items-center gap-1.5 py-4">
-            <Ionicons name="chatbubble-outline" size={14} color="#94A3B8" />
+            <Ionicons name="chatbubble-outline" size={14} color="#969696" />
             <Text className="text-sm text-slate-500">
               Ainda sem comentários. Sê o primeiro a comentar.
             </Text>

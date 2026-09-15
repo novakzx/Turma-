@@ -31,12 +31,12 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(function TextFiel
           error ? 'border-danger dark:border-danger-dark' : 'border-slate-200'
         }`}
       >
-        {icon ? <Ionicons name={icon} size={18} color="#94A3B8" /> : null}
+        {icon ? <Ionicons name={icon} size={18} color="#969696" /> : null}
         <TextInput
           ref={ref}
           accessibilityLabel={accessibilityLabel ?? (error ? `${label}. Erro: ${error}` : label)}
           className="min-h-11 flex-1 text-base text-slate-900"
-          placeholderTextColor="#94A3B8"
+          placeholderTextColor="#969696"
           {...inputProps}
         />
       </View>

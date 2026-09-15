@@ -70,7 +70,7 @@ function LinhaMateria({
   return (
     <View className="flex-row items-center gap-3 rounded-lg border border-slate-200 bg-surface p-3 dark:bg-surface-dark">
       <View className="h-10 w-10 items-center justify-center rounded-full bg-primary/10 dark:bg-primary-dark/10">
-        <Ionicons name="book-outline" size={18} color="#8B5CF6" />
+        <Ionicons name="book-outline" size={18} color="#385898" />
       </View>
       <Text className="flex-1 text-base text-slate-900">{materia.nome}</Text>
       {podeEditar ? (
@@ -81,7 +81,7 @@ function LinhaMateria({
             accessibilityLabel={`Renomear ${materia.nome}`}
             className="min-h-11 min-w-11 items-center justify-center"
           >
-            <Ionicons name="create-outline" size={18} color="#8B5CF6" />
+            <Ionicons name="create-outline" size={18} color="#385898" />
           </Pressable>
           <Pressable
             onPress={onApagar}

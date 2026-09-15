@@ -84,7 +84,7 @@ export default function Assinatura() {
     >
       <View className="items-center gap-2">
         <View className="h-16 w-16 items-center justify-center rounded-full bg-primary/10 dark:bg-primary-dark/10">
-          <Ionicons name="sparkles" size={28} color="#8B5CF6" />
+          <Ionicons name="sparkles" size={28} color="#385898" />
         </View>
         <Text className="text-2xl font-bold text-slate-900">Turma+ Premium</Text>
         <Text className="text-center text-sm text-slate-500">
@@ -94,7 +94,7 @@ export default function Assinatura() {
 
       {params.sucesso === '1' ? (
         <View className="flex-row items-center gap-2 rounded-xl border border-accent/30 bg-accent/5 p-4 dark:border-accent-dark/30 dark:bg-accent-dark/10">
-          <Ionicons name="hourglass-outline" size={18} color="#2DD4BF" />
+          <Ionicons name="hourglass-outline" size={18} color="#385898" />
           <Text className="flex-1 text-sm text-slate-800">
             {assinante
               ? 'Assinatura confirmada — bem-vindo ao Premium!'
@@ -115,7 +115,7 @@ export default function Assinatura() {
         {BENEFICIOS.map((b) => (
           <View key={b.titulo} className="flex-row items-start gap-3">
             <View className="h-9 w-9 items-center justify-center rounded-full bg-accent/10 dark:bg-accent-dark/10">
-              <Ionicons name={b.icone} size={18} color="#2DD4BF" />
+              <Ionicons name={b.icone} size={18} color="#385898" />
             </View>
             <View className="flex-1 gap-0.5">
               <Text className="text-sm font-semibold text-slate-900">{b.titulo}</Text>

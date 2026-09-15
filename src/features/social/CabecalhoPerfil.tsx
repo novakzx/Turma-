@@ -88,7 +88,7 @@ export function CabecalhoPerfil({
         {nomeUsuario ? <Text className="text-sm text-slate-500">@{nomeUsuario}</Text> : null}
         {papel ? (
           <View className="mt-1 flex-row items-center gap-1.5 rounded-md bg-primary/10 px-3 py-1 dark:bg-primary-dark/10">
-            <Ionicons name={ICONE_PAPEL[papel]} size={14} color="#8B5CF6" />
+            <Ionicons name={ICONE_PAPEL[papel]} size={14} color="#385898" />
             <Text className="text-xs font-semibold text-primary dark:text-primary-dark">
               {ROTULO_PAPEL[papel]}
             </Text>
@@ -101,7 +101,7 @@ export function CabecalhoPerfil({
             accessibilityRole="link"
             className="mt-1 min-h-11 flex-row items-center gap-1 px-2"
           >
-            <Ionicons name="link-outline" size={14} color="#2DD4BF" />
+            <Ionicons name="link-outline" size={14} color="#385898" />
             <Text className="text-sm font-medium text-accent dark:text-accent-dark">
               {formatarLinkExibicao(link)}
             </Text>

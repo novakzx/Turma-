@@ -97,7 +97,7 @@ export default function Perfil() {
           <View className="gap-3 rounded-xl border border-slate-200 bg-surface p-4 dark:bg-surface-dark">
             <View className="flex-row items-center gap-3">
               <View className="h-10 w-10 items-center justify-center rounded-full bg-accent/10 dark:bg-accent-dark/10">
-                <Ionicons name="business-outline" size={20} color="#2DD4BF" />
+                <Ionicons name="business-outline" size={20} color="#385898" />
               </View>
               <View className="flex-1">
                 <Text className="text-xs text-slate-500">Escola</Text>
@@ -108,7 +108,7 @@ export default function Perfil() {
             </View>
             <View className="flex-row items-center gap-3">
               <View className="h-10 w-10 items-center justify-center rounded-full bg-primary/10 dark:bg-primary-dark/10">
-                <Ionicons name="people-outline" size={20} color="#8B5CF6" />
+                <Ionicons name="people-outline" size={20} color="#385898" />
               </View>
               <View className="flex-1">
                 <Text className="text-xs text-slate-500">Turma</Text>

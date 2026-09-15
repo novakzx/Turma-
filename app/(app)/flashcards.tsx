@@ -32,7 +32,7 @@ function confirmar(mensagem: string, aoConfirmar: () => void) {
 
 const BOTOES_QUALIDADE: { valor: QualidadeRevisao; rotulo: string; cor: string }[] = [
   { valor: 'errei', rotulo: 'Errei', cor: '#F87171' },
-  { valor: 'dificil', rotulo: 'Difícil', cor: '#2DD4BF' },
+  { valor: 'dificil', rotulo: 'Difícil', cor: '#385898' },
   { valor: 'facil', rotulo: 'Fácil', cor: '#22C55E' },
 ];
 
