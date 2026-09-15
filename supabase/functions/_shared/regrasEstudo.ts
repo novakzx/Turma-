@@ -92,6 +92,24 @@ export function escolherModelo(modo: ModoChatEstudo): string {
  */
 export const MODELO_VISAO = 'gemma4:31b';
 
+/** Instrução comum aos dois prompts abaixo — ACHADO testando ao vivo
+ * (usuário relatou "a IA responde cheio de * e tenta digitar os
+ * icones"): `gemma4:31b`, um modelo de chat completo, formata a
+ * resposta em Markdown por padrão (`**negrito**`, listas, às vezes
+ * emoji) — comportamento normal do modelo, não um bug. O problema é só
+ * que a bolha de mensagem do chat (`estudo.tsx`) renderiza o texto cru
+ * num `<Text>` sem interpretar Markdown nenhum, então o aluno via os
+ * `**`/`*` literalmente na tela. Mais simples resolver pedindo texto
+ * simples no prompt do que adicionar um parser de Markdown na UI (o
+ * resto do chat do app — sala, mensagens diretas — também é `<Text>`
+ * puro, então isso manteria consistência). */
+const SEM_MARKDOWN =
+  'Responde em texto simples, sem nenhuma formatação Markdown — nunca uses ' +
+  'asteriscos para negrito/itálico, nunca uses `#`/`-`/`*` para títulos ou ' +
+  'listas, e nunca uses emoji ou outros ícones. Se precisar organizar uma ' +
+  'lista, numera os itens escrevendo o número seguido de ponto (1. 2. 3.), ' +
+  'como texto normal de conversa.';
+
 /** Pergunta/prompt pro modelo de visão — pede pra descrever a foto
  * antes de ajudar (mesma ordem testada e confirmada funcionando com
  * os modelos anteriores), com o mesmo tom de tutor de
@@ -104,7 +122,7 @@ export function montarPromptVisao(params: { nomeMateria: string; pergunta: strin
     'Primeiro, diz exatamente o que está escrito/desenhado na foto — se alguma parte estiver ' +
     `ilegível, diga isso em vez de adivinhar. Depois, ajuda o aluno com isto: "${params.pergunta}". ` +
     'Explica o raciocínio passo a passo, sem dar a resposta pronta — o objetivo é o aluno aprender ' +
-    'a chegar lá, não só copiar a resposta.'
+    `a chegar lá, não só copiar a resposta. ${SEM_MARKDOWN}`
   );
 }
 
@@ -120,7 +138,7 @@ export function montarPromptSistema(params: { nomeMateria: string; modo: ModoCha
     `Você é um tutor de ${params.nomeMateria} pra um aluno do ensino básico/secundário em Portugal. ` +
     'Explique com clareza, em português de Portugal, no nível da idade escolar. ' +
     'Nunca dê a resposta pronta de um exercício sem mostrar o raciocínio passo a passo — ' +
-    'o objetivo é o aluno aprender a chegar lá, não só copiar a resposta.';
+    `o objetivo é o aluno aprender a chegar lá, não só copiar a resposta. ${SEM_MARKDOWN}`;
 
   switch (params.modo) {
     case 'prova':

@@ -42,6 +42,18 @@ describe('montarPromptSistema', () => {
     }
   });
 
+  // ACHADO testando ao vivo: usuário relatou "a IA responde cheio de *
+  // e tenta digitar os icones" — gemma4:31b formata em Markdown por
+  // padrão, mas a bolha de mensagem do chat é `<Text>` puro (não
+  // interpreta Markdown), então o aluno via os `**`/`*` literalmente.
+  it('pede texto simples, sem Markdown nem emoji, em todos os modos', () => {
+    for (const modo of ['explicar', 'duvida', 'resumo', 'plano', 'prova'] as const) {
+      const prompt = montarPromptSistema({ nomeMateria: 'Física', modo });
+      expect(prompt).toContain('sem nenhuma formatação Markdown');
+      expect(prompt).toContain('emoji');
+    }
+  });
+
   it('ajusta a instrução pro modo resumo', () => {
     expect(montarPromptSistema({ nomeMateria: 'História', modo: 'resumo' })).toContain('resumo');
   });
@@ -60,10 +72,6 @@ describe('montarPromptSistema', () => {
 });
 
 describe('montarPromptVisao', () => {
-  // ACHADO testando ao vivo: LLaVA-1.5-7B ignora a imagem (responde
-  // "manda a foto") quando o prompt é longo/cheio de instrução de tutor
-  // — por isso este prompt é curto e direto, diferente de
-  // `montarPromptSistema`. Ver comentário na função.
   it('inclui o nome da matéria e a pergunta do aluno', () => {
     const prompt = montarPromptVisao({ nomeMateria: 'Matemática A', pergunta: 'Isso está certo?' });
     expect(prompt).toContain('Matemática A');
@@ -84,6 +92,12 @@ describe('montarPromptVisao', () => {
   it('mantém a regra de nunca dar resposta pronta sem mostrar raciocínio', () => {
     const prompt = montarPromptVisao({ nomeMateria: 'Química', pergunta: 'dúvida' });
     expect(prompt).toContain('raciocínio');
+  });
+
+  it('pede texto simples, sem Markdown nem emoji', () => {
+    const prompt = montarPromptVisao({ nomeMateria: 'Química', pergunta: 'dúvida' });
+    expect(prompt).toContain('sem nenhuma formatação Markdown');
+    expect(prompt).toContain('emoji');
   });
 });
 
