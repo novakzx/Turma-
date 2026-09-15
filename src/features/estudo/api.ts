@@ -1,4 +1,6 @@
+import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
+import { Platform } from 'react-native';
 
 import { mensagemDoErroDaFuncao } from '@/lib/erroEdgeFunction';
 import { lerBytesDeMidiaLocal } from '@/lib/lerMidiaLocal';
@@ -81,15 +83,27 @@ export async function enviarMensagemChat(params: {
   return data;
 }
 
-/** Igual `escolherImagem` de `feed/api.ts` (duplicado de propósito —
- * mesmo padrão de bucket/constante já duplicado neste projeto, ver
- * comentário em `BUCKET_FOTOS_ESTUDO`). `quality: 0.7`, igual ao de
- * post — a Edge Function manda a foto pro modelo de visão como array
- * de bytes (não base64, ver `chat-estudo/index.ts`), que infla bem mais
- * em JSON; comprimir direito no cliente ajuda a foto inteira caber no
- * teto de tamanho de lá sem cortar nitidez a ponto de a IA não conseguir
- * ler o texto. */
-export type FotoEscolhida = { uri: string; arquivoWeb: File | null };
+// BUG real relatado pelo usuário ("ta dando que a imagem e grande de
+// mais"): o código anterior só comprimia (`quality: 0.7` do picker) mas
+// nunca REDIMENSIONAVA — uma foto de celular moderno (12MP+) continua
+// passando fácil de 3-4 MB mesmo comprimida, estourando o teto de 2 MB
+// da Edge Function (`FOTO_TAMANHO_MAXIMO_BYTES`, ver `chat-estudo/
+// index.ts`) quase sempre. 1600px no lado maior é generoso o bastante
+// pra manter texto/número legível pro modelo de visão, mas já reduz o
+// arquivo pra uma fração do tamanho original — depois de redimensionar
+// e comprimir de novo (JPEG, 0.7), uma foto de caderno fica na casa dos
+// 150-400 KB, bem abaixo do teto.
+const LARGURA_MAXIMA_FOTO = 1600;
+
+/** `base64` só é pedido no **web**: depois de redimensionar, a uri nova
+ * seria um `blob:` criado pela própria página — o mesmo tipo de blob
+ * que o Safari às vezes recusa fazer `fetch()` (bug documentado em
+ * `lerMidiaLocal.ts`). Pedir o base64 direto do `saveAsync` evita esse
+ * fetch inteiramente. No **nativo**, a uri nova já é um `file://` de
+ * verdade — `fetch()` nela é seguro (mesmo padrão já testado em
+ * `lerBytesDeMidiaLocal`), então não precisa carregar a imagem inteira
+ * duas vezes na memória com base64. */
+export type FotoEscolhida = { uri: string; base64: string | null };
 
 export async function escolherFotoAnotacao(): Promise<FotoEscolhida | null> {
   const permissao = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -99,31 +113,45 @@ export async function escolherFotoAnotacao(): Promise<FotoEscolhida | null> {
     );
   }
 
-  const resultado = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ['images'],
-    quality: 0.7,
-  });
+  const resultado = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'] });
   if (resultado.canceled || resultado.assets.length === 0) return null;
-  const asset = resultado.assets[0];
-  return { uri: asset.uri, arquivoWeb: asset.file ?? null };
+
+  const contexto = ImageManipulator.manipulate(resultado.assets[0].uri);
+  contexto.resize({ width: LARGURA_MAXIMA_FOTO, height: null });
+  const renderizada = await contexto.renderAsync();
+  const salva = await renderizada.saveAsync({
+    format: SaveFormat.JPEG,
+    compress: 0.7,
+    base64: Platform.OS === 'web',
+  });
+
+  return { uri: salva.uri, base64: salva.base64 ?? null };
 }
 
-/** Upload pro bucket privado `estudo-fotos`, path "{aluno_id}/arquivo.ext"
- * (mesmo racional de `fazerUploadImagemPost`: extensão vem do
- * `content-type` real do blob, nunca cortando a URI local por "." —
- * no web isso é um `blob:...` sem ponto nenhum). Devolve só o caminho;
- * a URL assinada é gerada na hora de exibir (`obterUrlAssinadaFotoEstudo`). */
+function base64ParaArrayBuffer(base64: string): ArrayBuffer {
+  const binario = atob(base64);
+  const bytes = new Uint8Array(binario.length);
+  for (let i = 0; i < binario.length; i++) bytes[i] = binario.charCodeAt(i);
+  return bytes.buffer;
+}
+
+/** Upload pro bucket privado `estudo-fotos`, path "{aluno_id}/arquivo.jpg"
+ * (sempre jpg — `escolherFotoAnotacao` já converte pra isso no
+ * redimensionamento, então não precisa mais derivar a extensão do
+ * content-type real do blob como `fazerUploadImagemPost` faz). Devolve
+ * só o caminho; a URL assinada é gerada na hora de exibir
+ * (`obterUrlAssinadaFotoEstudo`). */
 export async function fazerUploadFotoAnotacao(
   alunoId: string,
-  uriLocal: string,
-  arquivoWeb?: File | null,
+  foto: FotoEscolhida,
 ): Promise<string> {
-  const { arrayBuffer, contentType } = await lerBytesDeMidiaLocal(uriLocal, arquivoWeb);
-  const extensao = contentType.split('/').pop()?.toLowerCase().replace('jpeg', 'jpg') || 'jpg';
-  const caminho = `${alunoId}/${Date.now()}-${Math.round(Math.random() * 1e6)}.${extensao}`;
+  const { arrayBuffer } = foto.base64
+    ? { arrayBuffer: base64ParaArrayBuffer(foto.base64) }
+    : await lerBytesDeMidiaLocal(foto.uri, null);
+  const caminho = `${alunoId}/${Date.now()}-${Math.round(Math.random() * 1e6)}.jpg`;
 
   const { error } = await supabase.storage.from(BUCKET_FOTOS_ESTUDO).upload(caminho, arrayBuffer, {
-    contentType,
+    contentType: 'image/jpeg',
   });
   if (error) throw error;
   return caminho;

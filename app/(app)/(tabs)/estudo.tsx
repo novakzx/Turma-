@@ -308,7 +308,7 @@ export default function Estudo() {
       foto: FotoEscolhida | null;
     }) => {
       const fotoCaminho = params.foto
-        ? await fazerUploadFotoAnotacao(profile!.id, params.foto.uri, params.foto.arquivoWeb)
+        ? await fazerUploadFotoAnotacao(profile!.id, params.foto)
         : null;
       return enviarMensagemChat({
         materiaId: params.materiaId,
