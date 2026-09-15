@@ -2,11 +2,13 @@ import { Stack } from 'expo-router';
 import { useEffect } from 'react';
 
 import { useAuth } from '@/features/auth/AuthProvider';
+import { useTema } from '@/features/configuracoes/TemaProvider';
 import { registrarPushToken } from '@/features/notificacoes/pushToken';
 import { registrarPushWeb } from '@/features/notificacoes/webPush';
 
 export default function AppLayout() {
   const { session } = useAuth();
+  const { escuro } = useTema();
 
   useEffect(() => {
     if (!session) return;
@@ -30,10 +32,23 @@ export default function AppLayout() {
         // `headerShadowVisible: false` — a sombra padrão do React
         // Navigation não bate com a sombra suave do resto do redesign v5
         // (ver comentário em `app/_layout.tsx`).
+        //
+        // ACHADO ao vivo (pedido do usuário — "mais flat e mais simples"
+        // levou a testar o app em modo escuro de novo): este `<Stack>`
+        // TEM SEU PRÓPRIO `screenOptions` (é uma segunda Stack, aninhada
+        // dentro de `(app)`, separada da raiz em `app/_layout.tsx`) —
+        // hardcoded pro claro desde sempre, nunca reagia ao tema.
+        // Qualquer tela dentro do grupo `(app)` que usa header do React
+        // Navigation (post/[id], sala/[id], editar-perfil, novo-post...)
+        // ficava com uma barra clara no topo mesmo com o app inteiro em
+        // modo escuro — só não tinha sido notado porque a maioria dessas
+        // telas usa `headerShown: false` ou raramente é aberta durante
+        // teste manual. Corrigido lendo `useTema()`, mesmo padrão já
+        // usado na Stack raiz.
         headerShadowVisible: false,
-        headerStyle: { backgroundColor: '#FAF8FF' },
-        headerTintColor: '#131B2E',
-        contentStyle: { backgroundColor: '#FAF8FF' },
+        headerStyle: { backgroundColor: escuro ? '#0A0A0A' : '#FAFAFA' },
+        headerTintColor: escuro ? '#F5F5F5' : '#000000',
+        contentStyle: { backgroundColor: escuro ? '#0A0A0A' : '#FAFAFA' },
       }}
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

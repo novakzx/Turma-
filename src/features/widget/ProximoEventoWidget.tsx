@@ -59,7 +59,7 @@ export function ProximoEventoWidget() {
     >
       <TextWidget
         text={`TURMA+ · ${quando.toUpperCase()}`}
-        style={{ fontSize: 11, fontWeight: 'bold', color: '#C7D2FE', letterSpacing: 1 }}
+        style={{ fontSize: 11, fontWeight: 'bold', color: '#BFDBFE', letterSpacing: 1 }}
       />
       <TextWidget
         text={proximo.nome}

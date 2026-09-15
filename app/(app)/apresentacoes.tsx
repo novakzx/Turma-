@@ -45,7 +45,7 @@ function CartaoApresentacao({
   apagando: boolean;
 }) {
   return (
-    <View className="flex-row items-center gap-2 rounded-xl border border-slate-200 bg-surface p-4 dark:bg-surface-dark">
+    <View className="flex-row items-center gap-2 rounded-lg border border-slate-200 bg-surface p-4 dark:bg-surface-dark">
       <Pressable
         onPress={() => router.push(`/apresentacao/${apresentacao.id}`)}
         accessibilityRole="button"
@@ -145,7 +145,7 @@ export default function Apresentacoes() {
 
   return (
     <ScrollView className="flex-1 bg-background dark:bg-background-dark" contentContainerClassName="gap-4 p-4 pb-10">
-      <View className="gap-3 rounded-xl border border-slate-200 bg-surface p-4 dark:bg-surface-dark">
+      <View className="gap-3 rounded-lg border border-slate-200 bg-surface p-4 dark:bg-surface-dark">
         <Text className="text-sm font-semibold text-slate-900">Gerar apresentação com IA</Text>
         <View className="flex-row flex-wrap gap-2">
           {(materiasQuery.data ?? []).map((materia) => (

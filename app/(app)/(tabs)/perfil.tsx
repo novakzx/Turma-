@@ -94,7 +94,7 @@ export default function Perfil() {
         />
 
         {turmaQuery.data ? (
-          <View className="gap-3 rounded-xl border border-slate-200 bg-surface p-4 dark:bg-surface-dark">
+          <View className="gap-3 rounded-lg border border-slate-200 bg-surface p-4 dark:bg-surface-dark">
             <View className="flex-row items-center gap-3">
               <View className="h-10 w-10 items-center justify-center rounded-full bg-accent/10 dark:bg-accent-dark/10">
                 <Ionicons name="business-outline" size={20} color="#0095F6" />

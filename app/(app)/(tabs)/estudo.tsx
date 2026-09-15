@@ -87,7 +87,7 @@ function CartaoEstatisticaSemanal({ alunoId }: { alunoId: string }) {
   const { totalPerguntas, materiasRevisadas, diaMaisAtivo } = query.data;
 
   return (
-    <View className="mx-4 mt-4 gap-3 rounded-xl border border-slate-200 bg-surface p-4 dark:bg-surface-dark">
+    <View className="mx-4 mt-4 gap-3 rounded-lg border border-slate-200 bg-surface p-4 dark:bg-surface-dark">
       <View className="flex-row items-center gap-2">
         <Ionicons name="stats-chart" size={16} color="#0095F6" />
         <Text className="text-sm font-semibold text-slate-900">Sua semana de estudo</Text>
@@ -451,7 +451,7 @@ export default function Estudo() {
                 <Ionicons
                   name={ICONE_MODO[opcao]}
                   size={14}
-                  color={modo === opcao ? '#0D9488' : '#424242'}
+                  color={modo === opcao ? '#0095F6' : '#424242'}
                 />
                 <Text className="text-xs font-medium text-slate-700">{ROTULO_MODO[opcao]}</Text>
               </Pressable>

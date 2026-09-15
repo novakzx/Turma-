@@ -60,8 +60,8 @@ export default function TabsLayout() {
         // linha branca por cima do fundo escuro (achado testando de
         // verdade no preview mobile, relatado pelo usuário).
         headerShadowVisible: false,
-        headerStyle: { backgroundColor: escuro ? '#0B0E14' : '#FAF8FF' },
-        headerTintColor: escuro ? '#F1F5F9' : '#131B2E',
+        headerStyle: { backgroundColor: escuro ? '#0A0A0A' : '#FAFAFA' },
+        headerTintColor: escuro ? '#F5F5F5' : '#000000',
         // `headerLeft`/`headerRight` (não um `headerTitle` esticando a
         // barra inteira) — cada um do tamanho do próprio conteúdo, sem
         // forçar `width: 0`/`flex: 1` nos containers. Essa era a v1 deste
@@ -77,8 +77,8 @@ export default function TabsLayout() {
         tabBarStyle: {
           height: ALTURA_CONTEUDO_BARRA + insets.bottom,
           borderTopWidth: 1,
-          borderTopColor: escuro ? '#262D39' : '#EDEBFA',
-          backgroundColor: escuro ? '#171B26' : '#FFFFFF',
+          borderTopColor: escuro ? '#2A2A2A' : '#D5D5D5',
+          backgroundColor: escuro ? '#141414' : '#FAFAFA',
           elevation: 0,
           shadowOpacity: 0,
           paddingTop: 6,

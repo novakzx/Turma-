@@ -93,7 +93,7 @@ export default function Assinatura() {
       </View>
 
       {params.sucesso === '1' ? (
-        <View className="flex-row items-center gap-2 rounded-xl border border-accent/30 bg-accent/5 p-4 dark:border-accent-dark/30 dark:bg-accent-dark/10">
+        <View className="flex-row items-center gap-2 rounded-lg border border-accent/30 bg-accent/5 p-4 dark:border-accent-dark/30 dark:bg-accent-dark/10">
           <Ionicons name="hourglass-outline" size={18} color="#0095F6" />
           <Text className="flex-1 text-sm text-slate-800">
             {assinante
@@ -104,14 +104,14 @@ export default function Assinatura() {
       ) : null}
 
       {params.cancelado === '1' && !assinante ? (
-        <View className="rounded-xl border border-slate-200 bg-surface p-4 dark:bg-surface-dark">
+        <View className="rounded-lg border border-slate-200 bg-surface p-4 dark:bg-surface-dark">
           <Text className="text-sm text-slate-500">
             Checkout cancelado — sem problema, você pode assinar quando quiser.
           </Text>
         </View>
       ) : null}
 
-      <View className="gap-4 rounded-xl border border-slate-200 bg-surface p-4 dark:bg-surface-dark">
+      <View className="gap-4 rounded-lg border border-slate-200 bg-surface p-4 dark:bg-surface-dark">
         {BENEFICIOS.map((b) => (
           <View key={b.titulo} className="flex-row items-start gap-3">
             <View className="h-9 w-9 items-center justify-center rounded-full bg-accent/10 dark:bg-accent-dark/10">

@@ -77,7 +77,7 @@ function ModoRevisao({ cartoes, onTerminou }: { cartoes: Flashcard[]; onTerminou
       <Text className="text-center text-xs text-slate-500">
         Cartão {indice + 1} de {cartoes.length}
       </Text>
-      <View className="min-h-40 justify-center gap-3 rounded-xl border border-slate-200 bg-surface p-6 dark:bg-surface-dark">
+      <View className="min-h-40 justify-center gap-3 rounded-lg border border-slate-200 bg-surface p-6 dark:bg-surface-dark">
         <Text className="text-lg font-semibold text-slate-900">{cartao.pergunta}</Text>
         {mostrarResposta ? (
           <Text className="text-base text-slate-500">{cartao.resposta}</Text>

@@ -337,7 +337,7 @@ export default function Notas() {
             <Pressable
               onPress={() => setNovaAvaliacaoAberta(true)}
               accessibilityRole="button"
-              className="min-h-11 flex-row items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-300 bg-surface p-4 dark:bg-surface-dark"
+              className="min-h-11 flex-row items-center justify-center gap-1.5 rounded-lg border border-dashed border-slate-300 bg-surface p-4 dark:bg-surface-dark"
             >
               <Ionicons name="add-circle-outline" size={18} color="#0095F6" />
               <Text className="text-sm font-semibold text-primary dark:text-primary-dark">
@@ -345,7 +345,7 @@ export default function Notas() {
               </Text>
             </Pressable>
           ) : (
-            <View className="gap-3 rounded-xl border border-slate-200 bg-surface p-4 dark:bg-surface-dark">
+            <View className="gap-3 rounded-lg border border-slate-200 bg-surface p-4 dark:bg-surface-dark">
               <View className="flex-row items-center justify-between">
                 <View className="flex-row items-center gap-1.5">
                   <Ionicons name="add-circle-outline" size={16} color="#0095F6" />
@@ -409,7 +409,7 @@ export default function Notas() {
             </View>
           )}
 
-          <View className="gap-3 rounded-xl border border-slate-200 bg-surface p-4 dark:bg-surface-dark">
+          <View className="gap-3 rounded-lg border border-slate-200 bg-surface p-4 dark:bg-surface-dark">
             <View className="flex-row items-center gap-1.5">
               <Ionicons name="calculator-outline" size={16} color="#0095F6" />
               <Text className="text-sm font-semibold text-slate-700">Quanto preciso tirar?</Text>

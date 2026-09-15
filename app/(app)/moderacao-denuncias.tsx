@@ -37,7 +37,7 @@ function CartaoDenuncia({
   });
 
   return (
-    <View className="gap-3 rounded-xl border border-slate-200 bg-surface p-4 dark:bg-surface-dark">
+    <View className="gap-3 rounded-lg border border-slate-200 bg-surface p-4 dark:bg-surface-dark">
       <View className="flex-row items-center gap-2">
         <View className="flex-row items-center gap-1.5 rounded-md bg-accent/10 px-3 py-1 dark:bg-accent-dark/10">
           <Ionicons name="flag" size={12} color="#0095F6" />

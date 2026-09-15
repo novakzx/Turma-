@@ -13,6 +13,7 @@ import { ImagemChat } from '@/components/ui/ImagemChat';
 import { TextoComMencoes } from '@/components/ui/TextoComMencoes';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { mensagemDeErro } from '@/features/auth/errors';
+import { useTema } from '@/features/configuracoes/TemaProvider';
 import { BotaoDenunciar } from '@/features/feed/BotaoDenunciar';
 import {
   aceitarPedido,
@@ -201,12 +202,17 @@ function CabecalhoConversa({
   // Cor do texto vem em JS, não de classe `dark:` do Tailwind — conteúdo
   // dentro do header do React Navigation segue esse padrão em todo o app
   // (ver headerTintColor/ícones do headerRight em `(tabs)/_layout.tsx`),
-  // porque esse cabeçalho já é estilizado via `headerStyle` inline. Fixo
-  // em escuro de propósito (redesign v5, claro): o fundo do header é
-  // sempre claro agora (ver tailwind.config.js), então não existe mais um
-  // caso "fundo escuro" que precisasse de texto claro aqui — antes disso,
-  // o `colorScheme` decidia entre os dois.
-  const corTexto = '#131B2E';
+  // porque esse cabeçalho já é estilizado via `headerStyle` inline.
+  //
+  // ACHADO ao vivo: o comentário antigo aqui dizia "fixo em escuro de
+  // propósito, o fundo do header é sempre claro agora" — isso ficou
+  // desatualizado assim que o modo escuro de verdade voltou (o header
+  // passou a ter fundo escuro de novo em `(app)/_layout.tsx`), e
+  // ninguém tinha notado que o texto continuava preto sobre fundo
+  // preto nessa tela específica. Corrigido lendo `useTema()`, mesmo
+  // padrão do resto do header.
+  const { escuro } = useTema();
+  const corTexto = escuro ? '#F5F5F5' : '#000000';
 
   return (
     <Pressable

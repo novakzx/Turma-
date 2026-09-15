@@ -46,7 +46,7 @@ function confirmarExclusaoConta(aoConfirmar: () => void) {
 
 function Secao({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
-    <View className="gap-3 rounded-xl border border-slate-200 bg-surface p-4 dark:bg-surface-dark">
+    <View className="gap-3 rounded-lg border border-slate-200 bg-surface p-4 dark:bg-surface-dark">
       <Text className="text-sm font-semibold text-slate-700">{titulo}</Text>
       {children}
     </View>
