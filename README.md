@@ -224,6 +224,8 @@ Lista grande de funcionalidades estilo Instagram (perfil com seguidores, stories
 
 ## Status atual
 
+**Skeleton loading em vez de spinner (pedido do usuário — "oque mais posso adicionar", sugeri duas coisas, escolheu o skeleton)** — `src/components/ui/Skeleton.tsx`: placeholder cinza pulsando com a FORMA do conteúdo (avatar + linhas de texto), no lugar do `ActivityIndicator` genérico, mesma linguagem de carregamento do X/Instagram. Só nas listas de conteúdo de verdade (feed, salas de chat, conversas, avaliações) — telas de formulário/ação continuam com o spinner simples (`LoadingState`), não faz sentido desenhar o "esqueleto" de um formulário vazio. Pulso desliga sozinho quando o sistema pede "reduzir movimento" (fica um bloco cinza parado). Testado ao vivo forçando uma resposta lenta da API (`fetch` da própria página interceptado por alguns segundos, só pra teste — não é código do app) — o esqueleto aparece com a forma certa e cede lugar ao conteúdo/estado vazio sem piscar.
+
 **Mais um passo "flat" (pedido do usuário — "oque acha que devo adicionar para deixar mais flat e mais simples visualmente tipo o X, Instagram etc")**: eu sugeri duas coisas (terminar o sweep de sombra/raio nas telas que faltavam + campo de texto sem borda) e o usuário pediu as duas.
 
 - **Radius padronizado**: todo card que ainda usava `rounded-xl` (12px) virou `rounded-lg` (8px) — perfil, configurações, notas, pedidos de turma, moderação, assinatura, apresentações, flashcards, estudo. Já eram flat (borda fina, sem sombra) desde a entrada anterior, só o raio estava inconsistente entre telas.

@@ -5,7 +5,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
-import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { SkeletonLinha } from '@/components/ui/Skeleton';
 import { EntradaAnimada } from '@/components/ui/EntradaAnimada';
 import { TextField } from '@/components/ui/TextField';
 import { useAuth } from '@/features/auth/AuthProvider';
@@ -192,7 +193,11 @@ function AbaMensagens() {
       />
 
       {carregando ? (
-        <LoadingState />
+        <View className="gap-2">
+          <SkeletonLinha />
+          <SkeletonLinha />
+          <SkeletonLinha />
+        </View>
       ) : (lista ?? []).length === 0 ? (
         <EmptyState
           icon="chatbubble-outline"
@@ -287,7 +292,12 @@ export default function Chat() {
       {secao === 'mensagens' ? (
         <AbaMensagens />
       ) : salasQuery.isLoading ? (
-        <LoadingState />
+        <View className="gap-2">
+          <SkeletonLinha />
+          <SkeletonLinha />
+          <SkeletonLinha />
+          <SkeletonLinha />
+        </View>
       ) : salasQuery.isError ? (
         <EmptyState
           titulo="Não deu pra carregar as salas"

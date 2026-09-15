@@ -4,7 +4,8 @@ import { router } from 'expo-router';
 import { useMemo } from 'react';
 import { FlatList, Pressable, RefreshControl, View } from 'react-native';
 
-import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { SkeletonPost } from '@/components/ui/Skeleton';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { curtir, descurtir, listarMeusLikes, listarPosts } from '@/features/feed/api';
 import { CartaoPost } from '@/features/feed/CartaoPost';
@@ -41,7 +42,15 @@ export default function Feed() {
     onSuccess: invalidarTudo,
   });
 
-  if (postsQuery.isLoading) return <LoadingState />;
+  if (postsQuery.isLoading) {
+    return (
+      <View className="flex-1 bg-background dark:bg-background-dark">
+        <SkeletonPost />
+        <SkeletonPost />
+        <SkeletonPost />
+      </View>
+    );
+  }
   if (postsQuery.isError) {
     return (
       <EmptyState titulo="Não deu pra carregar o feed" onTentarNovo={() => postsQuery.refetch()} />

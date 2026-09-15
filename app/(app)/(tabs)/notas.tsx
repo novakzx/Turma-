@@ -5,6 +5,7 @@ import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
 import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
+import { SkeletonLinha } from '@/components/ui/Skeleton';
 import { TextField } from '@/components/ui/TextField';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { mensagemDeErro } from '@/features/auth/errors';
@@ -284,7 +285,11 @@ export default function Notas() {
           descricao="Toque num chip acima pra ver as avaliações."
         />
       ) : avaliacoesQuery.isLoading ? (
-        <LoadingState />
+        <View className="gap-2">
+          <SkeletonLinha />
+          <SkeletonLinha />
+          <SkeletonLinha />
+        </View>
       ) : avaliacoesQuery.isError ? (
         <EmptyState
           titulo="Não deu pra carregar as avaliações"
