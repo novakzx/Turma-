@@ -52,6 +52,43 @@ export function escolherModelo(modo: ModoChatEstudo): string {
 }
 
 /**
+ * Modelo de VISÃO (pedido do usuário — "pra ia ver fotos das anotacoes
+ * dos alunos"). LLaVA, não um modelo Llama Vision da Meta — a primeira
+ * tentativa (`@cf/meta/llama-3.2-11b-vision-instruct`) exige aceitar
+ * uma licença que declara "não sou domiciliado na União Europeia", o
+ * que seria falso pra este projeto (Turma+ é de Portugal) — nunca
+ * reverter pra um modelo Llama Vision da Meta por esse motivo. Roda
+ * numa chamada separada dos modelos de texto acima: a API de chat
+ * completions (compatível OpenAI, usada pra texto) não aceita imagem;
+ * este modelo usa o endpoint nativo `/ai/run/{modelo}` da própria
+ * Cloudflare, com a imagem como array de bytes no campo `image` — não
+ * base64 (achado testando ao vivo: o endpoint recusa base64 pra esse
+ * campo, "Tensor error: failed to decode u8", mesmo a documentação da
+ * Cloudflare mostrando um exemplo com base64 em outro lugar). Formato
+ * diferente do resto, então não dá pra reusar `montarPromptSistema`
+ * (que devolve texto pra virar `content` de uma mensagem `role:
+ * 'system'`) — usa `montarPromptVisao` abaixo.
+ */
+export const MODELO_VISAO = '@cf/llava-hf/llava-1.5-7b-hf';
+
+/** Prompt pro modelo de visão. ACHADO testando ao vivo: LLaVA-1.5-7B (um
+ * modelo pequeno) IGNORA a imagem e responde "manda a foto" quando o
+ * prompt é longo/cheio de instrução de tutor — um prompt simples e
+ * direto ("descreva o que vê") faz o modelo ler a imagem corretamente
+ * (confirmado: identificou um número escrito na foto de teste). Por
+ * isso este prompt é bem mais curto que `montarPromptSistema` — pede
+ * pra descrever a foto PRIMEIRO (ordem que funcionou no teste), só
+ * depois ajudar, e sem a explicação longa de "nunca dê a resposta
+ * pronta" que o modelo maior recebe. */
+export function montarPromptVisao(params: { nomeMateria: string; pergunta: string }): string {
+  return (
+    `Olha para esta foto de um exercício de ${params.nomeMateria}. Primeiro diz exatamente o que ` +
+    'está escrito ou desenhado nela (se estiver ilegível, diga isso). Depois, ajuda com isto: ' +
+    `${params.pergunta}. Explica o raciocínio passo a passo, sem dar a resposta pronta.`
+  );
+}
+
+/**
  * Prompt de sistema do tutor (brief 6.2): "tom de tutor, não dá a
  * resposta pronta de exercício sem mostrar o raciocínio". O texto é
  * decisão de produto delegada a quem implementa ("ajuste o texto do

@@ -1,4 +1,10 @@
-import { MARCADOR_GABARITO, escolherModelo, montarPromptSistema } from '../regrasEstudo';
+import {
+  MARCADOR_GABARITO,
+  MODELO_VISAO,
+  escolherModelo,
+  montarPromptSistema,
+  montarPromptVisao,
+} from '../regrasEstudo';
 
 describe('escolherModelo (Cloudflare Workers AI — ids confirmados em developers.cloudflare.com/workers-ai/models)', () => {
   it('usa o modelo leve pra explicar conceito', () => {
@@ -50,5 +56,43 @@ describe('montarPromptSistema', () => {
     const prompt = montarPromptSistema({ nomeMateria: 'Geografia', modo: 'prova' });
     expect(prompt).toContain(MARCADOR_GABARITO);
     expect(prompt).toContain('gabarito');
+  });
+});
+
+describe('montarPromptVisao', () => {
+  // ACHADO testando ao vivo: LLaVA-1.5-7B ignora a imagem (responde
+  // "manda a foto") quando o prompt é longo/cheio de instrução de tutor
+  // — por isso este prompt é curto e direto, diferente de
+  // `montarPromptSistema`. Ver comentário na função.
+  it('inclui o nome da matéria e a pergunta do aluno', () => {
+    const prompt = montarPromptVisao({ nomeMateria: 'Matemática A', pergunta: 'Isso está certo?' });
+    expect(prompt).toContain('Matemática A');
+    expect(prompt).toContain('Isso está certo?');
+  });
+
+  it('pede pra descrever a foto antes de responder', () => {
+    const prompt = montarPromptVisao({ nomeMateria: 'Física', pergunta: 'dúvida' });
+    expect(prompt).toContain('foto');
+    expect(prompt).toContain('escrito');
+  });
+
+  it('instrui a IA a admitir quando a letra estiver ilegível, em vez de adivinhar', () => {
+    const prompt = montarPromptVisao({ nomeMateria: 'Português', pergunta: 'dúvida' });
+    expect(prompt).toContain('ilegível');
+  });
+
+  it('mantém a regra de nunca dar resposta pronta sem mostrar raciocínio', () => {
+    const prompt = montarPromptVisao({ nomeMateria: 'Química', pergunta: 'dúvida' });
+    expect(prompt).toContain('raciocínio');
+  });
+});
+
+describe('MODELO_VISAO', () => {
+  // Trocado de um modelo Llama Vision da Meta pra este — o Llama exige
+  // aceitar uma licença que declara "não domiciliado na União Europeia",
+  // falso pra este projeto (Turma+ é de Portugal). Ver comentário na
+  // constante — nunca reverter pra um modelo Llama Vision da Meta.
+  it('é o LLaVA (não um modelo Llama Vision da Meta, por causa da licença EU)', () => {
+    expect(MODELO_VISAO).toBe('@cf/llava-hf/llava-1.5-7b-hf');
   });
 });

@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -22,7 +23,11 @@ import { mensagemDeErro } from '@/features/auth/errors';
 import {
   buscarEstatisticaSemanal,
   enviarMensagemChat,
+  escolherFotoAnotacao,
+  fazerUploadFotoAnotacao,
   listarHistoricoChat,
+  obterUrlAssinadaFotoEstudo,
+  type FotoEscolhida,
 } from '@/features/estudo/api';
 import { formatarTempo, separarGabarito } from '@/features/estudo/regras';
 import {
@@ -115,6 +120,34 @@ function CartaoEstatisticaSemanal({ alunoId }: { alunoId: string }) {
   );
 }
 
+/** Miniatura da foto de anotação anexada numa mensagem (pedido do
+ * usuário — "pra ia ver fotos das anotacoes dos alunos"). Mesmo padrão
+ * de `ImagemPost`/`FotoPerfil`: bucket privado, então busca a própria
+ * URL assinada (cache do TanStack Query evita repetir a cada re-render). */
+function MiniaturaFoto({ caminho }: { caminho: string }) {
+  const { data: url, isLoading } = useQuery({
+    queryKey: ['url-assinada-foto-estudo', caminho],
+    queryFn: () => obterUrlAssinadaFotoEstudo(caminho),
+    staleTime: 50 * 60 * 1000,
+  });
+
+  if (isLoading || !url) {
+    return (
+      <View className="h-40 w-40 items-center justify-center rounded-xl bg-slate-100">
+        <ActivityIndicator size="small" color="#8B5CF6" />
+      </View>
+    );
+  }
+  return (
+    <Image
+      source={{ uri: url }}
+      className="h-40 w-40 rounded-xl"
+      resizeMode="cover"
+      accessibilityLabel="Foto da anotação enviada"
+    />
+  );
+}
+
 function BolhaMensagem({
   mensagem,
   perguntaAnterior,
@@ -159,6 +192,7 @@ function BolhaMensagem({
         </View>
       ) : null}
       <View className="shrink gap-1.5">
+        {mensagem.midia_url ? <MiniaturaFoto caminho={mensagem.midia_url} /> : null}
         <View
           className={`shrink px-4 py-2.5 ${
             doAluno
@@ -224,6 +258,12 @@ export default function Estudo() {
   const [texto, setTexto] = useState('');
   const [erro, setErro] = useState<string | null>(null);
   const [segundosRestantesProva, setSegundosRestantesProva] = useState<number | null>(null);
+  // Foto de anotação escolhida, ainda não enviada (pedido do usuário —
+  // "pra ia ver fotos das anotacoes dos alunos"). Só o preview local
+  // (`uri`) — o upload de verdade só acontece no envio, pra não deixar
+  // foto órfã no Storage se o aluno trocar de ideia e apagar o anexo
+  // antes de mandar.
+  const [fotoEscolhida, setFotoEscolhida] = useState<FotoEscolhida | null>(null);
   // Barra de abas agora é docada (não mais flutuante/`position: absolute`
   // — ver `(tabs)/_layout.tsx`), então o React Navigation já reserva o
   // espaço dela sozinho: só falta somar o inset de segurança do rodapé,
@@ -257,9 +297,29 @@ export default function Estudo() {
   });
 
   const enviarMutation = useMutation({
-    mutationFn: enviarMensagemChat,
+    // Com foto: faz o upload pro bucket privado primeiro (pedido do
+    // usuário — "pra ia ver fotos das anotacoes dos alunos"), só depois
+    // manda a mensagem com o caminho — a Edge Function busca os bytes
+    // ela mesma a partir daí, o app nunca manda a imagem inteira pra IA.
+    mutationFn: async (params: {
+      materiaId: string;
+      mensagem: string;
+      modo: ModoChatEstudo;
+      foto: FotoEscolhida | null;
+    }) => {
+      const fotoCaminho = params.foto
+        ? await fazerUploadFotoAnotacao(profile!.id, params.foto.uri, params.foto.arquivoWeb)
+        : null;
+      return enviarMensagemChat({
+        materiaId: params.materiaId,
+        mensagem: params.mensagem,
+        modo: params.modo,
+        fotoCaminho,
+      });
+    },
     onSuccess: () => {
       setTexto('');
+      setFotoEscolhida(null);
       setErro(null);
       // Prova gerada com sucesso: dispara o cronômetro de 15 min agora,
       // não no clique de "Enviar" — só faz sentido contar o tempo depois
@@ -270,9 +330,21 @@ export default function Estudo() {
     onError: (error) => setErro(mensagemDeErro(error)),
   });
 
+  async function handleEscolherFoto() {
+    try {
+      const foto = await escolherFotoAnotacao();
+      if (foto) setFotoEscolhida(foto);
+    } catch (error) {
+      setErro(mensagemDeErro(error));
+    }
+  }
+
   function handleEnviar() {
     if (!materiaId) return;
-    if (!texto.trim()) {
+    // Com foto anexada, a pergunta é opcional — "o que está aqui?" já é
+    // uma pergunta válida sem precisar digitar nada; sem foto, continua
+    // exigindo texto (é a única coisa que a IA teria pra responder).
+    if (!texto.trim() && !fotoEscolhida) {
       setErro(
         modo === 'prova'
           ? 'Escreve o assunto da prova antes de gerar (ex.: "frações" ou "2ª Guerra Mundial").'
@@ -281,7 +353,12 @@ export default function Estudo() {
       return;
     }
     setErro(null);
-    enviarMutation.mutate({ materiaId, mensagem: texto.trim(), modo });
+    enviarMutation.mutate({
+      materiaId,
+      mensagem: texto.trim() || 'O que está escrito/desenhado nessa foto? Pode me ajudar?',
+      modo,
+      foto: fotoEscolhida,
+    });
   }
 
   if (materiasQuery.isLoading) return <LoadingState />;
@@ -438,7 +515,9 @@ export default function Estudo() {
             <View className="flex-row items-center gap-1.5">
               <ActivityIndicator size="small" color="#8B5CF6" />
               <Text className="text-sm text-slate-500">
-                A IA está a pensar... pode demorar alguns segundos.
+                {fotoEscolhida
+                  ? 'A IA está a olhar a foto... pode demorar um pouco mais que o normal.'
+                  : 'A IA está a pensar... pode demorar alguns segundos.'}
               </Text>
             </View>
           ) : erro ? (
@@ -447,16 +526,44 @@ export default function Estudo() {
               <Text className="text-sm text-danger dark:text-danger-dark">{erro}</Text>
             </View>
           ) : null}
+          {fotoEscolhida ? (
+            <View className="flex-row items-center gap-2 self-start rounded-xl bg-slate-100 p-2">
+              <Image
+                source={{ uri: fotoEscolhida.uri }}
+                className="h-14 w-14 rounded-lg"
+                resizeMode="cover"
+              />
+              <Text className="text-xs text-slate-500">Foto anexada</Text>
+              <Pressable
+                onPress={() => setFotoEscolhida(null)}
+                accessibilityRole="button"
+                accessibilityLabel="Remover foto"
+                className="min-h-11 min-w-11 items-center justify-center"
+              >
+                <Ionicons name="close-circle" size={20} color="#94A3B8" />
+              </Pressable>
+            </View>
+          ) : null}
           <View className="flex-row items-end gap-2">
+            <Pressable
+              onPress={handleEscolherFoto}
+              accessibilityRole="button"
+              accessibilityLabel="Anexar foto de anotação"
+              className="min-h-11 min-w-11 items-center justify-center rounded-full bg-slate-100"
+            >
+              <Ionicons name="camera-outline" size={20} color="#8B5CF6" />
+            </Pressable>
             <View className="flex-1">
               <TextField
                 label="Mensagem"
                 value={texto}
                 onChangeText={setTexto}
                 placeholder={
-                  modo === 'prova'
-                    ? 'Assunto da prova (ex.: frações)...'
-                    : 'Escreve sua pergunta...'
+                  fotoEscolhida
+                    ? 'O que você quer saber sobre a foto? (opcional)'
+                    : modo === 'prova'
+                      ? 'Assunto da prova (ex.: frações)...'
+                      : 'Escreve sua pergunta...'
                 }
                 multiline
               />

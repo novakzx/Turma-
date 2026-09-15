@@ -8,10 +8,26 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
 import {
+  MODELO_VISAO,
   escolherModelo,
   montarPromptSistema,
+  montarPromptVisao,
   type ModoChatEstudo,
 } from '../_shared/regrasEstudo.ts';
+
+// Bucket privado das fotos de anotação (ver migration
+// `estudo_fotos_anotacao`) — path sempre "{aluno_id}/arquivo.ext".
+const BUCKET_FOTOS_ESTUDO = 'estudo-fotos';
+// O endpoint de visão da Cloudflare quer o campo `image` como array de
+// bytes (`[137, 80, 78, ...]`), não base64 (achado testando ao vivo —
+// ver comentário mais abaixo) — isso infla o tamanho uns 4x em JSON
+// (cada byte vira 1-3 dígitos + vírgula), bem mais caro que os ~33% do
+// base64. 2 MB de foto já viram ~8 MB de corpo de requisição, então o
+// teto aqui é bem mais conservador do que seria com base64. Ainda é
+// generoso pra uma foto de caderno comprimida com nitidez razoável;
+// acima disso, devolve um erro amigável em vez de mandar um payload
+// gigante pra Cloudflare e receber um erro obscuro de volta.
+const FOTO_TAMANHO_MAXIMO_BYTES = 2 * 1024 * 1024;
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
@@ -98,6 +114,7 @@ Deno.serve(async (req) => {
     const materiaId = payload?.materiaId as string | undefined;
     const mensagem = (payload?.mensagem as string | undefined)?.trim();
     const modo = (payload?.modo as ModoChatEstudo | undefined) ?? 'duvida';
+    const fotoCaminho = (payload?.fotoCaminho as string | undefined)?.trim() || null;
 
     if (!materiaId || !mensagem) {
       return respostaJson({ error: 'payload inválido' }, 400, origin);
@@ -118,6 +135,41 @@ Deno.serve(async (req) => {
     } = await userClient.auth.getUser();
     if (userError || !user) {
       return respostaJson({ error: 'Sessão inválida.' }, 401, origin);
+    }
+
+    // Precisa da service role já aqui pra buscar os bytes da foto (o
+    // bucket é privado e o `userClient` até teria acesso via RLS, mas
+    // baixar arquivo binário grande é mais direto com um client dedicado).
+    // Validar que o caminho é mesmo da PRÓPRIA pasta do usuário antes de
+    // baixar é essencial — a service role ignora RLS por definição, então
+    // sem essa checagem um payload forjado com o caminho de outro aluno
+    // faria esta função ler a foto de qualquer um.
+    const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+    // Array de bytes (`number[]`), não base64 — achado testando ao vivo:
+    // o endpoint nativo `/ai/run/{modelo}` recusa base64 pra este campo
+    // ("Tensor error: failed to decode u8"), mesmo a documentação da
+    // Cloudflare mostrando um exemplo com base64 em outro lugar (docs
+    // inconsistentes entre si). `Array.from(bytes)` é o formato
+    // confirmado funcionando pelo endpoint de verdade.
+    let fotoBytes: number[] | null = null;
+    if (fotoCaminho) {
+      if (!fotoCaminho.startsWith(`${user.id}/`)) {
+        return respostaJson({ error: 'Foto inválida.' }, 400, origin);
+      }
+      const { data: fotoBlob, error: fotoError } = await admin.storage
+        .from(BUCKET_FOTOS_ESTUDO)
+        .download(fotoCaminho);
+      if (fotoError || !fotoBlob) {
+        return respostaJson({ error: 'Não achei essa foto — tenta enviar de novo.' }, 400, origin);
+      }
+      if (fotoBlob.size > FOTO_TAMANHO_MAXIMO_BYTES) {
+        return respostaJson(
+          { error: 'Essa foto é grande demais pra IA processar — tenta uma foto mais simples.' },
+          400,
+          origin,
+        );
+      }
+      fotoBytes = Array.from(new Uint8Array(await fotoBlob.arrayBuffer()));
     }
 
     // Assinante do Turma+ Premium (R$1,99/mês, ver migration
@@ -190,72 +242,135 @@ Deno.serve(async (req) => {
 
     // Cloudflare Workers AI expõe uma API compatível com OpenAI (`role:
     // 'system' | 'user' | 'assistant'`, texto direto em `content`) —
-    // mesmo formato que a Groq usava, então essa parte não mudou.
+    // mesmo formato que a Groq usava, então essa parte não mudou. Só
+    // usada no caminho sem foto (o modelo de visão não aceita esse
+    // formato, ver `MODELO_VISAO`).
     const historicoConvertido = (historico ?? []).reverse().map((m) => ({
       role: m.papel === 'usuario' ? ('user' as const) : ('assistant' as const),
       content: m.conteudo as string,
     }));
 
-    const modelo = escolherModelo(modo);
-    const systemPrompt = montarPromptSistema({ nomeMateria: materia.nome, modo });
+    const modelo = fotoBytes ? MODELO_VISAO : escolherModelo(modo);
+    let textoResposta = '';
 
-    // 429 (cota do tier grátis estourada) ou 503 (sobrecarga temporária)
-    // — uma única nova tentativa depois de um respiro curto resolve a
-    // maioria dos casos sem esperar o usuário clicar "Enviar" de novo.
-    async function chamarCloudflare() {
-      return fetch(
-        `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/ai/v1/chat/completions`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${CF_API_TOKEN}`,
+    if (fotoBytes) {
+      // Endpoint NATIVO da Cloudflare (`/ai/run/{modelo}`), não o
+      // compatível OpenAI usado abaixo pro texto puro — o modelo de
+      // visão não é exposto por ali. Sem histórico de conversa aqui
+      // (o endpoint não tem conceito de "mensagens anteriores" pra
+      // esse modelo) — cada foto é uma pergunta isolada, o que é
+      // aceitável: ninguém manda foto atrás de foto na mesma dúvida.
+      const promptVisao = montarPromptVisao({ nomeMateria: materia.nome, pergunta: mensagem });
+
+      async function chamarCloudflareVisao() {
+        return fetch(
+          `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/ai/run/${MODELO_VISAO}`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${CF_API_TOKEN}`,
+            },
+            body: JSON.stringify({ image: fotoBytes, prompt: promptVisao }),
           },
-          body: JSON.stringify({
-            model: modelo,
-            messages: [
-              { role: 'system', content: systemPrompt },
-              ...historicoConvertido,
-              { role: 'user', content: mensagem },
-            ],
-          }),
-        },
-      );
-    }
+        );
+      }
 
-    let respostaCloudflare = await chamarCloudflare();
-    if (respostaCloudflare.status === 429 || respostaCloudflare.status === 503) {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      respostaCloudflare = await chamarCloudflare();
-    }
+      let respostaCloudflare = await chamarCloudflareVisao();
+      if (respostaCloudflare.status === 429 || respostaCloudflare.status === 503) {
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        respostaCloudflare = await chamarCloudflareVisao();
+      }
 
-    if (!respostaCloudflare.ok) {
-      const corpo = await respostaCloudflare.text();
-      console.error('chat-estudo: Cloudflare Workers AI recusou', respostaCloudflare.status, corpo);
-      const mensagemErro =
-        respostaCloudflare.status === 429 || respostaCloudflare.status === 503
-          ? 'A IA está sobrecarregada agora — tenta de novo em alguns segundos.'
-          : 'Não deu pra falar com a IA agora.';
-      return respostaJson({ error: mensagemErro }, 502, origin);
-    }
+      if (!respostaCloudflare.ok) {
+        const corpo = await respostaCloudflare.text();
+        console.error(
+          'chat-estudo: Cloudflare Workers AI (visão) recusou',
+          respostaCloudflare.status,
+          corpo,
+        );
+        const mensagemErro =
+          respostaCloudflare.status === 429 || respostaCloudflare.status === 503
+            ? 'A IA está sobrecarregada agora — tenta de novo em alguns segundos.'
+            : 'Não deu pra falar com a IA agora.';
+        return respostaJson({ error: mensagemErro }, 502, origin);
+      }
 
-    const dadosResposta = await respostaCloudflare.json();
-    const textoResposta: string = dadosResposta.choices?.[0]?.message?.content ?? '';
+      const dadosResposta = await respostaCloudflare.json();
+      textoResposta =
+        typeof dadosResposta?.result === 'string'
+          ? dadosResposta.result
+          : (dadosResposta?.result?.response ?? dadosResposta?.result?.description ?? '');
+    } else {
+      const systemPrompt = montarPromptSistema({ nomeMateria: materia.nome, modo });
+
+      // 429 (cota do tier grátis estourada) ou 503 (sobrecarga
+      // temporária) — uma única nova tentativa depois de um respiro
+      // curto resolve a maioria dos casos sem esperar o usuário clicar
+      // "Enviar" de novo.
+      async function chamarCloudflare() {
+        return fetch(
+          `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/ai/v1/chat/completions`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${CF_API_TOKEN}`,
+            },
+            body: JSON.stringify({
+              model: modelo,
+              messages: [
+                { role: 'system', content: systemPrompt },
+                ...historicoConvertido,
+                { role: 'user', content: mensagem },
+              ],
+            }),
+          },
+        );
+      }
+
+      let respostaCloudflare = await chamarCloudflare();
+      if (respostaCloudflare.status === 429 || respostaCloudflare.status === 503) {
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        respostaCloudflare = await chamarCloudflare();
+      }
+
+      if (!respostaCloudflare.ok) {
+        const corpo = await respostaCloudflare.text();
+        console.error(
+          'chat-estudo: Cloudflare Workers AI recusou',
+          respostaCloudflare.status,
+          corpo,
+        );
+        const mensagemErro =
+          respostaCloudflare.status === 429 || respostaCloudflare.status === 503
+            ? 'A IA está sobrecarregada agora — tenta de novo em alguns segundos.'
+            : 'Não deu pra falar com a IA agora.';
+        return respostaJson({ error: mensagemErro }, 502, origin);
+      }
+
+      const dadosResposta = await respostaCloudflare.json();
+      textoResposta = dadosResposta.choices?.[0]?.message?.content ?? '';
+    }
 
     if (!textoResposta) {
-      console.error(
-        'chat-estudo: Cloudflare Workers AI sem texto na resposta',
-        JSON.stringify(dadosResposta),
-      );
+      console.error('chat-estudo: Cloudflare Workers AI sem texto na resposta');
       return respostaJson({ error: 'A IA não conseguiu responder dessa vez.' }, 502, origin);
     }
 
     // Persiste os dois lados com a service role — não existe policy de
     // INSERT pra `authenticated` nessa tabela de propósito (evita um
-    // cliente forjar uma mensagem "assistente").
-    const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+    // cliente forjar uma mensagem "assistente"). `midia_url` só na
+    // mensagem do usuário (a foto que ele mandou) — a resposta da IA
+    // nunca tem mídia própria.
     const { error: insertError } = await admin.from('chat_ia_mensagens').insert([
-      { aluno_id: user.id, materia_id: materiaId, papel: 'usuario', conteudo: mensagem },
+      {
+        aluno_id: user.id,
+        materia_id: materiaId,
+        papel: 'usuario',
+        conteudo: mensagem,
+        midia_url: fotoCaminho,
+      },
       { aluno_id: user.id, materia_id: materiaId, papel: 'assistente', conteudo: textoResposta },
     ]);
     if (insertError) console.error('chat-estudo: falha ao salvar histórico', insertError);

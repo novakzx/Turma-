@@ -160,6 +160,7 @@ export type Database = {
           criado_em: string;
           id: string;
           materia_id: string;
+          midia_url: string | null;
           papel: Database['public']['Enums']['papel_mensagem_ia'];
         };
         Insert: {
@@ -168,6 +169,7 @@ export type Database = {
           criado_em?: string;
           id?: string;
           materia_id: string;
+          midia_url?: string | null;
           papel: Database['public']['Enums']['papel_mensagem_ia'];
         };
         Update: {
@@ -176,6 +178,7 @@ export type Database = {
           criado_em?: string;
           id?: string;
           materia_id?: string;
+          midia_url?: string | null;
           papel?: Database['public']['Enums']['papel_mensagem_ia'];
         };
         Relationships: [
