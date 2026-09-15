@@ -2,6 +2,7 @@ import {
   avaliarExpressao,
   derivarPolinomio,
   interpretarQuadratica,
+  normalizarExpressao,
   resolverQuadratica,
 } from '../ferramentasCalculo';
 
@@ -26,6 +27,21 @@ describe('avaliarExpressao', () => {
 
   it('rejeita expressão vazia', () => {
     expect(() => avaliarExpressao('')).toThrow();
+  });
+
+  // ACHADO testando ao vivo (usuário relatou ferramentas difíceis de
+  // usar): a própria dica de erro da equação mostra "ax² + bx + c",
+  // então "²" precisa funcionar em todo lugar, não só na equação.
+  it('aceita "²"/"³" de verdade (não só "^2"/"^3")', () => {
+    expect(avaliarExpressao('3²').resultado).toBe(9);
+    expect(avaliarExpressao('2³').resultado).toBe(8);
+  });
+});
+
+describe('normalizarExpressao', () => {
+  it('converte dígito sobrescrito (²³...) pra "^N"', () => {
+    expect(normalizarExpressao('x²')).toBe('x^2');
+    expect(normalizarExpressao('x³')).toBe('x^3');
   });
 });
 
@@ -62,6 +78,16 @@ describe('interpretarQuadratica', () => {
   it('lê "2x^2 - 5x + 3 = 0"', () => {
     expect(interpretarQuadratica('2x^2 - 5x + 3 = 0')).toEqual({ a: 2, b: -5, c: 3 });
   });
+
+  // BUG real testando ao vivo: antes do fix, "x² - 5x + 6 = 0" (com o
+  // "²" de verdade, exatamente como a dica de erro da própria
+  // ferramenta sugere escrever) não dava erro nenhum — calculava
+  // ERRADO em silêncio (a virava 0 em vez de 1, porque o "²" era
+  // ignorado pelo regex sem ser rejeitado). Pior que travar: parecia
+  // ter funcionado.
+  it('lê "x² - 5x + 6 = 0" com o "²" de verdade, sem calcular errado', () => {
+    expect(interpretarQuadratica('x² - 5x + 6 = 0')).toEqual({ a: 1, b: -5, c: 6 });
+  });
 });
 
 describe('derivarPolinomio', () => {
@@ -72,5 +98,10 @@ describe('derivarPolinomio', () => {
 
   it('derivada de uma constante isolada é 0', () => {
     expect(derivarPolinomio('7').derivada).toBe('0');
+  });
+
+  it('aceita "²" de verdade no polinómio (ex.: 3x⁴ - 2x²)', () => {
+    const r = derivarPolinomio('3x⁴ - 2x² + 5x - 7');
+    expect(r.derivada.replace(/\s+/g, ' ')).toBe('12x^3 −4x + 5');
   });
 });

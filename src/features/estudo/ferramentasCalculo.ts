@@ -9,6 +9,30 @@
  * funciona mesmo sem internet ou sem o app de IA responder.
  */
 
+// Dígito sobrescrito (Unicode) → dígito normal, pra virar "^N" — achado
+// testando ao vivo (usuário relatou "arrume as ferramentas... fácil
+// uso e funcional"): a própria dica de erro do resolvedor de equação
+// mostra "ax² + bx + c" (usa "²" de verdade), mas sem esta conversão o
+// parser não reconhecia "²" nenhum — pior ainda, no resolvedor de
+// equação isso não dava erro nenhum, só CALCULAVA ERRADO em silêncio
+// (ex.: "x² - 5x + 6 = 0" virava a=0 em vez de a=1, porque o "²" era
+// simplesmente ignorado pelo regex, não rejeitado). Convertido antes de
+// qualquer outra coisa pra "²"/"³"/etc. virarem "^2"/"^3" de verdade,
+// consistente em TODAS as ferramentas (calculadora, equação, derivada),
+// já que as três usam esta mesma função de normalização.
+const SOBRESCRITOS: Record<string, string> = {
+  '⁰': '0',
+  '¹': '1',
+  '²': '2',
+  '³': '3',
+  '⁴': '4',
+  '⁵': '5',
+  '⁶': '6',
+  '⁷': '7',
+  '⁸': '8',
+  '⁹': '9',
+};
+
 export function normalizarExpressao(entrada: string): string {
   return entrada
     .toLowerCase()
@@ -17,7 +41,10 @@ export function normalizarExpressao(entrada: string): string {
     .replace(/÷/g, '/')
     .replace(/−/g, '-')
     .replace(/\s+/g, '')
-    .replace(/π/g, 'pi');
+    .replace(/π/g, 'pi')
+    .replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]+/g, (grupo) =>
+      '^' + grupo.split('').map((c) => SOBRESCRITOS[c]).join(''),
+    );
 }
 
 const CONSTANTES: Record<string, number> = { pi: Math.PI, e: Math.E };
