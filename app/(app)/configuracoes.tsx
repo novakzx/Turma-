@@ -1,8 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
 import { TextField } from '@/components/ui/TextField';
@@ -11,6 +11,8 @@ import { useAuth } from '@/features/auth/AuthProvider';
 import { mensagemDeErro } from '@/features/auth/errors';
 import { useTema } from '@/features/configuracoes/TemaProvider';
 import type { TemaPreferido } from '@/features/configuracoes/tema';
+import { desbloquearUsuario, listarBloqueios } from '@/features/mensagens/api';
+import { FotoPerfil } from '@/features/perfil/FotoPerfil';
 import { atualizarPrivacidade } from '@/features/perfil/api';
 import { excluirMinhaConta, exportarMeusDados } from '@/features/perfil/dadosPessoais';
 
@@ -93,10 +95,61 @@ function CartaoAcaoExpansivel({
   );
 }
 
+/** Uma linha de "Contas bloqueadas" — avatar, nome, botão de
+ * desbloquear. Mesmo padrão visual dos outros botões desta tela
+ * (`variant="secondary"`), só num card mais compacto pra caber vários
+ * numa lista. */
+function CartaoContaBloqueada({
+  perfil,
+  onDesbloquear,
+  carregando,
+}: {
+  perfil: { id: string; nome: string; nome_usuario: string | null; foto_url: string | null };
+  onDesbloquear: () => void;
+  carregando: boolean;
+}) {
+  return (
+    <View className="flex-row items-center gap-3 rounded-lg border border-slate-200 p-3">
+      <FotoPerfil caminho={perfil.foto_url} nome={perfil.nome} tamanho={40} />
+      <View className="flex-1">
+        <Text className="text-sm font-semibold text-slate-900">{perfil.nome}</Text>
+        {perfil.nome_usuario ? (
+          <Text className="text-xs text-slate-500">@{perfil.nome_usuario}</Text>
+        ) : null}
+      </View>
+      <Pressable
+        onPress={onDesbloquear}
+        disabled={carregando}
+        accessibilityRole="button"
+        accessibilityLabel={`Desbloquear ${perfil.nome}`}
+        className="min-h-11 items-center justify-center rounded-md border border-slate-200 px-3"
+      >
+        {carregando ? (
+          <ActivityIndicator size="small" color="#8B5CF6" />
+        ) : (
+          <Text className="text-sm font-medium text-primary dark:text-primary-dark">
+            Desbloquear
+          </Text>
+        )}
+      </Pressable>
+    </View>
+  );
+}
+
 export default function Configuracoes() {
   const { profile } = useAuth();
   const queryClient = useQueryClient();
   const { temaPreferido, setTemaPreferido, cores } = useTema();
+
+  const bloqueiosQuery = useQuery({
+    queryKey: ['bloqueios', profile?.id],
+    queryFn: () => listarBloqueios(profile!.id),
+    enabled: !!profile,
+  });
+  const desbloquearMutation = useMutation({
+    mutationFn: (bloqueadoId: string) => desbloquearUsuario(profile!.id, bloqueadoId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['bloqueios', profile?.id] }),
+  });
 
   const [secaoAberta, setSecaoAberta] = useState<'senha' | null>(null);
   const [novaSenha, setNovaSenha] = useState('');
@@ -215,6 +268,30 @@ export default function Configuracoes() {
             loading={privacidadeMutation.isPending}
           />
         </View>
+      </Secao>
+
+      <Secao titulo="Contas bloqueadas">
+        {bloqueiosQuery.isLoading ? (
+          <ActivityIndicator color="#8B5CF6" />
+        ) : (bloqueiosQuery.data ?? []).length === 0 ? (
+          <Text className="text-sm text-slate-500">
+            Você não bloqueou ninguém. Contas bloqueadas não conseguem te mandar mensagem nem
+            iniciar conversa.
+          </Text>
+        ) : (
+          <View className="gap-2">
+            {bloqueiosQuery.data!.map(({ id, perfil }) => (
+              <CartaoContaBloqueada
+                key={id}
+                perfil={perfil}
+                onDesbloquear={() => desbloquearMutation.mutate(perfil.id)}
+                carregando={
+                  desbloquearMutation.isPending && desbloquearMutation.variables === perfil.id
+                }
+              />
+            ))}
+          </View>
+        )}
       </Secao>
 
       <Secao titulo="Conta">

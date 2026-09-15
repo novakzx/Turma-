@@ -23,11 +23,12 @@ import { FotoPerfil } from '@/features/perfil/FotoPerfil';
  * documenta — cada um do tamanho do próprio conteúdo, sem forçar
  * largura de container — é o caminho testado nos dois motores.
  *
- * Sino não tem "bolinha" de não-lido de propósito: não existe hoje uma
- * lista de notificações real no app pra saber se tem algo novo — uma
- * bolinha sempre acesa seria só decoração enganosa. Leva pra
- * Configurações (onde as prefs de notificação já vivem) até o app ganhar
- * uma tela de notificações de verdade.
+ * Sino leva pra `/notificacoes` (pedido do usuário — antes ia direto
+ * pra Configurações, era só um redirect provisório documentado aqui
+ * até existir uma tela de verdade, ver `app/(app)/notificacoes.tsx`).
+ * Ainda sem "bolinha" de não-lido de propósito: a página não marca
+ * o que já foi visto, então uma bolinha sempre acesa seria decoração
+ * enganosa — fica pra quando existir esse controle de verdade.
  */
 export function HeaderEsquerda({ subtitulo }: { subtitulo: string }) {
   return (
@@ -68,9 +69,9 @@ export function HeaderDireita({
         </Pressable>
       ) : null}
       <Pressable
-        onPress={() => router.push('/configuracoes')}
+        onPress={() => router.push('/notificacoes')}
         accessibilityRole="button"
-        accessibilityLabel="Notificações e configurações"
+        accessibilityLabel="Notificações"
         className="h-10 w-10 items-center justify-center rounded-full bg-slate-100"
       >
         <Ionicons name="notifications-outline" size={19} color={cores.neutro} />

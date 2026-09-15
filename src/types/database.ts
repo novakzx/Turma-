@@ -969,6 +969,42 @@ export type Database = {
           },
         ];
       };
+      story_curtidas: {
+        Row: {
+          autor_id: string;
+          criado_em: string;
+          id: string;
+          story_id: string;
+        };
+        Insert: {
+          autor_id: string;
+          criado_em?: string;
+          id?: string;
+          story_id: string;
+        };
+        Update: {
+          autor_id?: string;
+          criado_em?: string;
+          id?: string;
+          story_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'story_curtidas_autor_id_fkey';
+            columns: ['autor_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'story_curtidas_story_id_fkey';
+            columns: ['story_id'];
+            isOneToOne: false;
+            referencedRelation: 'stories';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       traducoes_uso: {
         Row: {
           aluno_id: string;

@@ -45,6 +45,7 @@ export default function AppLayout() {
         options={{ presentation: 'modal', title: 'Editar perfil' }}
       />
       <Stack.Screen name="minhas-publicacoes" options={{ title: 'Minhas publicações' }} />
+      <Stack.Screen name="notificacoes" options={{ title: 'Notificações' }} />
       <Stack.Screen name="configuracoes" options={{ title: 'Configurações' }} />
       <Stack.Screen name="gerenciar-materias" options={{ title: 'Matérias' }} />
       <Stack.Screen name="pedidos-turma" options={{ title: 'Pedidos de entrada' }} />

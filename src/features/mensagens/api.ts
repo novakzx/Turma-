@@ -275,3 +275,23 @@ export async function euBloqueei(bloqueadorId: string, bloqueadoId: string): Pro
   if (error) throw error;
   return !!data;
 }
+
+/** Lista de "Contas bloqueadas" (pedido do usuário, pra Configurações)
+ * — RLS de `bloqueios` só devolve linhas onde `bloqueador_id =
+ * auth.uid()` de propósito (ver migration `mensagens_diretas_
+ * bloqueio`, quem foi bloqueado não pode descobrir), então esta query
+ * já vem naturalmente restrita a "quem EU bloqueei", sem precisar
+ * filtrar de novo aqui. */
+export async function listarBloqueios(
+  bloqueadorId: string,
+): Promise<{ id: string; perfil: PerfilResumo }[]> {
+  const { data, error } = await supabase
+    .from('bloqueios')
+    .select(`id, profiles:bloqueado_id(${SELECT_PERFIL_RESUMO})`)
+    .eq('bloqueador_id', bloqueadorId)
+    .order('criado_em', { ascending: false });
+  if (error) throw error;
+  return (data as unknown as { id: string; profiles: PerfilResumo | null }[])
+    .filter((linha): linha is { id: string; profiles: PerfilResumo } => !!linha.profiles)
+    .map((linha) => ({ id: linha.id, perfil: linha.profiles }));
+}

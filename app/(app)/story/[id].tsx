@@ -8,7 +8,15 @@ import { useVideoPlayer, VideoView } from 'expo-video';
 
 import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
 import { useAuth } from '@/features/auth/AuthProvider';
-import { apagarStory, listarStoriesDoAutor, obterUrlAssinadaStory } from '@/features/social/api';
+import {
+  apagarStory,
+  contarCurtidasStory,
+  curtirStory,
+  descurtirStory,
+  estaCurtindoStory,
+  listarStoriesDoAutor,
+  obterUrlAssinadaStory,
+} from '@/features/social/api';
 import { ehVideo } from '@/features/social/types';
 
 /** `window.confirm` no web, `Alert.alert` nativo — mesmo padrão já
@@ -79,6 +87,36 @@ export default function StoryViewer() {
     confirmar('Apagar essa story? Não dá pra desfazer.', () => apagarMutation.mutate());
   }
 
+  // Curtida da story (pedido do usuário — precisa existir pra alimentar
+  // a página de notificações, "curtiram sua story"). Chave da query
+  // inclui o id da story atual — troca de story troca o coração sem
+  // misturar estado de uma story com outra.
+  const curtidaQuery = useQuery({
+    queryKey: ['curtida-story', storyAtual?.id, profile?.id],
+    queryFn: () => estaCurtindoStory(storyAtual!.id, profile!.id),
+    enabled: !!storyAtual && !!profile,
+  });
+  const totalCurtidasQuery = useQuery({
+    queryKey: ['total-curtidas-story', storyAtual?.id],
+    queryFn: () => contarCurtidasStory(storyAtual!.id),
+    enabled: !!storyAtual,
+  });
+  const curtirMutation = useMutation({
+    mutationFn: () => curtirStory(storyAtual!.id, profile!.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['curtida-story', storyAtual?.id, profile?.id] });
+      queryClient.invalidateQueries({ queryKey: ['total-curtidas-story', storyAtual?.id] });
+    },
+  });
+  const descurtirMutation = useMutation({
+    mutationFn: () => descurtirStory(storyAtual!.id, profile!.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['curtida-story', storyAtual?.id, profile?.id] });
+      queryClient.invalidateQueries({ queryKey: ['total-curtidas-story', storyAtual?.id] });
+    },
+  });
+  const curtido = curtidaQuery.data ?? false;
+
   if (storiesQuery.isLoading) return <LoadingState />;
   if (storiesQuery.isError || stories.length === 0) {
     return (
@@ -105,6 +143,24 @@ export default function StoryViewer() {
           <Text className="flex-1 px-2 text-base font-semibold text-white">
             {storyAtual.profiles?.nome ?? 'Alguém'}
           </Text>
+          <Pressable
+            onPress={() =>
+              curtido ? descurtirMutation.mutate() : curtirMutation.mutate()
+            }
+            disabled={!profile}
+            accessibilityRole="button"
+            accessibilityLabel={curtido ? 'Descurtir esta story' : 'Curtir esta story'}
+            className="min-h-11 min-w-11 flex-row items-center justify-center gap-1"
+          >
+            <Ionicons
+              name={curtido ? 'heart' : 'heart-outline'}
+              size={22}
+              color={curtido ? '#F87171' : '#FFFFFF'}
+            />
+            {(totalCurtidasQuery.data ?? 0) > 0 ? (
+              <Text className="text-sm font-medium text-white">{totalCurtidasQuery.data}</Text>
+            ) : null}
+          </Pressable>
           {ehDono ? (
             <Pressable
               onPress={handleApagar}

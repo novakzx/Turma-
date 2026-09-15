@@ -183,3 +183,43 @@ export async function obterUrlAssinadaStory(caminho: string): Promise<string> {
   if (error) throw error;
   return data.signedUrl;
 }
+
+/** Curtida em story (pedido do usuário — página de notificações
+ * precisa mostrar "curtiram sua story", que não existia até agora).
+ * Mesmo racional de `curtir`/`descurtir` em `feed/api.ts`, tabela
+ * dedicada `story_curtidas`. */
+export async function curtirStory(storyId: string, autorId: string) {
+  const { error } = await supabase
+    .from('story_curtidas')
+    .insert({ story_id: storyId, autor_id: autorId });
+  if (error) throw error;
+}
+
+export async function descurtirStory(storyId: string, autorId: string) {
+  const { error } = await supabase
+    .from('story_curtidas')
+    .delete()
+    .eq('story_id', storyId)
+    .eq('autor_id', autorId);
+  if (error) throw error;
+}
+
+export async function estaCurtindoStory(storyId: string, autorId: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('story_curtidas')
+    .select('id')
+    .eq('story_id', storyId)
+    .eq('autor_id', autorId)
+    .maybeSingle();
+  if (error) throw error;
+  return !!data;
+}
+
+export async function contarCurtidasStory(storyId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from('story_curtidas')
+    .select('id', { count: 'exact', head: true })
+    .eq('story_id', storyId);
+  if (error) throw error;
+  return count ?? 0;
+}
