@@ -14,6 +14,14 @@ type AuthContextValue = {
   isLoadingSession: boolean;
   /** Tem sessão, mas o perfil ainda não voltou (ou está sendo criado). */
   isLoadingProfile: boolean;
+  /** Sessão veio de um link de "esqueci minha senha" (evento
+   * `PASSWORD_RECOVERY` do Supabase) — o RootNavigator usa isto pra
+   * levar direto pra `/redefinir-senha` em vez de deixar a pessoa cair
+   * solta dentro do app com essa sessão temporária (ver comentário em
+   * `solicitarRedefinicaoSenha`, `features/auth/api.ts`). Só quem
+   * termina a troca de senha (`limparRecuperacaoSenha`) sai desse modo. */
+  isPasswordRecovery: boolean;
+  limparRecuperacaoSenha: () => void;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -26,6 +34,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoadingSession, setIsLoadingSession] = useState(true);
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -36,8 +45,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, novaSessao) => {
+    } = supabase.auth.onAuthStateChange((event, novaSessao) => {
       setSession(novaSessao);
+      // Disparado quando `detectSessionInUrl` autentica sozinho a
+      // sessão que vem do link de "esqueci minha senha" — ver
+      // `solicitarRedefinicaoSenha`.
+      if (event === 'PASSWORD_RECOVERY') setIsPasswordRecovery(true);
       queryClient.invalidateQueries({ queryKey: ['profile'] });
     });
 
@@ -75,8 +88,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       profile: profileQuery.data ?? null,
       isLoadingSession,
       isLoadingProfile: !!userId && profileQuery.isPending,
+      isPasswordRecovery,
+      limparRecuperacaoSenha: () => setIsPasswordRecovery(false),
     }),
-    [session, profileQuery.data, profileQuery.isPending, isLoadingSession, userId],
+    [session, profileQuery.data, profileQuery.isPending, isLoadingSession, userId, isPasswordRecovery],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -215,7 +215,7 @@ export default function DetalhePost() {
 
           {post.tipo === 'evento' && post.data_evento ? (
             <View className="flex-row items-center gap-1.5 self-start rounded-md bg-primary/10 px-3 py-1 dark:bg-primary-dark/10">
-              <Ionicons name="calendar" size={14} color="#385898" />
+              <Ionicons name="calendar" size={14} color="#0095F6" />
               <Text className="text-sm font-medium text-primary dark:text-primary-dark">
                 {formatarDataEvento(post.data_evento)}
               </Text>

@@ -30,7 +30,7 @@ function CartaoFerramenta({
     <View className="gap-3 rounded-lg border border-slate-200 bg-surface p-4 dark:border-slate-200 dark:bg-surface-dark">
       <View className="flex-row items-center gap-2">
         <View className="h-9 w-9 items-center justify-center rounded-full bg-primary/10 dark:bg-primary-dark/10">
-          <Ionicons name={icone} size={18} color="#385898" />
+          <Ionicons name={icone} size={18} color="#0095F6" />
         </View>
         <View className="flex-1">
           <Text className="text-base font-semibold text-slate-900">{titulo}</Text>

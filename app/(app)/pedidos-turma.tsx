@@ -62,7 +62,7 @@ export default function PedidosTurma() {
         >
           <View className="flex-row items-center gap-3">
             <View className="h-10 w-10 items-center justify-center rounded-full bg-primary/10 dark:bg-primary-dark/10">
-              <Ionicons name="person-add-outline" size={18} color="#385898" />
+              <Ionicons name="person-add-outline" size={18} color="#0095F6" />
             </View>
             <View className="flex-1">
               <Text className="text-base font-semibold text-slate-900">

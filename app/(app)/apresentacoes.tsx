@@ -52,7 +52,7 @@ function CartaoApresentacao({
         className="min-h-11 flex-1 flex-row items-center gap-3"
       >
         <View className="h-10 w-10 items-center justify-center rounded-full bg-primary/10 dark:bg-primary-dark/10">
-          <Ionicons name="easel-outline" size={18} color="#385898" />
+          <Ionicons name="easel-outline" size={18} color="#0095F6" />
         </View>
         <View className="flex-1 gap-0.5">
           <Text className="text-sm font-semibold text-slate-900" numberOfLines={2}>
@@ -173,7 +173,7 @@ export default function Apresentacoes() {
         />
         {gerarMutation.isPending ? (
           <View className="flex-row items-center gap-1.5">
-            <ActivityIndicator size="small" color="#385898" />
+            <ActivityIndicator size="small" color="#0095F6" />
             <Text className="flex-1 text-sm text-slate-500">
               A IA está a criar os slides e as imagens... pode demorar até um minuto.
             </Text>

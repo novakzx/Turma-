@@ -174,7 +174,7 @@ export default function NovoPost() {
               <Ionicons
                 name={ICONE_TIPO_POST[opcao]}
                 size={15}
-                color={tipo === opcao ? '#385898' : '#969696'}
+                color={tipo === opcao ? '#0095F6' : '#969696'}
               />
               <Text className="text-sm text-slate-900">{ROTULO_TIPO_POST[opcao]}</Text>
             </Pressable>

@@ -110,7 +110,7 @@ export default function GrupoParticipantes() {
             <Text className="flex-1 text-base text-slate-900">{p.profiles?.nome ?? 'Alguém'}</Text>
             {p.papel === 'admin' ? (
               <View className="flex-row items-center gap-1 rounded-md bg-primary/10 px-2 py-1 dark:bg-primary-dark/10">
-                <Ionicons name="shield-checkmark-outline" size={12} color="#385898" />
+                <Ionicons name="shield-checkmark-outline" size={12} color="#0095F6" />
                 <Text className="text-xs font-semibold text-primary dark:text-primary-dark">
                   Admin
                 </Text>
@@ -141,7 +141,7 @@ export default function GrupoParticipantes() {
                 >
                   <FotoPerfil caminho={c.foto_url} nome={c.nome} tamanho={36} />
                   <Text className="flex-1 text-slate-900">{c.nome}</Text>
-                  <Ionicons name="add-circle-outline" size={22} color="#385898" />
+                  <Ionicons name="add-circle-outline" size={22} color="#0095F6" />
                 </Pressable>
               ))
             )}

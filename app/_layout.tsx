@@ -30,7 +30,10 @@ import { queryClient } from '@/lib/queryClient';
  * (só acontece no primeiro login social — Google/Apple não dão esses
  * dados, diferente do cadastro normal que já exige tudo antes de criar a
  * conta) → (completar-cadastro); com sessão e cadastro completo mas sem
- * escola/turma → (onboarding); com tudo completo → (app).
+ * escola/turma → (onboarding); com tudo completo → (app). Sessão de
+ * recuperação de senha (`isPasswordRecovery`, ver `AuthProvider.tsx`)
+ * tem prioridade sobre todos esses — leva pra `redefinir-senha` mesmo
+ * que o resto do cadastro já esteja completo.
  * `Stack.Protected` troca de grupo sozinho quando `session`/`profile`
  * mudam (login, logout, fim de cadastro/onboarding) — nenhuma navegação
  * manual é necessária nas telas.
@@ -45,7 +48,7 @@ import { queryClient } from '@/lib/queryClient';
  */
 function RootNavigator() {
   const { escuro, cores } = useTema();
-  const { session, profile, isLoadingSession, isLoadingProfile } = useAuth();
+  const { session, profile, isLoadingSession, isLoadingProfile, isPasswordRecovery } = useAuth();
 
   if (isLoadingSession || (!!session && isLoadingProfile)) {
     return (
@@ -86,21 +89,34 @@ function RootNavigator() {
             // verdade (todo filho aqui usa `headerShown: false` e tem o
             // próprio Stack/Tabs) — mantido consistente mesmo assim.
             headerShadowVisible: false,
-            headerStyle: { backgroundColor: escuro ? '#0B0E14' : '#FAF8FF' },
-            headerTintColor: escuro ? '#F1F5F9' : '#131B2E',
-            contentStyle: { backgroundColor: escuro ? '#0B0E14' : '#FAF8FF' },
+            headerStyle: { backgroundColor: escuro ? '#0A0A0A' : '#FAFAFA' },
+            headerTintColor: escuro ? '#F5F5F5' : '#000000',
+            contentStyle: { backgroundColor: escuro ? '#0A0A0A' : '#FAFAFA' },
           }}
         >
-          <Stack.Protected guard={!session}>
+          {/* Checado ANTES dos outros grupos de propósito: uma sessão de
+              recuperação de senha (`PASSWORD_RECOVERY`) é uma sessão
+              válida como outra qualquer aos olhos do Supabase — sem essa
+              guarda na frente, alguém com cadastro/onboarding já
+              completos cairia direto dentro do app em vez de ver a tela
+              de trocar a senha (ver `solicitarRedefinicaoSenha`). */}
+          <Stack.Protected guard={!!session && isPasswordRecovery}>
+            <Stack.Screen name="redefinir-senha" options={{ headerShown: false }} />
+          </Stack.Protected>
+          <Stack.Protected guard={!session && !isPasswordRecovery}>
             <Stack.Screen name="(auth)" options={{ headerShown: false }} />
           </Stack.Protected>
-          <Stack.Protected guard={!!session && !cadastroCompleto}>
+          <Stack.Protected guard={!!session && !isPasswordRecovery && !cadastroCompleto}>
             <Stack.Screen name="(completar-cadastro)" options={{ headerShown: false }} />
           </Stack.Protected>
-          <Stack.Protected guard={!!session && cadastroCompleto && !onboardingCompleto}>
+          <Stack.Protected
+            guard={!!session && !isPasswordRecovery && cadastroCompleto && !onboardingCompleto}
+          >
             <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
           </Stack.Protected>
-          <Stack.Protected guard={!!session && cadastroCompleto && onboardingCompleto}>
+          <Stack.Protected
+            guard={!!session && !isPasswordRecovery && cadastroCompleto && onboardingCompleto}
+          >
             <Stack.Screen name="(app)" options={{ headerShown: false }} />
           </Stack.Protected>
         </Stack>

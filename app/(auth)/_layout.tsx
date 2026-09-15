@@ -5,6 +5,7 @@ export default function AuthLayout() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="cadastro" />
+      <Stack.Screen name="esqueci-senha" />
     </Stack>
   );
 }

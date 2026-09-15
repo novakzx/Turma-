@@ -4,17 +4,18 @@
  * dois lugares, já que um é CSS puro e o outro é `vars()` do NativeWind
  * pro nativo — não dá pra compartilhar o arquivo entre os dois formatos).
  *
- * Paleta "newspaper column" (pedido do usuário — design de referência
- * quase monocromático, um único azul (Meta Blue) de ênfase, ver
- * `global.css` pro comentário completo). Escuro é um espelho monocromático
- * da mesma ideia (fundo quase preto, mesmo azul clareado pra contraste),
- * não faz parte da referência em si (que é só "Theme: light").
+ * Paleta "newspaper column" (design quase monocromático, ver `global.css`
+ * pro comentário completo) — azul trocado pra `#0095F6` (pedido do
+ * usuário: "estética do Instagram igual mesmo"), mesmo valor claro/escuro
+ * de propósito (é assim que o próprio Instagram faz — já tem contraste
+ * alto nos dois fundos). Escuro é um espelho monocromático da mesma
+ * ideia (fundo quase preto).
  */
 export const CORES_CLARO = {
   '--color-background': '#FAFAFA',
   '--color-surface': '#FAFAFA',
-  '--color-primary': '#385898',
-  '--color-accent': '#385898',
+  '--color-primary': '#0095F6',
+  '--color-accent': '#0095F6',
   '--color-success': '#22C55E',
   '--color-danger': '#F87171',
   '--color-slate-100': '#EFEFEF',
@@ -30,8 +31,8 @@ export const CORES_CLARO = {
 export const CORES_ESCURO = {
   '--color-background': '#0A0A0A',
   '--color-surface': '#141414',
-  '--color-primary': '#6D93C9',
-  '--color-accent': '#6D93C9',
+  '--color-primary': '#0095F6',
+  '--color-accent': '#0095F6',
   '--color-success': '#4ADE80',
   '--color-danger': '#FCA5A5',
   '--color-slate-100': '#1A1A1A',
@@ -53,8 +54,8 @@ export const CORES_ESCURO = {
  */
 export function paletaIcones(escuro: boolean) {
   return {
-    primary: escuro ? '#6D93C9' : '#385898',
-    accent: escuro ? '#6D93C9' : '#385898',
+    primary: '#0095F6',
+    accent: '#0095F6',
     success: escuro ? '#4ADE80' : '#22C55E',
     danger: escuro ? '#FCA5A5' : '#F87171',
     // slate-400 (não tem token de tema — só usado solto em ícone)

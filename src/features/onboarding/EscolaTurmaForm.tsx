@@ -38,10 +38,10 @@ function ItemSelecionavel({
       }`}
     >
       {icone ? (
-        <Ionicons name={icone} size={16} color={selecionado ? '#385898' : '#969696'} />
+        <Ionicons name={icone} size={16} color={selecionado ? '#0095F6' : '#969696'} />
       ) : null}
       <Text className="flex-1 text-base text-slate-900">{label}</Text>
-      {selecionado ? <Ionicons name="checkmark-circle" size={20} color="#385898" /> : null}
+      {selecionado ? <Ionicons name="checkmark-circle" size={20} color="#0095F6" /> : null}
     </Pressable>
   );
 }
@@ -200,7 +200,7 @@ export function EscolaTurmaForm({
           <Text className="text-sm font-medium text-slate-700">Escola</Text>
         </View>
         {escolasQuery.isLoading ? (
-          <ActivityIndicator color="#385898" />
+          <ActivityIndicator color="#0095F6" />
         ) : escolasQuery.isError ? (
           <Text className="text-danger dark:text-danger-dark">
             Não deu pra carregar as escolas. Tenta de novo mais tarde.
@@ -276,7 +276,7 @@ export function EscolaTurmaForm({
             <Text className="text-sm font-medium text-slate-700">Turma</Text>
           </View>
           {turmasQuery.isLoading ? (
-            <ActivityIndicator color="#385898" />
+            <ActivityIndicator color="#0095F6" />
           ) : turmasQuery.isError ? (
             <Text className="text-danger dark:text-danger-dark">
               Não deu pra carregar as turmas. Tenta de novo mais tarde.
@@ -309,7 +309,7 @@ export function EscolaTurmaForm({
       {precisaPerguntarRepeticao ? (
         <View className="gap-3 rounded-lg border border-accent/30 bg-accent/10 p-3 dark:border-accent-dark/30 dark:bg-accent-dark/10">
           <View className="flex-row items-start gap-2">
-            <Ionicons name="help-circle-outline" size={18} color="#385898" />
+            <Ionicons name="help-circle-outline" size={18} color="#0095F6" />
             <Text className="flex-1 text-sm text-slate-700">
               A idade que você informou no cadastro não bate com o {serieAnoParaChecar} — você
               repetiu de ano?
@@ -378,7 +378,7 @@ export function EscolaTurmaForm({
       {turmaEhDeOutraPessoa ? (
         pedidoQuery.data ? (
           <View className="flex-row items-center gap-2 rounded-lg bg-accent/10 p-3 dark:bg-accent-dark/10">
-            <Ionicons name="time-outline" size={18} color="#385898" />
+            <Ionicons name="time-outline" size={18} color="#0095F6" />
             <Text className="flex-1 text-sm text-accent dark:text-accent-dark">
               Pedido enviado — aguardando o dono da turma aprovar.
             </Text>
@@ -391,7 +391,7 @@ export function EscolaTurmaForm({
               accessibilityRole="button"
               accessibilityLabel="Verificar de novo"
             >
-              <Ionicons name="refresh" size={18} color="#385898" />
+              <Ionicons name="refresh" size={18} color="#0095F6" />
             </Pressable>
           </View>
         ) : (

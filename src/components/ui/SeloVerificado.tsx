@@ -11,7 +11,7 @@ import { View } from 'react-native';
 export function SeloVerificado({ tamanho = 14 }: { tamanho?: number }) {
   return (
     <View accessibilityLabel="Conta verificada" accessibilityRole="image">
-      <Ionicons name="checkmark-circle" size={tamanho} color="#385898" />
+      <Ionicons name="checkmark-circle" size={tamanho} color="#0095F6" />
     </View>
   );
 }

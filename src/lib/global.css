@@ -38,23 +38,28 @@
    pra variável de CSS multiplataforma (funciona nos dois alvos, ao
    contrário de `dark:`). */
 /* Paleta "newspaper column" (pedido do usuário — "queria um design mais
-   simples tipo destes arquivos que mandei", referência: Threads —
-   quase monocromática, um único azul cromático (Meta Blue) pra link/
-   ênfase, nada de gradiente ou preenchimento colorido. `accent` aponta
-   pra MESMA variável que `primary` de propósito — a referência é
-   explícita: "the system is monochrome plus one blue", uma segunda cor
-   cromática quebraria a disciplina. `success`/`danger` continuam à
-   parte (vermelho do coração curtido, verde de sucesso) — são cores
-   FUNCIONAIS de feedback, não cromatismo de marca, a referência não
-   fala sobre elas. Dark mode não faz parte da referência (ela é
-   "Theme: light" só) — mantido como recurso já existente e testado do
-   app, com uma paleta escura equivalente (mesmo azul, fundo quase
-   preto) em vez de removido. */
+   simples tipo destes arquivos que mandei", referência original: Threads
+   — quase monocromática, um único azul cromático pra link/ênfase, nada
+   de gradiente ou preenchimento colorido. `accent` aponta pra MESMA
+   variável que `primary` de propósito — um sistema com só uma cor
+   cromática, uma segunda quebraria a disciplina. `success`/`danger`
+   continuam à parte (vermelho do coração curtido, verde de sucesso) —
+   são cores FUNCIONAIS de feedback, não cromatismo de marca.
+
+   Azul trocado depois pra `#0095F6` (pedido do usuário — referência
+   trocada pra "estética do Instagram igual mesmo", com prints em anexo)
+   — é literalmente o azul de marca do Instagram, usado sem clarear no
+   modo escuro (mesmo valor nos dois — é assim que o próprio Instagram
+   faz: o azul já tem contraste alto tanto no fundo quase-preto quanto
+   no quase-branco). Dark mode não fazia parte da referência original
+   (Threads é "Theme: light" só) — mantido como recurso já existente e
+   testado do app, com uma paleta escura equivalente (mesmo azul, fundo
+   quase preto) em vez de removido. */
 :root {
   --color-background: #fafafa;
   --color-surface: #fafafa;
-  --color-primary: #385898;
-  --color-accent: #385898;
+  --color-primary: #0095f6;
+  --color-accent: #0095f6;
   --color-success: #22c55e;
   --color-danger: #f87171;
   --color-slate-100: #efefef;
@@ -72,8 +77,8 @@
   :root:not([data-theme='light']) {
     --color-background: #0a0a0a;
     --color-surface: #141414;
-    --color-primary: #6d93c9;
-    --color-accent: #6d93c9;
+    --color-primary: #0095f6;
+    --color-accent: #0095f6;
     --color-success: #4ade80;
     --color-danger: #fca5a5;
     --color-slate-100: #1a1a1a;
@@ -91,8 +96,8 @@
 :root[data-theme='dark'] {
   --color-background: #0a0a0a;
   --color-surface: #141414;
-  --color-primary: #6d93c9;
-  --color-accent: #6d93c9;
+  --color-primary: #0095f6;
+  --color-accent: #0095f6;
   --color-success: #4ade80;
   --color-danger: #fca5a5;
   --color-slate-100: #1a1a1a;

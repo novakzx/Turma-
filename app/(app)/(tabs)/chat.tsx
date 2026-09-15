@@ -32,7 +32,7 @@ function LinhaSala({ sala, index }: { sala: Sala; index: number }) {
         className="min-h-11 flex-row items-center gap-3 rounded-lg border border-slate-200 bg-surface p-3 active:opacity-80 dark:bg-surface-dark"
       >
         <View className="h-10 w-10 items-center justify-center rounded-full bg-primary/10 dark:bg-primary-dark/10">
-          <Ionicons name={ICONE_TIPO_SALA[sala.tipo]} size={20} color="#385898" />
+          <Ionicons name={ICONE_TIPO_SALA[sala.tipo]} size={20} color="#0095F6" />
         </View>
         <Text className="flex-1 text-base font-medium text-slate-900">{sala.nome}</Text>
         {sala.trancada ? <Ionicons name="lock-closed" size={16} color="#969696" /> : null}
@@ -110,7 +110,7 @@ function LinhaConversa({ conversa, index }: { conversa: ConversaComResumo; index
       >
         {conversa.tipo === 'grupo' ? (
           <View className="h-14 w-14 items-center justify-center rounded-full bg-accent/10 dark:bg-accent-dark/10">
-            <Ionicons name="people" size={26} color="#385898" />
+            <Ionicons name="people" size={26} color="#0095F6" />
           </View>
         ) : (
           <FotoPerfil caminho={foto} nome={nome} tamanho={56} />

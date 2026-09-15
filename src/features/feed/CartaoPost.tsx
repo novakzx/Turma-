@@ -134,7 +134,7 @@ export function EnquetePost({ postId }: { postId: string }) {
   if (enqueteQuery.isLoading || !enqueteQuery.data) {
     return (
       <View className="items-center py-4">
-        <ActivityIndicator color="#385898" />
+        <ActivityIndicator color="#0095F6" />
       </View>
     );
   }
@@ -170,7 +170,7 @@ export function EnquetePost({ postId }: { postId: string }) {
             ) : null}
             <View className="flex-row items-center justify-between px-4 py-2.5">
               <View className="flex-1 flex-row items-center gap-1.5 pr-2">
-                {escolhida ? <Ionicons name="checkmark-circle" size={16} color="#385898" /> : null}
+                {escolhida ? <Ionicons name="checkmark-circle" size={16} color="#0095F6" /> : null}
                 <Text className="shrink text-sm text-slate-900">{opcao.texto}</Text>
               </View>
               {jaVotou ? (
@@ -258,7 +258,7 @@ export function CartaoPost({
             {post.tipo !== 'texto' ? (
               <>
                 <Text className="text-xs text-slate-500">·</Text>
-                <Ionicons name={ICONE_TIPO_POST[post.tipo]} size={11} color="#385898" />
+                <Ionicons name={ICONE_TIPO_POST[post.tipo]} size={11} color="#0095F6" />
                 <Text className="text-xs font-medium text-accent dark:text-accent-dark">
                   {ROTULO_TIPO_POST[post.tipo]}
                   {post.tipo === 'evento' && post.data_evento

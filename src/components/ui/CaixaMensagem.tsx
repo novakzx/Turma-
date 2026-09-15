@@ -131,7 +131,7 @@ export function CaixaMensagem({
             accessibilityLabel="Enviar áudio"
             className="min-h-11 min-w-11 items-center justify-center"
           >
-            <Ionicons name="checkmark-circle" size={28} color="#385898" />
+            <Ionicons name="checkmark-circle" size={28} color="#0095F6" />
           </Pressable>
         </View>
       ) : (
@@ -146,7 +146,7 @@ export function CaixaMensagem({
               <Ionicons
                 name={mostrarEmoji ? 'happy' : 'happy-outline'}
                 size={22}
-                color={mostrarEmoji ? '#385898' : '#969696'}
+                color={mostrarEmoji ? '#0095F6' : '#969696'}
               />
             </Pressable>
             <TextInput

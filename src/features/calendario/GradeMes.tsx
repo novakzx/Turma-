@@ -21,8 +21,8 @@ const NOMES_MES = [
 ];
 
 const COR_TIPO: Record<EventoCalendario['tipo'], string> = {
-  nacional: '#385898',
-  letivo: '#385898',
+  nacional: '#0095F6',
+  letivo: '#0095F6',
   avaliacao: '#F87171',
   regional: '#3B82F6',
   municipal: '#F59E0B',

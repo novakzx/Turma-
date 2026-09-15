@@ -25,7 +25,7 @@ function CelulaGrid({ post }: { post: PostComContadores }) {
       {post.midia_url ? (
         isLoading || !url ? (
           <View className="flex-1 items-center justify-center rounded-md bg-slate-100">
-            <ActivityIndicator size="small" color="#385898" />
+            <ActivityIndicator size="small" color="#0095F6" />
           </View>
         ) : (
           <Image source={{ uri: url }} className="flex-1 rounded-md" resizeMode="cover" />

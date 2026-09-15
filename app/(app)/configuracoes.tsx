@@ -75,7 +75,7 @@ function CartaoAcaoExpansivel({
         accessibilityRole="button"
         className="min-h-11 flex-row items-center gap-3 rounded-lg border border-slate-200 px-4 py-3"
       >
-        <Ionicons name={icone} size={18} color="#385898" />
+        <Ionicons name={icone} size={18} color="#0095F6" />
         <Text className="flex-1 text-base text-slate-900">{rotulo}</Text>
         <Ionicons name="chevron-forward" size={18} color="#969696" />
       </Pressable>
@@ -125,7 +125,7 @@ function CartaoContaBloqueada({
         className="min-h-11 items-center justify-center rounded-md border border-slate-200 px-3"
       >
         {carregando ? (
-          <ActivityIndicator size="small" color="#385898" />
+          <ActivityIndicator size="small" color="#0095F6" />
         ) : (
           <Text className="text-sm font-medium text-primary dark:text-primary-dark">
             Desbloquear
@@ -248,7 +248,7 @@ export default function Configuracoes() {
             <Ionicons
               name={profile?.publico ? 'globe-outline' : 'lock-closed-outline'}
               size={20}
-              color="#385898"
+              color="#0095F6"
             />
             <View className="flex-1">
               <Text className="text-base text-slate-900">
@@ -272,7 +272,7 @@ export default function Configuracoes() {
 
       <Secao titulo="Contas bloqueadas">
         {bloqueiosQuery.isLoading ? (
-          <ActivityIndicator color="#385898" />
+          <ActivityIndicator color="#0095F6" />
         ) : (bloqueiosQuery.data ?? []).length === 0 ? (
           <Text className="text-sm text-slate-500">
             Você não bloqueou ninguém. Contas bloqueadas não conseguem te mandar mensagem nem

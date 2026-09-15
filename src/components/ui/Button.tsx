@@ -75,7 +75,7 @@ export function Button({
     [escala, onPressOut, reduceMotion],
   );
 
-  const corTexto = isPrimary ? '#FFFFFF' : '#385898';
+  const corTexto = isPrimary ? '#FFFFFF' : '#0095F6';
 
   return (
     <AnimatedPressable

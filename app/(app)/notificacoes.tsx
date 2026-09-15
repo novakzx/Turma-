@@ -173,7 +173,7 @@ export default function Notificacoes() {
   if (carregando) {
     return (
       <View className="flex-1 items-center justify-center bg-background dark:bg-background-dark">
-        <ActivityIndicator color="#385898" />
+        <ActivityIndicator color="#0095F6" />
       </View>
     );
   }

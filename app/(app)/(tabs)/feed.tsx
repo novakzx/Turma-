@@ -69,7 +69,7 @@ export default function Feed() {
             <RefreshControl
               refreshing={postsQuery.isRefetching}
               onRefresh={() => postsQuery.refetch()}
-              tintColor="#385898"
+              tintColor="#0095F6"
             />
           }
           ListHeaderComponent={

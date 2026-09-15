@@ -42,8 +42,8 @@ const ROTULO_TIPO: Record<EventoCalendario['tipo'], string> = {
 };
 
 const COR_TIPO: Record<EventoCalendario['tipo'], string> = {
-  nacional: '#385898',
-  letivo: '#385898',
+  nacional: '#0095F6',
+  letivo: '#0095F6',
   avaliacao: '#F87171',
   regional: '#3B82F6',
   municipal: '#F59E0B',
@@ -170,7 +170,7 @@ export default function CalendarioFeriados() {
                 accessibilityLabel="Exportar calendário"
                 className="min-h-11 flex-row items-center gap-1.5 rounded-full bg-slate-100 px-3"
               >
-                <Ionicons name="download-outline" size={14} color="#385898" />
+                <Ionicons name="download-outline" size={14} color="#0095F6" />
                 <Text className="text-xs font-semibold text-primary dark:text-primary-dark">
                   {exportarMutation.isPending ? 'Exportando...' : 'Exportar'}
                 </Text>

@@ -26,7 +26,7 @@ export function EmptyState({ titulo, descricao, onTentarNovo, icon }: EmptyState
   return (
     <View className="flex-1 items-center justify-center gap-3 px-8 py-16">
       <View className="h-20 w-20 items-center justify-center rounded-full bg-primary/10 dark:bg-primary-dark/10">
-        <Ionicons name={nomeIcone} size={36} color="#385898" />
+        <Ionicons name={nomeIcone} size={36} color="#0095F6" />
       </View>
       <Text className="text-center text-base font-medium text-slate-700">{titulo}</Text>
       {descricao ? <Text className="text-center text-sm text-slate-500">{descricao}</Text> : null}
@@ -47,7 +47,7 @@ export function EmptyState({ titulo, descricao, onTentarNovo, icon }: EmptyState
 export function LoadingState() {
   return (
     <View className="flex-1 items-center justify-center py-16">
-      <ActivityIndicator color="#385898" />
+      <ActivityIndicator color="#0095F6" />
     </View>
   );
 }

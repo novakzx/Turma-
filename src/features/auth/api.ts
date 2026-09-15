@@ -35,8 +35,8 @@ const REDIRECT_NATIVO = `${ESQUEMA_APP}://google-auth`;
  * só pra satisfazer o `auth.users.email`, porque o Supabase Auth não
  * tem cadastro "só usuário". Com SMTP configurado, o e-mail de
  * confirmação chega de verdade — então voltou a fazer sentido coletar
- * o e-mail real (também abre a porta pra "esqueci minha senha" no
- * futuro, que não existe ainda). `signIn` continua por nome de
+ * o e-mail real (também abriu a porta pra "esqueci minha senha", ver
+ * `solicitarRedefinicaoSenha` abaixo). `signIn` continua por nome de
  * usuário — a RPC `email_por_nome_usuario` (ver migration
  * `login_sem_email_por_usuario`) resolve pro e-mail de verdade agora
  * guardado, sem precisar mudar a UI de login.
@@ -206,6 +206,37 @@ export async function signOut() {
 
 export async function atualizarSenha(novaSenha: string) {
   const { error } = await supabase.auth.updateUser({ password: novaSenha });
+  if (error) throw error;
+}
+
+/**
+ * "Esqueci minha senha" (pedido do usuário — não existia até aqui, ver
+ * comentário de `signUp` sobre e-mail real ter reaberto essa porta).
+ * Pede E-MAIL, não @usuário: resolver @usuário → e-mail no cliente é
+ * exatamente o problema de segurança já corrigido em `signIn` (vazava
+ * e-mail de aluno menor de idade pra quem perguntasse) — pedir o e-mail
+ * direto evita reabrir essa mesma falha aqui. `resetPasswordForEmail`
+ * já é seguro contra enumeração de conta por padrão (o Supabase sempre
+ * responde sucesso, exista ou não a conta, e só manda e-mail se existir).
+ *
+ * `redirectTo` é a MESMA origem já aprovada na lista de "Redirect URLs"
+ * do Supabase pra confirmação de cadastro (`emailRedirectTo` em
+ * `signUp`, acima) — não um sub-caminho novo, que precisaria ser
+ * cadastrado à parte no painel. Ao voltar, `detectSessionInUrl` (só
+ * web, ver `src/lib/supabase.ts`) autentica a sessão de recuperação
+ * sozinho e dispara o evento `PASSWORD_RECOVERY`, que `AuthProvider`
+ * escuta pra levar direto pra `/redefinir-senha` em vez de deixar a
+ * pessoa cair solta dentro do app com uma sessão "temporária" de troca
+ * de senha (ver `AuthProvider.tsx`).
+ *
+ * Nativo (iOS/Android) ainda não está coberto — mesma limitação já
+ * documentada em `signUp` pro e-mail de confirmação (precisaria de um
+ * listener de deep link `turmamais://...`, não implementado ainda).
+ */
+export async function solicitarRedefinicaoSenha(email: string) {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: Platform.OS === 'web' ? window.location.origin : undefined,
+  });
   if (error) throw error;
 }
 

@@ -31,7 +31,7 @@ export function ProximoEventoWidget() {
           alignItems: 'flex-start',
         }}
       >
-        <TextWidget text="Turma+" style={{ fontSize: 13, fontWeight: 'bold', color: '#385898' }} />
+        <TextWidget text="Turma+" style={{ fontSize: 13, fontWeight: 'bold', color: '#0095F6' }} />
         <TextWidget
           text="Sem próximo evento no calendário"
           style={{ fontSize: 13, color: '#969696', marginTop: 4 }}
@@ -50,7 +50,7 @@ export function ProximoEventoWidget() {
       style={{
         height: 'match_parent',
         width: 'match_parent',
-        backgroundColor: '#385898',
+        backgroundColor: '#0095F6',
         borderRadius: 20,
         padding: 16,
         justifyContent: 'center',

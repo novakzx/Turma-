@@ -89,7 +89,7 @@ function CartaoEstatisticaSemanal({ alunoId }: { alunoId: string }) {
   return (
     <View className="mx-4 mt-4 gap-3 rounded-xl border border-slate-200 bg-surface p-4 dark:bg-surface-dark">
       <View className="flex-row items-center gap-2">
-        <Ionicons name="stats-chart" size={16} color="#385898" />
+        <Ionicons name="stats-chart" size={16} color="#0095F6" />
         <Text className="text-sm font-semibold text-slate-900">Sua semana de estudo</Text>
       </View>
       <View className="flex-row justify-around">
@@ -134,7 +134,7 @@ function MiniaturaFoto({ caminho }: { caminho: string }) {
   if (isLoading || !url) {
     return (
       <View className="h-40 w-40 items-center justify-center rounded-xl bg-slate-100">
-        <ActivityIndicator size="small" color="#385898" />
+        <ActivityIndicator size="small" color="#0095F6" />
       </View>
     );
   }
@@ -188,7 +188,7 @@ function BolhaMensagem({
     >
       {!doAluno ? (
         <View className="h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent/10 dark:bg-accent-dark/10">
-          <Ionicons name="sparkles" size={14} color="#385898" />
+          <Ionicons name="sparkles" size={14} color="#0095F6" />
         </View>
       ) : null}
       <View className="shrink gap-1.5">
@@ -217,7 +217,7 @@ function BolhaMensagem({
               accessibilityRole="button"
               className="min-h-11 flex-row items-center gap-1 self-start rounded-full bg-accent/10 px-3 dark:bg-accent-dark/15"
             >
-              <Ionicons name="key-outline" size={14} color="#385898" />
+              <Ionicons name="key-outline" size={14} color="#0095F6" />
               <Text className="text-xs font-semibold text-accent dark:text-accent-dark">
                 Ver gabarito
               </Text>
@@ -238,7 +238,7 @@ function BolhaMensagem({
             <Ionicons
               name={flashcardMutation.isSuccess ? 'checkmark' : 'albums-outline'}
               size={14}
-              color="#385898"
+              color="#0095F6"
             />
             <Text className="text-xs font-semibold text-primary dark:text-primary-dark">
               {flashcardMutation.isSuccess ? 'Flashcard criado' : 'Criar flashcard'}
@@ -413,7 +413,7 @@ export default function Estudo() {
             accessibilityLabel="Ferramentas de cálculo"
             className="min-h-11 min-w-11 items-center justify-center rounded-full bg-slate-100"
           >
-            <Ionicons name="calculator-outline" size={18} color="#385898" />
+            <Ionicons name="calculator-outline" size={18} color="#0095F6" />
           </Pressable>
           <Pressable
             onPress={() => router.push('/flashcards')}
@@ -421,7 +421,7 @@ export default function Estudo() {
             accessibilityLabel="Flashcards"
             className="min-h-11 min-w-11 items-center justify-center rounded-full bg-slate-100"
           >
-            <Ionicons name="albums-outline" size={18} color="#385898" />
+            <Ionicons name="albums-outline" size={18} color="#0095F6" />
           </Pressable>
           <Pressable
             onPress={() => router.push('/apresentacoes')}
@@ -429,7 +429,7 @@ export default function Estudo() {
             accessibilityLabel="Apresentações"
             className="min-h-11 min-w-11 items-center justify-center rounded-full bg-slate-100"
           >
-            <Ionicons name="easel-outline" size={18} color="#385898" />
+            <Ionicons name="easel-outline" size={18} color="#0095F6" />
           </Pressable>
         </View>
         {materiaId ? (
@@ -521,7 +521,7 @@ export default function Estudo() {
         >
           {enviarMutation.isPending ? (
             <View className="flex-row items-center gap-1.5">
-              <ActivityIndicator size="small" color="#385898" />
+              <ActivityIndicator size="small" color="#0095F6" />
               <Text className="text-sm text-slate-500">
                 {fotoEscolhida
                   ? 'A IA está a olhar a foto... pode demorar um pouco mais que o normal.'
@@ -559,7 +559,7 @@ export default function Estudo() {
               accessibilityLabel="Anexar foto de anotação"
               className="min-h-11 min-w-11 items-center justify-center rounded-full bg-slate-100"
             >
-              <Ionicons name="camera-outline" size={20} color="#385898" />
+              <Ionicons name="camera-outline" size={20} color="#0095F6" />
             </Pressable>
             <View className="flex-1">
               <TextField

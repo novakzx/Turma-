@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useMutation } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
 import { TextField } from '@/components/ui/TextField';
@@ -74,6 +74,16 @@ export default function LoginScreen() {
           autoComplete="current-password"
           textContentType="password"
         />
+
+        <Pressable
+          onPress={() => router.push('/esqueci-senha')}
+          accessibilityRole="button"
+          className="min-h-11 items-end justify-center"
+        >
+          <Text className="text-sm font-semibold text-primary dark:text-primary-dark">
+            Esqueceu a senha?
+          </Text>
+        </Pressable>
 
         {erros.geral ? (
           <View className="flex-row items-center gap-1.5">

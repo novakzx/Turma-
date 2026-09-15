@@ -78,7 +78,7 @@ function LinhaMensagem({
           <BolhaAudio
             caminho={mensagem.midia_url}
             obterUrl={obterUrlAssinadaSala}
-            corIcone={ehPropria ? '#FFFFFF' : '#385898'}
+            corIcone={ehPropria ? '#FFFFFF' : '#0095F6'}
             corTexto={ehPropria ? 'text-white' : 'text-slate-900'}
           />
         ) : null}
