@@ -1,4 +1,4 @@
-import { calcularMediaAtual, calcularNotaNecessaria } from '../regras';
+import { calcularMediaAtual, calcularNotaNecessaria, situacaoFaltas } from '../regras';
 
 describe('calcularNotaNecessaria (brief 6.3)', () => {
   it('calcula a nota necessária com uma única avaliação pendente', () => {
@@ -115,5 +115,25 @@ describe('calcularMediaAtual', () => {
 
   it('devolve null quando nenhuma nota foi lançada ainda', () => {
     expect(calcularMediaAtual([{ peso: 100, nota: null }])).toBeNull();
+  });
+});
+
+describe('situacaoFaltas (rastreamento de faltas, pedido do usuário)', () => {
+  it('devolve "sem_limite" quando a matéria não tem limite configurado', () => {
+    expect(situacaoFaltas(15, null)).toBe('sem_limite');
+  });
+
+  it('devolve "ok" bem abaixo do limite', () => {
+    expect(situacaoFaltas(2, 10)).toBe('ok');
+  });
+
+  it('devolve "atencao" a partir de 80% do limite', () => {
+    expect(situacaoFaltas(8, 10)).toBe('atencao');
+    expect(situacaoFaltas(7, 10)).toBe('ok');
+  });
+
+  it('devolve "excedido" ao bater ou passar do limite', () => {
+    expect(situacaoFaltas(10, 10)).toBe('excedido');
+    expect(situacaoFaltas(12, 10)).toBe('excedido');
   });
 });

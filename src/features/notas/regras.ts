@@ -58,3 +58,21 @@ export function calcularMediaAtual(avaliacoes: AvaliacaoParaCalculo[]): number |
   const somaPonderada = lancadas.reduce((acc, a) => acc + (a.nota as number) * a.peso, 0);
   return somaPonderada / somaPesos;
 }
+
+/**
+ * Rastreamento de faltas (pedido do usuário, auto-declarado pelo
+ * aluno): situação em relação ao limite da matéria. `limite` `null`
+ * (staff não configurou) sempre devolve `'sem_limite'` — não dá pra
+ * avisar de algo que não foi definido. "Atenção" começa em 80% do
+ * limite (dá tempo do aluno se organizar antes de bater o teto).
+ */
+export type SituacaoFaltas = 'sem_limite' | 'ok' | 'atencao' | 'excedido';
+
+const LIMIAR_ATENCAO = 0.8;
+
+export function situacaoFaltas(totalFaltas: number, limite: number | null): SituacaoFaltas {
+  if (limite === null) return 'sem_limite';
+  if (totalFaltas >= limite) return 'excedido';
+  if (totalFaltas >= limite * LIMIAR_ATENCAO) return 'atencao';
+  return 'ok';
+}

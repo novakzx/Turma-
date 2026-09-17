@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import { useMemo } from 'react';
 import { FlatList, Pressable, RefreshControl, View } from 'react-native';
 
+import { BannerPremium } from '@/components/ui/BannerPremium';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { SkeletonPost } from '@/components/ui/Skeleton';
 import { useAuth } from '@/features/auth/AuthProvider';
@@ -62,6 +63,7 @@ export default function Feed() {
       {(postsQuery.data ?? []).length === 0 ? (
         <>
           <StoriesBar />
+          <BannerPremium />
           <CompositorRapido />
           <EmptyState
             icon="newspaper-outline"
@@ -84,6 +86,7 @@ export default function Feed() {
           ListHeaderComponent={
             <>
               <StoriesBar />
+              <BannerPremium />
               <CompositorRapido />
               <View className="h-2" />
             </>

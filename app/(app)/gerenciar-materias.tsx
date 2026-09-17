@@ -10,6 +10,7 @@ import { useAuth } from '@/features/auth/AuthProvider';
 import { mensagemDeErro } from '@/features/auth/errors';
 import {
   apagarMateria,
+  atualizarLimiteFaltas,
   criarMateria,
   listarMateriasDaTurma,
   renomearMateria,
@@ -33,21 +34,26 @@ function LinhaMateria({
   materia,
   podeEditar,
   onRenomear,
+  onSalvarLimiteFaltas,
   onApagar,
   salvando,
 }: {
   materia: Materia;
   podeEditar: boolean;
   onRenomear: (nome: string) => void;
+  onSalvarLimiteFaltas: (limite: number | null) => void;
   onApagar: () => void;
   salvando: boolean;
 }) {
   const [editando, setEditando] = useState(false);
   const [nome, setNome] = useState(materia.nome);
+  const [limiteFaltas, setLimiteFaltas] = useState(materia.limite_faltas?.toString() ?? '');
 
   function handleSalvar() {
     if (!nome.trim()) return;
     onRenomear(nome.trim());
+    const limiteNumero = Number.parseInt(limiteFaltas, 10);
+    onSalvarLimiteFaltas(limiteFaltas.trim() && Number.isFinite(limiteNumero) ? limiteNumero : null);
     setEditando(false);
   }
 
@@ -55,6 +61,14 @@ function LinhaMateria({
     return (
       <View className="gap-2 rounded-lg border border-primary/30 bg-surface p-3 dark:border-primary-dark/30 dark:bg-surface-dark">
         <TextField label="Nome da matéria" value={nome} onChangeText={setNome} autoFocus />
+        <TextField
+          label="Limite de faltas (opcional)"
+          icon="calendar-outline"
+          value={limiteFaltas}
+          onChangeText={setLimiteFaltas}
+          placeholder="ex.: 15"
+          keyboardType="number-pad"
+        />
         <View className="flex-row gap-2">
           <View className="flex-1">
             <Button label="Cancelar" variant="secondary" onPress={() => setEditando(false)} />
@@ -134,6 +148,12 @@ export default function GerenciarMaterias() {
     onSuccess: invalidar,
   });
 
+  const limiteFaltasMutation = useMutation({
+    mutationFn: (params: { id: string; limite: number | null }) =>
+      atualizarLimiteFaltas(params.id, params.limite),
+    onSuccess: invalidar,
+  });
+
   const apagarMutation = useMutation({
     mutationFn: apagarMateria,
     onSuccess: invalidar,
@@ -184,6 +204,9 @@ export default function GerenciarMaterias() {
             podeEditar={ehStaff}
             salvando={renomearMutation.isPending && renomearMutation.variables?.id === materia.id}
             onRenomear={(nome) => renomearMutation.mutate({ id: materia.id, nome })}
+            onSalvarLimiteFaltas={(limite) =>
+              limiteFaltasMutation.mutate({ id: materia.id, limite })
+            }
             onApagar={() => handleApagar(materia)}
           />
         ))

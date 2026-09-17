@@ -11,11 +11,15 @@ export type PerfilDestinatario = {
   escola_id: string | null;
   turma_id: string | null;
   push_token: string | null;
+  /** Tipos de aviso que o próprio aluno silenciou (pedido do usuário:
+   * "cada aluno escolhe que tipo de aviso recebe") — vazio recebe tudo. */
+  tipos_aviso_silenciados: string[];
 };
 
 export type AvisoEscopo = {
   escola_id: string;
   turma_id: string | null;
+  tipo: string;
 };
 
 /**
@@ -23,7 +27,8 @@ export type AvisoEscopo = {
  * escola toda; preenchido = só aquela turma. Só professor/coordenacao
  * publica aviso — só aluno recebe push dele (brief: "Só
  * professor/coordenacao publica; aluno recebe push"). Sem token salvo,
- * não tem pra onde mandar.
+ * não tem pra onde mandar. Aluno que silenciou esse `tipo` específico
+ * (pedido do usuário) também fica de fora, mesmo com token salvo.
  */
 export function filtrarDestinatarios(
   perfis: PerfilDestinatario[],
@@ -34,7 +39,8 @@ export function filtrarDestinatarios(
       p.papel === 'aluno' &&
       !!p.push_token &&
       p.escola_id === aviso.escola_id &&
-      (aviso.turma_id === null || p.turma_id === aviso.turma_id),
+      (aviso.turma_id === null || p.turma_id === aviso.turma_id) &&
+      !p.tipos_aviso_silenciados.includes(aviso.tipo),
   );
 }
 

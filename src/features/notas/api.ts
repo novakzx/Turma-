@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase';
 
-import type { Avaliacao, Materia } from './types';
+import type { Avaliacao, Falta, Materia } from './types';
 
 export async function listarMateriasDaTurma(turmaId: string): Promise<Materia[]> {
   const { data, error } = await supabase
@@ -24,6 +24,15 @@ export async function criarMateria(params: { turmaId: string; nome: string }) {
 
 export async function renomearMateria(id: string, nome: string) {
   const { error } = await supabase.from('materias').update({ nome }).eq('id', id);
+  if (error) throw error;
+}
+
+/** Rastreamento de faltas (pedido do usuário) — limite por matéria,
+ * configurado por staff (`materias_update` já libera qualquer coluna
+ * pra quem gerencia a turma, sem precisar de grant novo). `null` some
+ * o aviso de limite pra essa matéria. */
+export async function atualizarLimiteFaltas(id: string, limite: number | null) {
+  const { error } = await supabase.from('materias').update({ limite_faltas: limite }).eq('id', id);
   if (error) throw error;
 }
 
@@ -104,5 +113,32 @@ export async function atualizarNotaAvaliacao(id: string, nota: number | null) {
 
 export async function apagarAvaliacao(id: string) {
   const { error } = await supabase.from('avaliacoes').delete().eq('id', id);
+  if (error) throw error;
+}
+
+/** Faltas (pedido do usuário) — auto-declaradas pelo próprio aluno, RLS
+ * já restringe a `aluno_id = auth.uid()`. */
+export async function listarFaltas(materiaId: string): Promise<Falta[]> {
+  const { data, error } = await supabase
+    .from('faltas')
+    .select('*')
+    .eq('materia_id', materiaId)
+    .order('data', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+/** Um registro por dia (índice único `aluno_id+materia_id+data`) —
+ * clicar duas vezes no mesmo dia não duplica, só devolve o erro de
+ * conflito (23505), que a UI trata como "já registrada hoje". */
+export async function registrarFalta(alunoId: string, materiaId: string, data: string) {
+  const { error } = await supabase
+    .from('faltas')
+    .insert({ aluno_id: alunoId, materia_id: materiaId, data });
+  if (error) throw error;
+}
+
+export async function apagarFalta(id: string) {
+  const { error } = await supabase.from('faltas').delete().eq('id', id);
   if (error) throw error;
 }

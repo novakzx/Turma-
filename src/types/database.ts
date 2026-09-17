@@ -430,6 +430,45 @@ export type Database = {
         };
         Relationships: [];
       };
+      faltas: {
+        Row: {
+          aluno_id: string;
+          criado_em: string;
+          data: string;
+          id: string;
+          materia_id: string;
+        };
+        Insert: {
+          aluno_id: string;
+          criado_em?: string;
+          data?: string;
+          id?: string;
+          materia_id: string;
+        };
+        Update: {
+          aluno_id?: string;
+          criado_em?: string;
+          data?: string;
+          id?: string;
+          materia_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'faltas_aluno_id_fkey';
+            columns: ['aluno_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'faltas_materia_id_fkey';
+            columns: ['materia_id'];
+            isOneToOne: false;
+            referencedRelation: 'materias';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       flashcards: {
         Row: {
           aluno_id: string;
@@ -485,6 +524,7 @@ export type Database = {
         Row: {
           criado_em: string;
           id: string;
+          limite_faltas: number | null;
           nome: string;
           professor_id: string | null;
           turma_id: string;
@@ -492,6 +532,7 @@ export type Database = {
         Insert: {
           criado_em?: string;
           id?: string;
+          limite_faltas?: number | null;
           nome: string;
           professor_id?: string | null;
           turma_id: string;
@@ -499,6 +540,7 @@ export type Database = {
         Update: {
           criado_em?: string;
           id?: string;
+          limite_faltas?: number | null;
           nome?: string;
           professor_id?: string | null;
           turma_id?: string;
@@ -839,6 +881,7 @@ export type Database = {
           stripe_customer_id: string | null;
           stripe_subscription_id: string | null;
           termos_aceitos_em: string | null;
+          tipos_aviso_silenciados: string[];
           turma_id: string | null;
         };
         Insert: {
@@ -865,6 +908,7 @@ export type Database = {
           stripe_customer_id?: string | null;
           stripe_subscription_id?: string | null;
           termos_aceitos_em?: string | null;
+          tipos_aviso_silenciados?: string[];
           turma_id?: string | null;
         };
         Update: {
@@ -891,6 +935,7 @@ export type Database = {
           stripe_customer_id?: string | null;
           stripe_subscription_id?: string | null;
           termos_aceitos_em?: string | null;
+          tipos_aviso_silenciados?: string[];
           turma_id?: string | null;
         };
         Relationships: [

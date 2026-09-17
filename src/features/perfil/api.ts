@@ -72,6 +72,17 @@ export async function atualizarPrivacidade(id: string, publico: boolean) {
   if (error) throw error;
 }
 
+/** Preferência de notificações (pedido do usuário: "cada aluno escolhe
+ * que tipo de aviso recebe") — lista de tipos silenciados, conferida
+ * server-side em `notificar-aviso` (não é só cosmético no app). */
+export async function atualizarTiposAvisoSilenciados(id: string, tipos: string[]) {
+  const { error } = await supabase
+    .from('profiles')
+    .update({ tipos_aviso_silenciados: tipos })
+    .eq('id', id);
+  if (error) throw error;
+}
+
 export async function obterUrlAssinadaFoto(caminho: string): Promise<string> {
   const { data, error } = await supabase.storage
     .from(BUCKET_FOTOS)

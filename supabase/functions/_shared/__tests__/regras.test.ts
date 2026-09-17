@@ -13,40 +13,65 @@ describe('filtrarDestinatarios (escopo de quem recebe um aviso — brief 6.1)', 
     escola_id: 'esc-1',
     turma_id: 'turma-1',
     push_token: 'token-1',
+    tipos_aviso_silenciados: [],
   };
 
   it('inclui aluno da turma quando o aviso é escopado pra turma', () => {
-    expect(filtrarDestinatarios([aluno], { escola_id: 'esc-1', turma_id: 'turma-1' })).toEqual([
-      aluno,
-    ]);
+    expect(
+      filtrarDestinatarios([aluno], { escola_id: 'esc-1', turma_id: 'turma-1', tipo: 'greve' }),
+    ).toEqual([aluno]);
   });
 
   it('exclui aluno de outra turma quando o aviso é escopado pra turma', () => {
-    expect(filtrarDestinatarios([aluno], { escola_id: 'esc-1', turma_id: 'turma-2' })).toEqual([]);
+    expect(
+      filtrarDestinatarios([aluno], { escola_id: 'esc-1', turma_id: 'turma-2', tipo: 'greve' }),
+    ).toEqual([]);
   });
 
   it('inclui aluno de qualquer turma da escola quando o aviso é pra escola toda', () => {
-    expect(filtrarDestinatarios([aluno], { escola_id: 'esc-1', turma_id: null })).toEqual([aluno]);
+    expect(
+      filtrarDestinatarios([aluno], { escola_id: 'esc-1', turma_id: null, tipo: 'greve' }),
+    ).toEqual([aluno]);
   });
 
   it('exclui aluno de outra escola mesmo com aviso pra escola toda', () => {
     const deOutraEscola = { ...aluno, escola_id: 'esc-2' };
-    expect(filtrarDestinatarios([deOutraEscola], { escola_id: 'esc-1', turma_id: null })).toEqual(
-      [],
-    );
+    expect(
+      filtrarDestinatarios([deOutraEscola], { escola_id: 'esc-1', turma_id: null, tipo: 'greve' }),
+    ).toEqual([]);
   });
 
   it('exclui professor e coordenacao — só aluno recebe push de aviso', () => {
     const professor: PerfilDestinatario = { ...aluno, papel: 'professor' };
     const coordenacao: PerfilDestinatario = { ...aluno, papel: 'coordenacao' };
     expect(
-      filtrarDestinatarios([professor, coordenacao], { escola_id: 'esc-1', turma_id: null }),
+      filtrarDestinatarios([professor, coordenacao], {
+        escola_id: 'esc-1',
+        turma_id: null,
+        tipo: 'greve',
+      }),
     ).toEqual([]);
   });
 
   it('exclui aluno sem push_token salvo', () => {
     const semToken = { ...aluno, push_token: null };
-    expect(filtrarDestinatarios([semToken], { escola_id: 'esc-1', turma_id: null })).toEqual([]);
+    expect(
+      filtrarDestinatarios([semToken], { escola_id: 'esc-1', turma_id: null, tipo: 'greve' }),
+    ).toEqual([]);
+  });
+
+  it('exclui aluno que silenciou esse tipo de aviso (pedido do usuário)', () => {
+    const silenciouGreve = { ...aluno, tipos_aviso_silenciados: ['greve'] };
+    expect(
+      filtrarDestinatarios([silenciouGreve], { escola_id: 'esc-1', turma_id: null, tipo: 'greve' }),
+    ).toEqual([]);
+  });
+
+  it('só silencia o tipo escolhido -- outros tipos continuam chegando', () => {
+    const silenciouGreve = { ...aluno, tipos_aviso_silenciados: ['greve'] };
+    expect(
+      filtrarDestinatarios([silenciouGreve], { escola_id: 'esc-1', turma_id: null, tipo: 'feriado' }),
+    ).toEqual([silenciouGreve]);
   });
 });
 

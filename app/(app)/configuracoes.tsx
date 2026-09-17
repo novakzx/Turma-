@@ -9,11 +9,12 @@ import { TextField } from '@/components/ui/TextField';
 import { atualizarSenha, signOut } from '@/features/auth/api';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { mensagemDeErro } from '@/features/auth/errors';
+import { ICONE_TIPO_AVISO, ROTULO_TIPO_AVISO, type TipoAviso } from '@/features/avisos/types';
 import { useTema } from '@/features/configuracoes/TemaProvider';
 import type { TemaPreferido } from '@/features/configuracoes/tema';
 import { desbloquearUsuario, listarBloqueios } from '@/features/mensagens/api';
 import { FotoPerfil } from '@/features/perfil/FotoPerfil';
-import { atualizarPrivacidade } from '@/features/perfil/api';
+import { atualizarPrivacidade, atualizarTiposAvisoSilenciados } from '@/features/perfil/api';
 import { excluirMinhaConta, exportarMeusDados } from '@/features/perfil/dadosPessoais';
 import { CATALOGO_CORES_DESTAQUE, type CorDestaqueId } from '@/lib/temaCores';
 
@@ -154,6 +155,20 @@ export default function Configuracoes() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['bloqueios', profile?.id] }),
   });
 
+  // Notificações personalizadas (pedido do usuário: "cada aluno escolhe
+  // que tipo de aviso recebe") — grava o array inteiro a cada toque
+  // (mais simples que debounce; a lista tem só 8 itens no máximo).
+  const tiposSilenciadosMutation = useMutation({
+    mutationFn: (tipos: string[]) => atualizarTiposAvisoSilenciados(profile!.id, tipos),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['profile'] }),
+  });
+
+  function alternarTipoAviso(tipo: TipoAviso) {
+    const atual = profile?.tipos_aviso_silenciados ?? [];
+    const novo = atual.includes(tipo) ? atual.filter((t) => t !== tipo) : [...atual, tipo];
+    tiposSilenciadosMutation.mutate(novo);
+  }
+
   const [secaoAberta, setSecaoAberta] = useState<'senha' | null>(null);
   const [novaSenha, setNovaSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
@@ -288,6 +303,43 @@ export default function Configuracoes() {
                   ) : null}
                 </View>
                 <Text className="text-xs text-slate-700">{cor.nome.replace(' (padrão)', '')}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </Secao>
+
+      <Secao titulo="Notificações">
+        <Text className="text-xs text-slate-500">
+          Desmarque o que você não quer receber por notificação. O resto continua chegando
+          normalmente.
+        </Text>
+        <View className="gap-2">
+          {(Object.keys(ROTULO_TIPO_AVISO) as TipoAviso[]).map((tipo) => {
+            const silenciado = (profile?.tipos_aviso_silenciados ?? []).includes(tipo);
+            return (
+              <Pressable
+                key={tipo}
+                onPress={() => alternarTipoAviso(tipo)}
+                accessibilityRole="switch"
+                accessibilityState={{ checked: !silenciado }}
+                className="flex-row items-center justify-between rounded-md border border-slate-200 px-3 py-2.5"
+              >
+                <View className="flex-row items-center gap-2.5">
+                  <Ionicons
+                    name={ICONE_TIPO_AVISO[tipo]}
+                    size={16}
+                    color={silenciado ? '#969696' : cores.primary}
+                  />
+                  <Text className={`text-sm ${silenciado ? 'text-slate-500' : 'text-slate-900'}`}>
+                    {ROTULO_TIPO_AVISO[tipo]}
+                  </Text>
+                </View>
+                <Ionicons
+                  name={silenciado ? 'notifications-off-outline' : 'notifications'}
+                  size={18}
+                  color={silenciado ? '#969696' : cores.primary}
+                />
               </Pressable>
             );
           })}

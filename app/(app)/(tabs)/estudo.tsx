@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { BannerPremium } from '@/components/ui/BannerPremium';
 import { Button } from '@/components/ui/Button';
 import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
 import { TextField } from '@/components/ui/TextField';
@@ -596,6 +597,10 @@ export default function Estudo() {
         <View className="flex-1">
           {profile ? <CartaoEstatisticaSemanal alunoId={profile.id} /> : null}
           {profile ? <CartaoSequenciaEstudos alunoId={profile.id} /> : null}
+          <BannerPremium
+            titulo="Desbloqueie as ferramentas de IA"
+            descricao="Resumo, plano de estudo, simulado, corrigir trabalho e mais."
+          />
           <EmptyState
             icon="hand-left-outline"
             titulo="Escolha uma matéria"

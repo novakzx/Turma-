@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
 
     const { data: perfis, error } = await admin
       .from('profiles')
-      .select('id, papel, escola_id, turma_id, push_token')
+      .select('id, papel, escola_id, turma_id, push_token, tipos_aviso_silenciados')
       .eq('escola_id', escola_id)
       .not('push_token', 'is', null);
 
@@ -52,6 +52,7 @@ Deno.serve(async (req) => {
     const destinatarios = filtrarDestinatarios((perfis ?? []) as PerfilDestinatario[], {
       escola_id,
       turma_id: turma_id ?? null,
+      tipo: tipo as string,
     });
 
     if (destinatarios.length === 0) {

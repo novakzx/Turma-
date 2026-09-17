@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 
@@ -267,15 +268,25 @@ export default function Notas() {
       className="flex-1 bg-background dark:bg-background-dark"
       contentContainerClassName="gap-4 p-4 pb-28"
     >
-      <View className="flex-row flex-wrap gap-2">
-        {(materiasQuery.data ?? []).map((materia) => (
-          <ChipMateria
-            key={materia.id}
-            nome={materia.nome}
-            selecionada={materiaId === materia.id}
-            onPress={() => setMateriaId(materia.id)}
-          />
-        ))}
+      <View className="flex-row items-center justify-between gap-2">
+        <View className="flex-1 flex-row flex-wrap gap-2">
+          {(materiasQuery.data ?? []).map((materia) => (
+            <ChipMateria
+              key={materia.id}
+              nome={materia.nome}
+              selecionada={materiaId === materia.id}
+              onPress={() => setMateriaId(materia.id)}
+            />
+          ))}
+        </View>
+        <Pressable
+          onPress={() => router.push('/faltas')}
+          accessibilityRole="button"
+          accessibilityLabel="Faltas"
+          className="min-h-11 min-w-11 items-center justify-center rounded-full bg-slate-100"
+        >
+          <Ionicons name="calendar-outline" size={18} color="#0095F6" />
+        </Pressable>
       </View>
 
       {!materiaId ? (
