@@ -28,6 +28,7 @@ import {
   recusarOuSair,
   type MensagemComAutor,
 } from '@/features/mensagens/api';
+import { calcularSequenciaConversa } from '@/features/mensagens/regras';
 import { FotoPerfil } from '@/features/perfil/FotoPerfil';
 import { supabase } from '@/lib/supabase';
 
@@ -150,11 +151,16 @@ function LinhaMensagem({
         }`}
       >
         {mensagem.midia_tipo === 'imagem' && mensagem.midia_url ? (
-          <ImagemChat caminho={mensagem.midia_url} obterUrl={obterUrlAssinadaConversa} />
+          <ImagemChat
+            caminho={mensagem.midia_url}
+            obterUrl={obterUrlAssinadaConversa}
+            urlPreAssinada={mensagem.urlMidiaAssinada}
+          />
         ) : mensagem.midia_tipo === 'audio' && mensagem.midia_url ? (
           <BolhaAudio
             caminho={mensagem.midia_url}
             obterUrl={obterUrlAssinadaConversa}
+            urlPreAssinada={mensagem.urlMidiaAssinada}
             corIcone={souEu ? '#FFFFFF' : '#0095F6'}
             corTexto={souEu ? 'text-white' : 'text-slate-900'}
           />
@@ -192,11 +198,16 @@ function CabecalhoConversa({
   nome,
   foto,
   ehGrupo,
+  sequencia,
   onPress,
 }: {
   nome: string;
   foto?: string | null;
   ehGrupo: boolean;
+  /** Foguinho da conversa (pedido do usuário — "tipo o do tiktok"): dias
+   * seguidos em que os dois mandaram mensagem. `undefined`/`0` não
+   * mostra nada (não faz sentido gabar "0 dias seguidos"). */
+  sequencia?: number;
   onPress?: () => void;
 }) {
   // Cor do texto vem em JS, não de classe `dark:` do Tailwind — conteúdo
@@ -238,6 +249,14 @@ function CabecalhoConversa({
       >
         {nome}
       </Text>
+      {sequencia ? (
+        <View className="flex-row items-center gap-0.5">
+          <Ionicons name="flame" size={14} color="#F97316" />
+          <Text style={{ color: corTexto }} className="text-xs font-semibold">
+            {sequencia}
+          </Text>
+        </View>
+      ) : null}
     </Pressable>
   );
 }
@@ -375,6 +394,14 @@ export default function DetalheConversa() {
 
   const itensLista = construirItensLista(mensagensQuery.data ?? []);
 
+  // Foguinho (pedido do usuário — "tipo o do tiktok"): só faz sentido
+  // 1:1, não em grupo. Reaproveita `mensagensQuery.data` (já carregado
+  // pra desenhar o chat) em vez de bater o banco de novo.
+  const sequenciaConversa =
+    !ehGrupo && profile && outroParticipante
+      ? calcularSequenciaConversa(mensagensQuery.data ?? [], profile.id, outroParticipante.profile_id)
+      : 0;
+
   return (
     <KeyboardAvoidingView
       className="flex-1 bg-background dark:bg-background-dark"
@@ -387,6 +414,7 @@ export default function DetalheConversa() {
               nome={titulo}
               foto={outroParticipante?.profiles?.foto_url}
               ehGrupo={ehGrupo}
+              sequencia={sequenciaConversa}
               onPress={() =>
                 router.push(
                   ehGrupo

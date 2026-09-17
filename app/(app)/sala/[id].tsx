@@ -73,11 +73,16 @@ function LinhaMensagem({
           </Text>
         ) : null}
         {mensagem.midia_tipo === 'imagem' && mensagem.midia_url ? (
-          <ImagemChat caminho={mensagem.midia_url} obterUrl={obterUrlAssinadaSala} />
+          <ImagemChat
+            caminho={mensagem.midia_url}
+            obterUrl={obterUrlAssinadaSala}
+            urlPreAssinada={mensagem.urlMidiaAssinada}
+          />
         ) : mensagem.midia_tipo === 'audio' && mensagem.midia_url ? (
           <BolhaAudio
             caminho={mensagem.midia_url}
             obterUrl={obterUrlAssinadaSala}
+            urlPreAssinada={mensagem.urlMidiaAssinada}
             corIcone={ehPropria ? '#FFFFFF' : '#0095F6'}
             corTexto={ehPropria ? 'text-white' : 'text-slate-900'}
           />

@@ -1,6 +1,7 @@
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
 import { lerBytesDeMidiaLocal } from '@/lib/lerMidiaLocal';
+import { assinarUrlsEmLote } from '@/lib/storageAssinado';
 import { supabase } from '@/lib/supabase';
 import type { PerfilResumo } from '@/features/social/types';
 
@@ -153,8 +154,16 @@ export async function listarParticipantes(conversaId: string): Promise<Participa
   return data as unknown as ParticipanteComPerfil[];
 }
 
-export type MensagemComAutor = MensagemDireta & { profiles: PerfilResumo | null };
+export type MensagemComAutor = MensagemDireta & {
+  profiles: PerfilResumo | null;
+  /** URL já assinada em lote (imagem ou áudio) — ver comentário abaixo. */
+  urlMidiaAssinada?: string | null;
+};
 
+/** Achado do usuário ("demora pra carregar as imagens"/"demora uns 10
+ * segundos pra abrir"): mesmo problema de N+1 assinatura já corrigido
+ * no feed (`assinarUrlsEmLote`) e na sala de chat (`chat/api.ts`) —
+ * cada `<ImagemChat>`/`<BolhaAudio>` pedia a própria URL sozinha. */
 export async function listarMensagens(conversaId: string): Promise<MensagemComAutor[]> {
   const { data, error } = await supabase
     .from('mensagens_diretas')
@@ -163,7 +172,17 @@ export async function listarMensagens(conversaId: string): Promise<MensagemComAu
     .order('criado_em')
     .limit(200);
   if (error) throw error;
-  return data as unknown as MensagemComAutor[];
+  const mensagens = data as unknown as MensagemComAutor[];
+
+  const caminhosMidia = mensagens
+    .filter((m) => m.midia_url && (m.midia_tipo === 'imagem' || m.midia_tipo === 'audio'))
+    .map((m) => m.midia_url as string);
+  const urls = await assinarUrlsEmLote(BUCKET_MIDIA, caminhosMidia);
+
+  return mensagens.map((m) => ({
+    ...m,
+    urlMidiaAssinada: m.midia_url ? (urls.get(m.midia_url) ?? null) : null,
+  }));
 }
 
 export async function enviarMensagemDireta(params: {

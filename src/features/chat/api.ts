@@ -1,6 +1,7 @@
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
 import { lerBytesDeMidiaLocal } from '@/lib/lerMidiaLocal';
+import { assinarUrlsEmLote } from '@/lib/storageAssinado';
 import { supabase } from '@/lib/supabase';
 
 import type { MensagemChat, Sala, TipoMidiaMensagem } from './types';
@@ -47,12 +48,26 @@ export async function definirSalaTrancada(salaId: string, trancada: boolean) {
   if (error) throw error;
 }
 
-export type MensagemComAutor = MensagemChat & { profiles: { nome: string } | null };
+export type MensagemComAutor = MensagemChat & {
+  profiles: { nome: string } | null;
+  /** URL já assinada em lote (imagem ou áudio) — ver comentário abaixo.
+   * `null`/`undefined` quando a mensagem não tem mídia. */
+  urlMidiaAssinada?: string | null;
+};
 
 /** Mensagem apagada (soft delete) some da lista de quem não é staff —
  * a policy de select já filtra isso no banco (`not apagada or
  * is_staff()`); pra staff ela continua vindo, marcada, pra fim de
- * auditoria. */
+ * auditoria.
+ *
+ * Achado do usuário ("demora pra carregar as imagens"/"demora uns 10
+ * segundos pra abrir"): `<ImagemChat>`/`<BolhaAudio>` pediam a própria
+ * URL assinada cada uma, sozinhas -- uma sala com várias fotos/áudios
+ * virava uma rajada de requisições de assinatura (uma por mensagem)
+ * antes de qualquer mídia começar a carregar de verdade, exatamente o
+ * mesmo problema já corrigido no feed (`assinarUrlsEmLote`, ver
+ * `feed/api.ts`). Assina tudo aqui, numa chamada só, e cada mensagem
+ * já chega pronta com `urlMidiaAssinada`. */
 export async function listarMensagens(salaId: string): Promise<MensagemComAutor[]> {
   const { data, error } = await supabase
     .from('mensagens_chat')
@@ -61,7 +76,17 @@ export async function listarMensagens(salaId: string): Promise<MensagemComAutor[
     .order('criado_em')
     .limit(200);
   if (error) throw error;
-  return data as unknown as MensagemComAutor[];
+  const mensagens = data as unknown as MensagemComAutor[];
+
+  const caminhosMidia = mensagens
+    .filter((m) => m.midia_url && (m.midia_tipo === 'imagem' || m.midia_tipo === 'audio'))
+    .map((m) => m.midia_url as string);
+  const urls = await assinarUrlsEmLote(BUCKET_MIDIA, caminhosMidia);
+
+  return mensagens.map((m) => ({
+    ...m,
+    urlMidiaAssinada: m.midia_url ? (urls.get(m.midia_url) ?? null) : null,
+  }));
 }
 
 export async function enviarMensagem(params: {

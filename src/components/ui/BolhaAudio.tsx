@@ -16,23 +16,32 @@ function formatarTempo(segundos: number): string {
  * resolve o pedido do usuário, sem precisar de waveform/scrubber).
  * `obterUrl` busca a URL assinada certa (conversa ou sala — cada chat
  * tem seu próprio bucket privado, ver `mensagens/api.ts`/`chat/api.ts`).
+ *
+ * `urlPreAssinada` (pedido do usuário — "demora uns 10 segundos pra
+ * abrir"): quando `listarMensagens` já assinou tudo em lote, passa ela
+ * pronta aqui — sem isso, uma sala/conversa com vários áudios disparava
+ * uma requisição de assinatura por bolha, todas de uma vez.
  */
 export function BolhaAudio({
   caminho,
   obterUrl,
+  urlPreAssinada,
   corIcone = '#FFFFFF',
   corTexto = 'text-white',
 }: {
   caminho: string;
   obterUrl: (caminho: string) => Promise<string>;
+  urlPreAssinada?: string | null;
   corIcone?: string;
   corTexto?: string;
 }) {
-  const { data: url } = useQuery({
+  const { data: urlBuscada } = useQuery({
     queryKey: ['url-assinada-audio', caminho],
     queryFn: () => obterUrl(caminho),
     staleTime: 50 * 60 * 1000,
+    enabled: !urlPreAssinada,
   });
+  const url = urlPreAssinada ?? urlBuscada;
 
   const player = useAudioPlayer(url ?? null);
   const status = useAudioPlayerStatus(player);

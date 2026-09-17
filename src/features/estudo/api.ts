@@ -4,6 +4,7 @@ import { Platform } from 'react-native';
 
 import { mensagemDoErroDaFuncao } from '@/lib/erroEdgeFunction';
 import { lerBytesDeMidiaLocal } from '@/lib/lerMidiaLocal';
+import { assinarUrlsEmLote } from '@/lib/storageAssinado';
 import { supabase } from '@/lib/supabase';
 
 import { calcularEstatisticaSemanal, type EstatisticaSemanal } from './regras';
@@ -15,14 +16,29 @@ import type { MensagemChatIA, ModoChatEstudo } from './types';
 // aluno pode ver a própria foto (nunca colega de turma, nunca staff).
 const BUCKET_FOTOS_ESTUDO = 'estudo-fotos';
 
-export async function listarHistoricoChat(materiaId: string): Promise<MensagemChatIA[]> {
+export type MensagemChatIAComUrl = MensagemChatIA & {
+  /** URL já assinada em lote — ver comentário abaixo. */
+  urlMidiaAssinada?: string | null;
+};
+
+/** Achado do usuário ("demora pra carregar as imagens"): mesmo N+1 de
+ * assinatura já corrigido no feed/salas/DMs — `<MiniaturaFoto>` pedia a
+ * própria URL sozinha por mensagem. */
+export async function listarHistoricoChat(materiaId: string): Promise<MensagemChatIAComUrl[]> {
   const { data, error } = await supabase
     .from('chat_ia_mensagens')
     .select('*')
     .eq('materia_id', materiaId)
     .order('criado_em');
   if (error) throw error;
-  return data;
+
+  const caminhosFoto = data.filter((m) => m.midia_url).map((m) => m.midia_url as string);
+  const urls = await assinarUrlsEmLote(BUCKET_FOTOS_ESTUDO, caminhosFoto);
+
+  return data.map((m) => ({
+    ...m,
+    urlMidiaAssinada: m.midia_url ? (urls.get(m.midia_url) ?? null) : null,
+  }));
 }
 
 /** Só as perguntas (`papel = 'usuario'`) dos últimos 7 dias — a lógica

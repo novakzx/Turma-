@@ -30,13 +30,13 @@ import {
   listarHistoricoChat,
   obterUrlAssinadaFotoEstudo,
   type FotoEscolhida,
+  type MensagemChatIAComUrl,
 } from '@/features/estudo/api';
 import { calcularSequenciaEstudos, formatarTempo, separarGabarito } from '@/features/estudo/regras';
 import {
   ICONE_MODO,
   ROTULO_MODO,
   exigeAssinatura,
-  type MensagemChatIA,
   type ModoChatEstudo,
 } from '@/features/estudo/types';
 import { criarFlashcard } from '@/features/flashcards/api';
@@ -178,16 +178,26 @@ function CartaoSequenciaEstudos({ alunoId }: { alunoId: string }) {
 
 /** Miniatura da foto de anotação anexada numa mensagem (pedido do
  * usuário — "pra ia ver fotos das anotacoes dos alunos"). Mesmo padrão
- * de `ImagemPost`/`FotoPerfil`: bucket privado, então busca a própria
- * URL assinada (cache do TanStack Query evita repetir a cada re-render). */
-function MiniaturaFoto({ caminho }: { caminho: string }) {
-  const { data: url, isLoading } = useQuery({
+ * de `ImagemPost`/`FotoPerfil`: bucket privado, URL assinada.
+ * `urlPreAssinada` (pedido do usuário — "demora pra carregar as
+ * imagens"): `listarHistoricoChat` já assina tudo em lote; sem essa
+ * prop, cai no comportamento antigo (busca sozinha, com cache). */
+function MiniaturaFoto({
+  caminho,
+  urlPreAssinada,
+}: {
+  caminho: string;
+  urlPreAssinada?: string | null;
+}) {
+  const { data: urlBuscada, isLoading } = useQuery({
     queryKey: ['url-assinada-foto-estudo', caminho],
     queryFn: () => obterUrlAssinadaFotoEstudo(caminho),
     staleTime: 50 * 60 * 1000,
+    enabled: !urlPreAssinada,
   });
+  const url = urlPreAssinada ?? urlBuscada;
 
-  if (isLoading || !url) {
+  if ((!urlPreAssinada && isLoading) || !url) {
     return (
       <View className="h-40 w-40 items-center justify-center rounded-xl bg-slate-100">
         <ActivityIndicator size="small" color="#0095F6" />
@@ -210,10 +220,10 @@ function BolhaMensagem({
   materiaId,
   alunoId,
 }: {
-  mensagem: MensagemChatIA;
+  mensagem: MensagemChatIAComUrl;
   /** Mensagem do aluno logo antes desta (só faz sentido pra mensagem da
    * IA) — usada como `pergunta` do flashcard criado a partir da resposta. */
-  perguntaAnterior: MensagemChatIA | null;
+  perguntaAnterior: MensagemChatIAComUrl | null;
   materiaId: string;
   alunoId: string;
 }) {
@@ -266,7 +276,9 @@ function BolhaMensagem({
         </View>
       ) : null}
       <View className="shrink gap-1.5">
-        {mensagem.midia_url ? <MiniaturaFoto caminho={mensagem.midia_url} /> : null}
+        {mensagem.midia_url ? (
+          <MiniaturaFoto caminho={mensagem.midia_url} urlPreAssinada={mensagem.urlMidiaAssinada} />
+        ) : null}
         <View
           className={`shrink px-4 py-2.5 ${
             doAluno
