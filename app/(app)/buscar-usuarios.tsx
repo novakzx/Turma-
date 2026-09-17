@@ -3,7 +3,8 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
-import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { SkeletonListaLinhas } from '@/components/ui/Skeleton';
 import { TextField } from '@/components/ui/TextField';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { buscarUsuarios } from '@/features/busca/api';
@@ -43,7 +44,7 @@ export default function BuscarUsuarios() {
       {termo.trim().length > 0 && termo.trim().length < 2 ? (
         <Text className="text-sm text-slate-500">Digite pelo menos 2 letras.</Text>
       ) : buscaQuery.isLoading ? (
-        <LoadingState />
+        <SkeletonListaLinhas quantidade={3} />
       ) : termo.trim().length >= 2 && (buscaQuery.data ?? []).length === 0 ? (
         <EmptyState
           icon="person-outline"

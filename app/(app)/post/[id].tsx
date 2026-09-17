@@ -6,6 +6,7 @@ import { Alert, FlatList, Platform, Pressable, Text, View } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
 import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
+import { SkeletonListaLinhas } from '@/components/ui/Skeleton';
 import { TextField } from '@/components/ui/TextField';
 import { TextoComMencoes } from '@/components/ui/TextoComMencoes';
 import { useAuth } from '@/features/auth/AuthProvider';
@@ -251,7 +252,7 @@ export default function DetalhePost() {
       )}
       ListEmptyComponent={
         comentariosQuery.isLoading ? (
-          <LoadingState />
+          <SkeletonListaLinhas quantidade={3} />
         ) : (
           <View className="flex-row items-center gap-1.5 py-4">
             <Ionicons name="chatbubble-outline" size={14} color="#969696" />

@@ -2,7 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 
-import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { SkeletonListaLinhas } from '@/components/ui/Skeleton';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { FotoPerfil } from '@/features/perfil/FotoPerfil';
 import { listarSeguidores, listarSeguindo } from '@/features/social/api';
@@ -35,7 +36,9 @@ export default function Conexoes() {
       <Stack.Screen options={{ title: ehSeguidores ? 'Seguidores' : 'Seguindo' }} />
 
       {query.isLoading ? (
-        <LoadingState />
+        <View className="px-4 py-3">
+          <SkeletonListaLinhas />
+        </View>
       ) : query.isError ? (
         <EmptyState titulo="Não deu pra carregar" onTentarNovo={() => query.refetch()} />
       ) : (query.data ?? []).length === 0 ? (

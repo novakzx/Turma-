@@ -5,7 +5,8 @@ import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
-import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { SkeletonListaLinhas } from '@/components/ui/Skeleton';
 import { TextField } from '@/components/ui/TextField';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { mensagemDeErro } from '@/features/auth/errors';
@@ -147,7 +148,7 @@ export default function NovaConversa() {
       />
 
       {carregando ? (
-        <LoadingState />
+        <SkeletonListaLinhas />
       ) : pessoas.length === 0 ? (
         <EmptyState
           icon="people-outline"

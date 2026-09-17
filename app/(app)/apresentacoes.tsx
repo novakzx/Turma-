@@ -6,6 +6,7 @@ import { ActivityIndicator, Alert, Platform, Pressable, ScrollView, Text, View }
 
 import { Button } from '@/components/ui/Button';
 import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
+import { SkeletonListaLinhas } from '@/components/ui/Skeleton';
 import { TextField } from '@/components/ui/TextField';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { mensagemDeErro } from '@/features/auth/errors';
@@ -195,7 +196,7 @@ export default function Apresentacoes() {
       <View className="gap-2">
         <Text className="text-sm font-semibold text-slate-900">Minhas apresentações</Text>
         {apresentacoesQuery.isLoading ? (
-          <LoadingState />
+          <SkeletonListaLinhas quantidade={2} />
         ) : (apresentacoesQuery.data?.length ?? 0) === 0 ? (
           <EmptyState
             icon="easel-outline"

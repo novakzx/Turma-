@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { Alert, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
-import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { SkeletonListaLinhas } from '@/components/ui/Skeleton';
 import { TextField } from '@/components/ui/TextField';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { mensagemDeErro } from '@/features/auth/errors';
@@ -175,7 +176,13 @@ export default function GerenciarMaterias() {
     );
   }
 
-  if (materiasQuery.isLoading) return <LoadingState />;
+  if (materiasQuery.isLoading) {
+    return (
+      <View className="flex-1 bg-background p-4 dark:bg-background-dark">
+        <SkeletonListaLinhas />
+      </View>
+    );
+  }
   if (materiasQuery.isError) {
     return (
       <EmptyState

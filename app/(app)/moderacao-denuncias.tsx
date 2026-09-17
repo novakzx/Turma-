@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
-import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { SkeletonListaLinhas } from '@/components/ui/Skeleton';
 import { useAuth } from '@/features/auth/AuthProvider';
 import {
   atualizarStatusDenuncia,
@@ -144,7 +145,7 @@ export default function ModeracaoDenuncias() {
       </View>
 
       {denunciasQuery.isLoading ? (
-        <LoadingState />
+        <SkeletonListaLinhas />
       ) : denunciasQuery.isError ? (
         <EmptyState titulo="Não deu pra carregar" onTentarNovo={() => denunciasQuery.refetch()} />
       ) : (denunciasQuery.data ?? []).length === 0 ? (

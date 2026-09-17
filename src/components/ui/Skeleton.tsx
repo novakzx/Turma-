@@ -77,3 +77,17 @@ export function SkeletonLinha() {
     </View>
   );
 }
+
+/** Várias `SkeletonLinha` empilhadas — a forma que se repete na maioria
+ * das telas de lista (pedidos, participantes, matérias, busca,
+ * denúncias...), então vira um componente só em vez de repetir
+ * `<SkeletonLinha />` 3-4 vezes em cada arquivo. */
+export function SkeletonListaLinhas({ quantidade = 4 }: { quantidade?: number }) {
+  return (
+    <View className="gap-2">
+      {Array.from({ length: quantidade }).map((_, i) => (
+        <SkeletonLinha key={i} />
+      ))}
+    </View>
+  );
+}

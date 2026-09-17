@@ -2,7 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Pressable, Text, View } from 'react-native';
 
-import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { SkeletonListaLinhas } from '@/components/ui/Skeleton';
 import { useAuth } from '@/features/auth/AuthProvider';
 import {
   listarPedidosDasMinhasTurmas,
@@ -36,7 +37,13 @@ export default function PedidosTurma() {
       queryClient.invalidateQueries({ queryKey: ['pedidos-minhas-turmas', profile?.id] }),
   });
 
-  if (pedidosQuery.isLoading) return <LoadingState />;
+  if (pedidosQuery.isLoading) {
+    return (
+      <View className="flex-1 bg-background p-4 dark:bg-background-dark">
+        <SkeletonListaLinhas />
+      </View>
+    );
+  }
   if (pedidosQuery.isError) {
     return <EmptyState titulo="Não deu pra carregar" onTentarNovo={() => pedidosQuery.refetch()} />;
   }

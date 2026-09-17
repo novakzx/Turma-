@@ -2,7 +2,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { FlatList, View } from 'react-native';
 
-import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { SkeletonPost } from '@/components/ui/Skeleton';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { curtir, descurtir, listarMeusLikes, listarPostsDoAutor } from '@/features/feed/api';
 import { CartaoPost } from '@/features/feed/CartaoPost';
@@ -40,7 +41,15 @@ export default function MinhasPublicacoes() {
     onSuccess: invalidarTudo,
   });
 
-  if (postsQuery.isLoading) return <LoadingState />;
+  if (postsQuery.isLoading) {
+    return (
+      <View className="flex-1 bg-background dark:bg-background-dark">
+        <SkeletonPost />
+        <SkeletonPost />
+        <SkeletonPost />
+      </View>
+    );
+  }
   if (postsQuery.isError) {
     return <EmptyState titulo="Não deu pra carregar" onTentarNovo={() => postsQuery.refetch()} />;
   }

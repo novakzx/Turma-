@@ -5,7 +5,8 @@ import { useMemo, useState } from 'react';
 import { Alert, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
-import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { SkeletonListaLinhas } from '@/components/ui/Skeleton';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { mensagemDeErro } from '@/features/auth/errors';
 import {
@@ -78,7 +79,13 @@ export default function GrupoParticipantes() {
     onSuccess: () => router.back(),
   });
 
-  if (participantesQuery.isLoading) return <LoadingState />;
+  if (participantesQuery.isLoading) {
+    return (
+      <View className="flex-1 bg-background px-6 pt-6 dark:bg-background-dark">
+        <SkeletonListaLinhas />
+      </View>
+    );
+  }
   if (participantesQuery.isError) {
     return <EmptyState titulo="Não deu pra carregar os participantes" />;
   }

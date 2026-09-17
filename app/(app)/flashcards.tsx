@@ -5,6 +5,7 @@ import { Alert, Platform, Pressable, ScrollView, Text, View } from 'react-native
 
 import { Button } from '@/components/ui/Button';
 import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
+import { SkeletonListaLinhas } from '@/components/ui/Skeleton';
 import { useAuth } from '@/features/auth/AuthProvider';
 import {
   apagarFlashcard,
@@ -129,7 +130,7 @@ function ListaPorMateria({ materiaId }: { materiaId: string }) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['flashcards-materia', materiaId] }),
   });
 
-  if (cartoesQuery.isLoading) return <LoadingState />;
+  if (cartoesQuery.isLoading) return <SkeletonListaLinhas />;
   if (!cartoesQuery.data || cartoesQuery.data.length === 0) {
     return (
       <EmptyState
