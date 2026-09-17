@@ -10,7 +10,9 @@ import { createClient } from 'jsr:@supabase/supabase-js@2';
 
 import {
   MODELO_VISAO,
+  ROTULO_MODO,
   escolherModelo,
+  exigeAssinatura,
   montarPromptSistema,
   montarPromptVisao,
   type ModoChatEstudo,
@@ -195,6 +197,21 @@ Deno.serve(async (req) => {
       .eq('id', user.id)
       .single();
     const ehAssinante = perfilAssinatura?.assinatura_ativa === true;
+
+    // Modos Premium (pedido do usuário) -- checado ANTES do rate limit:
+    // é uma negação diferente, quem não tem acesso ao modo nem chega a
+    // gastar cota de mensagem. Conferido aqui (não só escondendo o botão
+    // no app) porque `supabase.functions.invoke` pode ser chamado direto,
+    // sem passar pela UI.
+    if (exigeAssinatura(modo) && !ehAssinante) {
+      return respostaJson(
+        {
+          error: `"${ROTULO_MODO[modo]}" é um recurso do Turma+ Premium (R$1,99/mês) -- assine pra desbloquear.`,
+        },
+        402,
+        origin,
+      );
+    }
 
     if (!ehAssinante) {
       // Rate limit por usuário (não só no cliente — um script chamando a

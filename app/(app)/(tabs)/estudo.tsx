@@ -18,6 +18,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '@/components/ui/Button';
 import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
 import { TextField } from '@/components/ui/TextField';
+import { useAssinante } from '@/features/assinatura/useAssinante';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { mensagemDeErro } from '@/features/auth/errors';
 import {
@@ -33,13 +34,22 @@ import { formatarTempo, separarGabarito } from '@/features/estudo/regras';
 import {
   ICONE_MODO,
   ROTULO_MODO,
+  exigeAssinatura,
   type MensagemChatIA,
   type ModoChatEstudo,
 } from '@/features/estudo/types';
 import { criarFlashcard } from '@/features/flashcards/api';
 import { listarMateriasDaTurma } from '@/features/notas/api';
 
-const MODOS: ModoChatEstudo[] = ['duvida', 'explicar', 'resumo', 'plano', 'prova'];
+const MODOS: ModoChatEstudo[] = [
+  'duvida',
+  'explicar',
+  'resumo',
+  'plano',
+  'prova',
+  'corrigir',
+  'perguntas',
+];
 
 /** Duração fixa da prova simulada (15 min) — é só um cronômetro de UX
  * pra dar noção de tempo real de prova, não um prazo de verdade que
@@ -162,6 +172,8 @@ function BolhaMensagem({
   alunoId: string;
 }) {
   const doAluno = mensagem.papel === 'usuario';
+  const assinante = useAssinante();
+  const queryClient = useQueryClient();
   const [mostrarGabarito, setMostrarGabarito] = useState(false);
   const { enunciado, gabarito } = separarGabarito(mensagem.conteudo);
 
@@ -173,6 +185,22 @@ function BolhaMensagem({
         pergunta: perguntaAnterior?.conteudo ?? enunciado.slice(0, 200),
         resposta: enunciado,
       }),
+  });
+
+  // "Explica de outro jeito" (recurso Premium, pedido do usuário) — reenvia
+  // a mesma resposta pra IA pedindo uma explicação mais simples, no modo
+  // `explicar` (construção do básico) em vez de repetir o `modo` original
+  // (não faz sentido pedir "de outro jeito" pra um resumo/prova, por
+  // exemplo). Mesmo padrão do `flashcardMutation` acima, mas invalida o
+  // histórico do chat pra resposta nova aparecer.
+  const explicarDeNovoMutation = useMutation({
+    mutationFn: () =>
+      enviarMensagemChat({
+        materiaId,
+        mensagem: 'Explica de outro jeito, de um jeito mais simples.',
+        modo: 'explicar',
+      }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['chat-ia', materiaId] }),
   });
 
   return (
@@ -225,25 +253,48 @@ function BolhaMensagem({
           )
         ) : null}
 
-        {/* "+ Flashcard" só faz sentido numa resposta de verdade da IA
-            (não na prova, que já tem gabarito próprio, nem na mensagem
-            do próprio aluno). */}
+        {/* "+ Flashcard" e "Explica de outro jeito" só fazem sentido numa
+            resposta de verdade da IA (não na prova, que já tem gabarito
+            próprio, nem na mensagem do próprio aluno). */}
         {!doAluno && !gabarito ? (
-          <Pressable
-            onPress={() => flashcardMutation.mutate()}
-            disabled={flashcardMutation.isPending || flashcardMutation.isSuccess}
-            accessibilityRole="button"
-            className="min-h-11 flex-row items-center gap-1 self-start rounded-full bg-slate-100 px-3"
-          >
-            <Ionicons
-              name={flashcardMutation.isSuccess ? 'checkmark' : 'albums-outline'}
-              size={14}
-              color="#0095F6"
-            />
-            <Text className="text-xs font-semibold text-primary dark:text-primary-dark">
-              {flashcardMutation.isSuccess ? 'Flashcard criado' : 'Criar flashcard'}
-            </Text>
-          </Pressable>
+          <View className="flex-row flex-wrap gap-2">
+            <Pressable
+              onPress={() => flashcardMutation.mutate()}
+              disabled={flashcardMutation.isPending || flashcardMutation.isSuccess}
+              accessibilityRole="button"
+              className="min-h-11 flex-row items-center gap-1 self-start rounded-full bg-slate-100 px-3"
+            >
+              <Ionicons
+                name={flashcardMutation.isSuccess ? 'checkmark' : 'albums-outline'}
+                size={14}
+                color="#0095F6"
+              />
+              <Text className="text-xs font-semibold text-primary dark:text-primary-dark">
+                {flashcardMutation.isSuccess ? 'Flashcard criado' : 'Criar flashcard'}
+              </Text>
+            </Pressable>
+
+            {/* Recurso Premium (pedido do usuário) — só aparece pra
+                assinante; quem não assina já pode simplesmente reescrever
+                a pergunta, então não há nada de servidor pra travar aqui. */}
+            {assinante ? (
+              <Pressable
+                onPress={() => explicarDeNovoMutation.mutate()}
+                disabled={explicarDeNovoMutation.isPending}
+                accessibilityRole="button"
+                className="min-h-11 flex-row items-center gap-1 self-start rounded-full bg-slate-100 px-3"
+              >
+                {explicarDeNovoMutation.isPending ? (
+                  <ActivityIndicator size="small" color="#0095F6" />
+                ) : (
+                  <Ionicons name="repeat-outline" size={14} color="#0095F6" />
+                )}
+                <Text className="text-xs font-semibold text-primary dark:text-primary-dark">
+                  Explica de outro jeito
+                </Text>
+              </Pressable>
+            ) : null}
+          </View>
         ) : null}
       </View>
     </View>
@@ -252,6 +303,7 @@ function BolhaMensagem({
 
 export default function Estudo() {
   const { profile } = useAuth();
+  const assinante = useAssinante();
   const queryClient = useQueryClient();
   const [materiaId, setMateriaId] = useState<string | null>(null);
   const [modo, setModo] = useState<ModoChatEstudo>('duvida');
@@ -346,9 +398,11 @@ export default function Estudo() {
     // exigindo texto (é a única coisa que a IA teria pra responder).
     if (!texto.trim() && !fotoEscolhida) {
       setErro(
-        modo === 'prova'
-          ? 'Escreve o assunto da prova antes de gerar (ex.: "frações" ou "2ª Guerra Mundial").'
-          : 'Escreve sua pergunta antes de enviar.',
+        modo === 'prova' || modo === 'perguntas'
+          ? 'Escreve o assunto antes de gerar (ex.: "frações" ou "2ª Guerra Mundial").'
+          : modo === 'corrigir'
+            ? 'Cola o texto/trabalho que você quer corrigir.'
+            : 'Escreve sua pergunta antes de enviar.',
       );
       return;
     }
@@ -438,24 +492,36 @@ export default function Estudo() {
             showsHorizontalScrollIndicator={false}
             contentContainerClassName="items-center gap-2 pl-3 pr-3"
           >
-            {MODOS.map((opcao) => (
-              <Pressable
-                key={opcao}
-                onPress={() => setModo(opcao)}
-                accessibilityRole="button"
-                accessibilityState={{ selected: modo === opcao }}
-                className={`min-h-11 flex-row items-center justify-center gap-1 rounded-full px-3 ${
-                  modo === opcao ? 'bg-accent/15 dark:bg-accent-dark/20' : 'bg-slate-100'
-                }`}
-              >
-                <Ionicons
-                  name={ICONE_MODO[opcao]}
-                  size={14}
-                  color={modo === opcao ? '#0095F6' : '#424242'}
-                />
-                <Text className="text-xs font-medium text-slate-700">{ROTULO_MODO[opcao]}</Text>
-              </Pressable>
-            ))}
+            {MODOS.map((opcao) => {
+              // Modo Premium (pedido do usuário) sem assinatura: mostra
+              // cadeado e leva pra tela de assinatura em vez de trocar de
+              // modo — a Edge Function recusa do mesmo jeito se alguém
+              // pular essa checagem chamando a API direto (ver
+              // `chat-estudo/index.ts`), então isto é só UX, não é a
+              // autorização de verdade.
+              const trancado = exigeAssinatura(opcao) && !assinante;
+              return (
+                <Pressable
+                  key={opcao}
+                  onPress={() => (trancado ? router.push('/assinatura') : setModo(opcao))}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: modo === opcao }}
+                  accessibilityLabel={
+                    trancado ? `${ROTULO_MODO[opcao]} (recurso Premium)` : ROTULO_MODO[opcao]
+                  }
+                  className={`min-h-11 flex-row items-center justify-center gap-1 rounded-full px-3 ${
+                    modo === opcao ? 'bg-accent/15 dark:bg-accent-dark/20' : 'bg-slate-100'
+                  }`}
+                >
+                  <Ionicons
+                    name={trancado ? 'lock-closed-outline' : ICONE_MODO[opcao]}
+                    size={14}
+                    color={modo === opcao ? '#0095F6' : '#424242'}
+                  />
+                  <Text className="text-xs font-medium text-slate-700">{ROTULO_MODO[opcao]}</Text>
+                </Pressable>
+              );
+            })}
             {modo === 'prova' && segundosRestantesProva !== null ? (
               <View className="flex-row items-center gap-1 rounded-full bg-danger/10 px-3 py-1.5 dark:bg-danger-dark/10">
                 <Ionicons name="timer-outline" size={14} color="#F87171" />
@@ -569,9 +635,11 @@ export default function Estudo() {
                 placeholder={
                   fotoEscolhida
                     ? 'O que você quer saber sobre a foto? (opcional)'
-                    : modo === 'prova'
-                      ? 'Assunto da prova (ex.: frações)...'
-                      : 'Escreve sua pergunta...'
+                    : modo === 'prova' || modo === 'perguntas'
+                      ? 'Assunto (ex.: frações)...'
+                      : modo === 'corrigir'
+                        ? 'Cola aqui o texto/trabalho...'
+                        : 'Escreve sua pergunta...'
                 }
                 multiline
               />

@@ -2,6 +2,7 @@ import {
   MARCADOR_GABARITO,
   MODELO_VISAO,
   escolherModelo,
+  exigeAssinatura,
   montarPromptSistema,
   montarPromptVisao,
 } from '../regrasEstudo';
@@ -26,6 +27,29 @@ describe('escolherModelo (Cloudflare Workers AI — ids confirmados em developer
   it('usa o modelo mais forte pra prova simulada', () => {
     expect(escolherModelo('prova')).toBe('@cf/meta/llama-3.3-70b-instruct-fp8-fast');
   });
+
+  it('usa o modelo mais forte pra corrigir trabalho', () => {
+    expect(escolherModelo('corrigir')).toBe('@cf/meta/llama-3.3-70b-instruct-fp8-fast');
+  });
+
+  it('usa o modelo mais forte pra gerar perguntas', () => {
+    expect(escolherModelo('perguntas')).toBe('@cf/meta/llama-3.3-70b-instruct-fp8-fast');
+  });
+});
+
+describe('exigeAssinatura (gate do Turma+ Premium)', () => {
+  it('não exige assinatura pro tutor básico (duvida/explicar continuam de graça)', () => {
+    expect(exigeAssinatura('duvida')).toBe(false);
+    expect(exigeAssinatura('explicar')).toBe(false);
+  });
+
+  it('exige assinatura pras ferramentas Premium', () => {
+    expect(exigeAssinatura('resumo')).toBe(true);
+    expect(exigeAssinatura('plano')).toBe(true);
+    expect(exigeAssinatura('prova')).toBe(true);
+    expect(exigeAssinatura('corrigir')).toBe(true);
+    expect(exigeAssinatura('perguntas')).toBe(true);
+  });
 });
 
 describe('montarPromptSistema', () => {
@@ -36,7 +60,15 @@ describe('montarPromptSistema', () => {
   });
 
   it('mantém a regra de nunca dar resposta pronta sem mostrar raciocínio', () => {
-    for (const modo of ['explicar', 'duvida', 'resumo', 'plano', 'prova'] as const) {
+    for (const modo of [
+      'explicar',
+      'duvida',
+      'resumo',
+      'plano',
+      'prova',
+      'corrigir',
+      'perguntas',
+    ] as const) {
       const prompt = montarPromptSistema({ nomeMateria: 'Física', modo });
       expect(prompt).toContain('raciocínio');
     }
@@ -47,7 +79,15 @@ describe('montarPromptSistema', () => {
   // padrão, mas a bolha de mensagem do chat é `<Text>` puro (não
   // interpreta Markdown), então o aluno via os `**`/`*` literalmente.
   it('pede texto simples, sem Markdown nem emoji, em todos os modos', () => {
-    for (const modo of ['explicar', 'duvida', 'resumo', 'plano', 'prova'] as const) {
+    for (const modo of [
+      'explicar',
+      'duvida',
+      'resumo',
+      'plano',
+      'prova',
+      'corrigir',
+      'perguntas',
+    ] as const) {
       const prompt = montarPromptSistema({ nomeMateria: 'Física', modo });
       expect(prompt).toContain('sem nenhuma formatação Markdown');
       expect(prompt).toContain('emoji');
@@ -68,6 +108,17 @@ describe('montarPromptSistema', () => {
     const prompt = montarPromptSistema({ nomeMateria: 'Geografia', modo: 'prova' });
     expect(prompt).toContain(MARCADOR_GABARITO);
     expect(prompt).toContain('gabarito');
+  });
+
+  it('ajusta a instrução pro modo corrigir (aponta erros sem reescrever tudo)', () => {
+    const prompt = montarPromptSistema({ nomeMateria: 'Português', modo: 'corrigir' });
+    expect(prompt).toContain('correção');
+    expect(prompt).toContain('Não reescreva o texto inteiro');
+  });
+
+  it('ajusta a instrução pro modo perguntas (sem gabarito, diferente da prova)', () => {
+    const prompt = montarPromptSistema({ nomeMateria: 'Biologia', modo: 'perguntas' });
+    expect(prompt).toContain('SEM gabarito');
   });
 });
 

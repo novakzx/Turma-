@@ -7,7 +7,14 @@ export type MensagemChatIA = Tables<'chat_ia_mensagens'>;
 // Espelha supabase/functions/_shared/regrasEstudo.ts — duplicado de
 // propósito: o lado Deno fica fora do tsconfig do app (ver
 // tsconfig.json), então não dá pra importar direto dali.
-export type ModoChatEstudo = 'explicar' | 'duvida' | 'resumo' | 'plano' | 'prova';
+export type ModoChatEstudo =
+  | 'explicar'
+  | 'duvida'
+  | 'resumo'
+  | 'plano'
+  | 'prova'
+  | 'corrigir'
+  | 'perguntas';
 
 export const ROTULO_MODO: Record<ModoChatEstudo, string> = {
   explicar: 'Explicar conceito',
@@ -15,6 +22,8 @@ export const ROTULO_MODO: Record<ModoChatEstudo, string> = {
   resumo: 'Gerar resumo',
   plano: 'Plano de estudo',
   prova: 'Prova simulada',
+  corrigir: 'Corrigir trabalho',
+  perguntas: 'Gerar perguntas',
 };
 
 export const ICONE_MODO: Record<ModoChatEstudo, keyof typeof Ionicons.glyphMap> = {
@@ -23,7 +32,26 @@ export const ICONE_MODO: Record<ModoChatEstudo, keyof typeof Ionicons.glyphMap> 
   resumo: 'document-text-outline',
   plano: 'calendar-outline',
   prova: 'timer-outline',
+  corrigir: 'create-outline',
+  perguntas: 'list-outline',
 };
+
+/**
+ * Modos do Turma+ Premium (pedido do usuário) — mesmo `MODOS_PREMIUM` de
+ * `supabase/functions/_shared/regrasEstudo.ts`, duplicado pelo mesmo
+ * motivo acima. `duvida`/`explicar` continuam de graça.
+ */
+const MODOS_PREMIUM: ReadonlySet<ModoChatEstudo> = new Set([
+  'resumo',
+  'plano',
+  'prova',
+  'corrigir',
+  'perguntas',
+]);
+
+export function exigeAssinatura(modo: ModoChatEstudo): boolean {
+  return MODOS_PREMIUM.has(modo);
+}
 
 /** Marcador que separa as perguntas do gabarito na resposta da IA (modo
  * `prova`) — a Edge Function é instruída a sempre usar esse texto exato

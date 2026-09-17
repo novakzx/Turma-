@@ -1,7 +1,14 @@
 // Lógica pura por trás da Edge Function chat-estudo (Fase 3, brief 6.2).
 // Mesma ideia de regras.ts: sem import de Deno/Supabase, testável com Jest.
 
-export type ModoChatEstudo = 'explicar' | 'duvida' | 'resumo' | 'plano' | 'prova';
+export type ModoChatEstudo =
+  | 'explicar'
+  | 'duvida'
+  | 'resumo'
+  | 'plano'
+  | 'prova'
+  | 'corrigir'
+  | 'perguntas';
 
 export const ROTULO_MODO: Record<ModoChatEstudo, string> = {
   explicar: 'Explicar conceito',
@@ -9,7 +16,29 @@ export const ROTULO_MODO: Record<ModoChatEstudo, string> = {
   resumo: 'Gerar resumo',
   plano: 'Plano de estudo',
   prova: 'Prova simulada',
+  corrigir: 'Corrigir trabalho',
+  perguntas: 'Gerar perguntas',
 };
+
+/**
+ * Modos do Turma+ Premium (pedido do usuário: "adicione tudo isso ao
+ * premium") — `duvida`/`explicar` continuam de graça (é o gancho já
+ * existente, "assine pra IA sem limites"); os outros cinco passam a
+ * exigir assinatura ativa. Conferido em `chat-estudo/index.ts` ANTES do
+ * rate limit (negação diferente — quem não tem acesso ao modo nem
+ * chega a gastar cota).
+ */
+const MODOS_PREMIUM: ReadonlySet<ModoChatEstudo> = new Set([
+  'resumo',
+  'plano',
+  'prova',
+  'corrigir',
+  'perguntas',
+]);
+
+export function exigeAssinatura(modo: ModoChatEstudo): boolean {
+  return MODOS_PREMIUM.has(modo);
+}
 
 /** Mesmo marcador que `src/features/estudo/types.ts` — duplicado de
  * propósito, mesma razão de `ModoChatEstudo` estar duplicado nos dois
@@ -43,6 +72,8 @@ export function escolherModelo(modo: ModoChatEstudo): string {
     case 'resumo':
     case 'plano':
     case 'prova':
+    case 'corrigir':
+    case 'perguntas':
       return '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
     case 'explicar':
     case 'duvida':
@@ -162,6 +193,22 @@ export function montarPromptSistema(params: { nomeMateria: string; modo: ModoCha
         ' Agora o aluno quer um plano de estudo pra uma prova. Pergunte a data da prova e os ' +
         'temas se não tiverem sido informados, e monte um plano dia a dia, realista, com o ' +
         'tempo que resta até lá.'
+      );
+    case 'corrigir':
+      return (
+        base +
+        ' Agora o aluno vai colar um texto/trabalho já escrito por ele e pedir correção — aponte ' +
+        'erros de gramática, ortografia, estrutura e conteúdo, um a um, citando o trecho exato e ' +
+        'explicando o porquê. Não reescreva o texto inteiro por ele (mesma regra de nunca entregar ' +
+        'pronto) — o objetivo é o aluno entender o erro e corrigir sozinho.'
+      );
+    case 'perguntas':
+      return (
+        base +
+        ' Agora gere perguntas de prática (5, nível da matéria e da idade escolar) sobre o assunto ' +
+        'que o aluno pedir, numeradas, SEM gabarito — é pra treinar antes da prova de verdade, não ' +
+        'um simulado valendo (isso já existe noutro modo). Se o aluno responder depois, corrija a ' +
+        'resposta dele.'
       );
     case 'duvida':
       return base + ' O aluno tem uma dúvida pontual — responda direto ao ponto, sem enrolar.';
