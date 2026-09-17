@@ -1207,6 +1207,10 @@ export type Database = {
         Args: { p_nome_usuario: string };
         Returns: string;
       };
+      entrar_turma_por_ano: {
+        Args: { p_escola_id: string; p_numero_cartao: string; p_serie_ano: string };
+        Returns: string;
+      };
       nome_usuario_disponivel: {
         Args: { p_nome_usuario: string };
         Returns: boolean;

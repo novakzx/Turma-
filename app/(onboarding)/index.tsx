@@ -15,10 +15,10 @@ export default function OnboardingScreen() {
         </View>
         <View className="items-center gap-1">
           <Text className="text-center text-2xl font-bold text-primary dark:text-primary-dark">
-            Escolha sua escola e turma
+            Escolha sua escola e ano escolar
           </Text>
           <Text className="text-center text-base text-slate-500">
-            Isso decide quais avisos e turmas você vê no app.
+            Isso decide quais avisos e turma você vê no app.
           </Text>
         </View>
       </View>

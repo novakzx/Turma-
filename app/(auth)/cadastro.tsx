@@ -165,7 +165,7 @@ export default function CadastroScreen() {
             Criar conta
           </Text>
           <Text className="text-base text-slate-500">
-            É rápido — depois você escolhe sua escola e turma.
+            É rápido — depois você escolhe sua escola e ano escolar.
           </Text>
         </View>
 

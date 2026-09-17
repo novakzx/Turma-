@@ -9,20 +9,6 @@ export async function listarEscolas() {
   return data;
 }
 
-/** Turma institucional (`criado_por` null, veio do seed) ou criada por
- * um usuário — a lista mistura os dois; `criado_por` é o que diferencia
- * entrada direta de "precisa pedir" na tela de onboarding. */
-export async function listarTurmasPorEscola(escolaId: string) {
-  const { data, error } = await supabase
-    .from('turmas')
-    .select('id, nome, serie_ano, criado_por')
-    .eq('escola_id', escolaId)
-    .order('serie_ano')
-    .order('nome');
-  if (error) throw error;
-  return data;
-}
-
 /** Só grava quando a idade não bate com a série escolhida (pedido do
  * usuário) — o resto do tempo `anos_reprovados` fica vazio, que é o
  * padrão da coluna. */
@@ -34,58 +20,42 @@ export async function atualizarAnosReprovados(userId: string, anos: number[]) {
   if (error) throw error;
 }
 
-export async function concluirOnboarding(params: {
-  userId: string;
+/**
+ * Resolve (ou cria, se ainda não existir) a turma da combinação
+ * escola+ano e já matricula o aluno nela — substitui o antigo fluxo de
+ * "escolher uma turma existente numa lista" + "pedir entrada" (pedido
+ * do usuário: "tira as turmas deixe so o ano escolar mesmo"). RPC
+ * `security definer` (ver migration `turma_por_ano_escolar`) porque
+ * criar a turma exige a policy de insert de `turmas`, que normalmente
+ * amarra `criado_por` a quem chama — aqui a turma nasce sem dono
+ * (compartilhada por escola+ano), então precisa rodar com privilégio
+ * elevado.
+ */
+export async function entrarTurmaPorAno(params: {
   escolaId: string;
-  turmaId: string;
+  serieAno: string;
   numeroCartao: string;
-}) {
-  const { error } = await supabase
-    .from('profiles')
-    .update({
-      escola_id: params.escolaId,
-      turma_id: params.turmaId,
-      numero_cartao_estudante: params.numeroCartao,
-    })
-    .eq('id', params.userId);
-  if (error) throw error;
-}
-
-/** Pedido de entrada numa turma criada por outro usuário — só o dono
- * dela (ou staff da escola) aprova, via RPC `responder_pedido_entrada_turma`
- * (nunca update direto: profiles.turma_id de outra pessoa não é
- * grantável pro cliente comum). */
-export async function pedirEntradaNaTurma(
-  turmaId: string,
-  profileId: string,
-  numeroCartao: string,
-) {
-  // Grava o cartão já aqui (não só em `concluirOnboarding`) — quem pede
-  // entrada ainda não tem `turma_id`/`escola_id` (só ganha depois de
-  // aprovado), mas a verificação de estudante não deveria esperar por
-  // isso.
-  const { error: erroPerfil } = await supabase
-    .from('profiles')
-    .update({ numero_cartao_estudante: numeroCartao })
-    .eq('id', profileId);
-  if (erroPerfil) throw erroPerfil;
-
-  const { error } = await supabase
-    .from('turma_pedidos_entrada')
-    .insert({ turma_id: turmaId, profile_id: profileId });
-  if (error) throw error;
-}
-
-export async function buscarMeuPedidoPendente(turmaId: string, profileId: string) {
-  const { data, error } = await supabase
-    .from('turma_pedidos_entrada')
-    .select('*')
-    .eq('turma_id', turmaId)
-    .eq('profile_id', profileId)
-    .eq('status', 'pendente')
-    .maybeSingle();
+}): Promise<string> {
+  const { data, error } = await supabase.rpc('entrar_turma_por_ano', {
+    p_escola_id: params.escolaId,
+    p_serie_ano: params.serieAno,
+    p_numero_cartao: params.numeroCartao,
+  });
   if (error) throw error;
   return data;
+}
+
+/** Turma atual do aluno (só o `serie_ano`) — usada pra pré-selecionar o
+ * ano certo ao abrir "trocar de turma" (o perfil só guarda `turma_id`,
+ * não o ano em texto). */
+export async function buscarSerieAnoDaTurma(turmaId: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from('turmas')
+    .select('serie_ano')
+    .eq('id', turmaId)
+    .maybeSingle();
+  if (error) throw error;
+  return data?.serie_ano ?? null;
 }
 
 /** Pedidos pendentes das turmas que EU criei — pra tela de "Pedidos de

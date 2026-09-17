@@ -9,13 +9,15 @@ import { useAuth } from '@/features/auth/AuthProvider';
 import { mensagemDeErro } from '@/features/auth/errors';
 import {
   atualizarAnosReprovados,
-  buscarMeuPedidoPendente,
-  concluirOnboarding,
+  entrarTurmaPorAno,
   listarEscolas,
-  listarTurmasPorEscola,
-  pedirEntradaNaTurma,
 } from '@/features/onboarding/api';
 import { idadeBateComSerie } from '@/features/onboarding/idadeEscolar';
+
+// Mesmo formato usado no seed (`"Nº ano"`, ver migration inicial) —
+// 5º ao 12º porque é o intervalo que as escolas cadastradas hoje
+// realmente oferecem (2º/3º ciclo + secundário).
+const ANOS_ESCOLARES = Array.from({ length: 8 }, (_, i) => `${i + 5}º ano`);
 
 function ItemSelecionavel({
   label,
@@ -47,22 +49,23 @@ function ItemSelecionavel({
 }
 
 /**
- * Escolha de escola + turma, com verificação de estudante (e-mail
- * institucional + cartão) — corpo original do onboarding (Fase 9),
- * extraído aqui pra ser reusado também em "trocar de turma" (Fase 10,
- * pedido do usuário: "permitir editar a turma na tela de editar
- * perfil"). `concluirOnboarding` é a mesma chamada nos dois casos —
- * ela só faz um `update` em `profiles`, então serve tanto pra primeira
- * escolha quanto pra trocar depois.
+ * Escolha de escola + ano escolar, com verificação de estudante
+ * (e-mail institucional + cartão) — corpo original do onboarding (Fase
+ * 9), reusado também em "trocar de turma" (Fase 10). Turma deixou de
+ * ser escolhida manualmente numa lista (pedido do usuário: "tira as
+ * turmas deixe so o ano escolar mesmo") — o app resolve (ou cria)
+ * sozinho a turma da combinação escola+ano via RPC
+ * `entrar_turma_por_ano` (ver `features/onboarding/api.ts`), sem dono
+ * nem pedido de entrada.
  */
 export function EscolaTurmaForm({
   escolaIdInicial = null,
-  turmaIdInicial = null,
+  serieAnoInicial = null,
   labelBotaoConfirmar = 'Confirmar',
   onConcluido,
 }: {
   escolaIdInicial?: string | null;
-  turmaIdInicial?: string | null;
+  serieAnoInicial?: string | null;
   labelBotaoConfirmar?: string;
   onConcluido: () => void;
 }) {
@@ -70,18 +73,13 @@ export function EscolaTurmaForm({
   const queryClient = useQueryClient();
   const [buscaEscola, setBuscaEscola] = useState('');
   const [escolaId, setEscolaId] = useState<string | null>(escolaIdInicial);
-  const [turmaId, setTurmaId] = useState<string | null>(turmaIdInicial);
+  const [serieAno, setSerieAno] = useState<string | null>(serieAnoInicial);
   const [numeroCartao, setNumeroCartao] = useState('');
   const [reprovou, setReprovou] = useState<boolean | null>(null);
   const [anosReprovados, setAnosReprovados] = useState<Set<number>>(new Set());
   const [erro, setErro] = useState<string | null>(null);
 
   const escolasQuery = useQuery({ queryKey: ['escolas'], queryFn: listarEscolas });
-  const turmasQuery = useQuery({
-    queryKey: ['turmas', escolaId],
-    queryFn: () => listarTurmasPorEscola(escolaId as string),
-    enabled: !!escolaId,
-  });
 
   const escolasFiltradas = useMemo(() => {
     const termo = buscaEscola.trim().toLowerCase();
@@ -89,18 +87,11 @@ export function EscolaTurmaForm({
     return (escolasQuery.data ?? []).filter((e) => e.nome.toLowerCase().includes(termo));
   }, [escolasQuery.data, buscaEscola]);
 
-  const turmaSelecionada = (turmasQuery.data ?? []).find((t) => t.id === turmaId) ?? null;
-  const turmaEhDeOutraPessoa =
-    !!turmaSelecionada?.criado_por && turmaSelecionada.criado_por !== session?.user.id;
-
   // Pedido do usuário: se a idade do cadastro não bater com o ano
   // letivo escolhido, perguntar se o aluno repetiu de ano (e quais
   // anos) antes de deixar continuar.
-  const serieAnoParaChecar = turmaSelecionada?.serie_ano ?? '';
   const precisaPerguntarRepeticao =
-    !!profile?.idade &&
-    !!serieAnoParaChecar &&
-    !idadeBateComSerie(profile.idade, serieAnoParaChecar);
+    !!profile?.idade && !!serieAno && !idadeBateComSerie(profile.idade, serieAno);
 
   const escolaSelecionada = (escolasQuery.data ?? []).find((e) => e.id === escolaId) ?? null;
   // Verificação de estudante (brief original, seção 3): e-mail
@@ -113,25 +104,12 @@ export function EscolaTurmaForm({
     !!escolaSelecionada?.dominio_email &&
     !emailDoUsuario.toLowerCase().endsWith(`@${escolaSelecionada.dominio_email.toLowerCase()}`);
 
-  const pedidoQuery = useQuery({
-    queryKey: ['meu-pedido-turma', turmaId, session?.user.id],
-    queryFn: () => buscarMeuPedidoPendente(turmaId as string, session!.user.id),
-    enabled: turmaEhDeOutraPessoa && !!turmaId && !!session,
-  });
-
   const mutation = useMutation({
-    mutationFn: concluirOnboarding,
+    mutationFn: entrarTurmaPorAno,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
       onConcluido();
     },
-    onError: (error) => setErro(mensagemDeErro(error)),
-  });
-
-  const pedirEntradaMutation = useMutation({
-    mutationFn: () => pedirEntradaNaTurma(turmaId as string, session!.user.id, numeroCartao.trim()),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ['meu-pedido-turma', turmaId, session?.user.id] }),
     onError: (error) => setErro(mensagemDeErro(error)),
   });
 
@@ -140,56 +118,37 @@ export function EscolaTurmaForm({
     onError: (error) => setErro(mensagemDeErro(error)),
   });
 
-  /** Validações comuns aos três fluxos (turma existente, criar turma,
-   * pedir entrada) — devolve `false` (com `setErro` já chamado) quando
-   * falta algo, incluindo a pergunta de repetência quando a idade não
-   * bate com a série. */
-  function validarERegistrarRepeticao(): boolean {
-    if (dominioNaoBate) {
-      setErro('Esse não parece ser seu e-mail institucional dessa escola.');
-      return false;
-    }
-    if (!numeroCartao.trim()) {
-      setErro('Informe o número do seu cartão de estudante.');
-      return false;
-    }
-    if (precisaPerguntarRepeticao) {
-      if (reprovou === null) {
-        setErro('Sua idade não bate com esse ano letivo — responda se você repetiu de ano.');
-        return false;
-      }
-      if (reprovou && anosReprovados.size === 0) {
-        setErro('Selecione pelo menos um ano que você reprovou.');
-        return false;
-      }
-      anosReprovadosMutation.mutate(reprovou ? Array.from(anosReprovados) : []);
-    }
-    setErro(null);
-    return true;
-  }
-
   function handleConfirmar() {
     if (!session) return;
     if (!escolaId) {
       setErro('Escolha uma escola.');
       return;
     }
-    if (!turmaId) {
-      setErro('Escolha uma turma.');
+    if (!serieAno) {
+      setErro('Escolha o ano escolar.');
       return;
     }
-    if (!validarERegistrarRepeticao()) return;
-    mutation.mutate({
-      userId: session.user.id,
-      escolaId,
-      turmaId,
-      numeroCartao: numeroCartao.trim(),
-    });
-  }
-
-  function handlePedirEntrada() {
-    if (!validarERegistrarRepeticao()) return;
-    pedirEntradaMutation.mutate();
+    if (dominioNaoBate) {
+      setErro('Esse não parece ser seu e-mail institucional dessa escola.');
+      return;
+    }
+    if (!numeroCartao.trim()) {
+      setErro('Informe o número do seu cartão de estudante.');
+      return;
+    }
+    if (precisaPerguntarRepeticao) {
+      if (reprovou === null) {
+        setErro('Sua idade não bate com esse ano letivo — responda se você repetiu de ano.');
+        return;
+      }
+      if (reprovou && anosReprovados.size === 0) {
+        setErro('Selecione pelo menos um ano que você reprovou.');
+        return;
+      }
+      anosReprovadosMutation.mutate(reprovou ? Array.from(anosReprovados) : []);
+    }
+    setErro(null);
+    mutation.mutate({ escolaId, serieAno, numeroCartao: numeroCartao.trim() });
   }
 
   return (
@@ -226,7 +185,6 @@ export function EscolaTurmaForm({
                     selecionado={escolaId === escola.id}
                     onPress={() => {
                       setEscolaId(escola.id);
-                      setTurmaId(null);
                       setErro(null);
                     }}
                   />
@@ -256,6 +214,35 @@ export function EscolaTurmaForm({
       {escolaId && !dominioNaoBate ? (
         <View className="gap-2">
           <View className="flex-row items-center gap-1.5">
+            <Ionicons name="school-outline" size={16} color="#969696" />
+            <Text className="text-sm font-medium text-slate-700">Ano escolar</Text>
+          </View>
+          <View className="flex-row flex-wrap gap-2">
+            {ANOS_ESCOLARES.map((ano) => (
+              <Pressable
+                key={ano}
+                onPress={() => {
+                  setSerieAno(ano);
+                  setErro(null);
+                }}
+                accessibilityRole="button"
+                accessibilityState={{ selected: serieAno === ano }}
+                className={`min-h-11 items-center justify-center rounded-full border px-4 ${
+                  serieAno === ano
+                    ? 'border-primary bg-primary/10 dark:border-primary-dark'
+                    : 'border-slate-200'
+                }`}
+              >
+                <Text className="text-sm font-medium text-slate-800">{ano}</Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+      ) : null}
+
+      {escolaId && !dominioNaoBate ? (
+        <View className="gap-2">
+          <View className="flex-row items-center gap-1.5">
             <Ionicons name="card-outline" size={16} color="#969696" />
             <Text className="text-sm font-medium text-slate-700">Verificação de estudante</Text>
           </View>
@@ -269,50 +256,13 @@ export function EscolaTurmaForm({
         </View>
       ) : null}
 
-      {escolaId && !dominioNaoBate ? (
-        <View className="gap-2">
-          <View className="flex-row items-center gap-1.5">
-            <Ionicons name="people-outline" size={16} color="#969696" />
-            <Text className="text-sm font-medium text-slate-700">Turma</Text>
-          </View>
-          {turmasQuery.isLoading ? (
-            <ActivityIndicator color="#0095F6" />
-          ) : turmasQuery.isError ? (
-            <Text className="text-danger dark:text-danger-dark">
-              Não deu pra carregar as turmas. Tenta de novo mais tarde.
-            </Text>
-          ) : (
-            <View className="gap-2">
-              {(turmasQuery.data ?? []).length === 0 ? (
-                <Text className="text-slate-500">
-                  Essa escola ainda não tem turma cadastrada — fale com a coordenação.
-                </Text>
-              ) : (
-                (turmasQuery.data ?? []).map((turma) => (
-                  <ItemSelecionavel
-                    key={turma.id}
-                    label={`${turma.serie_ano} · ${turma.nome}`}
-                    icone={turma.criado_por ? 'lock-closed-outline' : undefined}
-                    selecionado={turmaId === turma.id}
-                    onPress={() => {
-                      setTurmaId(turma.id);
-                      setErro(null);
-                    }}
-                  />
-                ))
-              )}
-            </View>
-          )}
-        </View>
-      ) : null}
-
       {precisaPerguntarRepeticao ? (
         <View className="gap-3 rounded-lg border border-accent/30 bg-accent/10 p-3 dark:border-accent-dark/30 dark:bg-accent-dark/10">
           <View className="flex-row items-start gap-2">
             <Ionicons name="help-circle-outline" size={18} color="#0095F6" />
             <Text className="flex-1 text-sm text-slate-700">
-              A idade que você informou no cadastro não bate com o {serieAnoParaChecar} — você
-              repetiu de ano?
+              A idade que você informou no cadastro não bate com o {serieAno} — você repetiu de
+              ano?
             </Text>
           </View>
           <View className="flex-row gap-2">
@@ -375,43 +325,6 @@ export function EscolaTurmaForm({
         </View>
       ) : null}
 
-      {turmaEhDeOutraPessoa ? (
-        pedidoQuery.data ? (
-          <View className="flex-row items-center gap-2 rounded-lg bg-accent/10 p-3 dark:bg-accent-dark/10">
-            <Ionicons name="time-outline" size={18} color="#0095F6" />
-            <Text className="flex-1 text-sm text-accent dark:text-accent-dark">
-              Pedido enviado — aguardando o dono da turma aprovar.
-            </Text>
-            <Pressable
-              onPress={() =>
-                queryClient.invalidateQueries({
-                  queryKey: ['meu-pedido-turma', turmaId, session?.user.id],
-                })
-              }
-              accessibilityRole="button"
-              accessibilityLabel="Verificar de novo"
-            >
-              <Ionicons name="refresh" size={18} color="#0095F6" />
-            </Pressable>
-          </View>
-        ) : (
-          <View className="gap-2 rounded-lg border border-slate-200 p-3">
-            <View className="flex-row items-center gap-1.5">
-              <Ionicons name="lock-closed-outline" size={14} color="#969696" />
-              <Text className="flex-1 text-xs text-slate-500">
-                Essa turma foi criada por outro usuário — só o dono dela aprova quem entra.
-              </Text>
-            </View>
-            <Button
-              label="Pedir entrada"
-              icon="paper-plane-outline"
-              onPress={handlePedirEntrada}
-              loading={pedirEntradaMutation.isPending}
-            />
-          </View>
-        )
-      ) : null}
-
       {erro ? (
         <View className="flex-row items-center gap-1.5">
           <Ionicons name="alert-circle" size={14} color="#F87171" />
@@ -419,14 +332,12 @@ export function EscolaTurmaForm({
         </View>
       ) : null}
 
-      {!turmaEhDeOutraPessoa ? (
-        <Button
-          label={labelBotaoConfirmar}
-          icon="checkmark-circle-outline"
-          onPress={handleConfirmar}
-          loading={mutation.isPending}
-        />
-      ) : null}
+      <Button
+        label={labelBotaoConfirmar}
+        icon="checkmark-circle-outline"
+        onPress={handleConfirmar}
+        loading={mutation.isPending}
+      />
     </View>
   );
 }
