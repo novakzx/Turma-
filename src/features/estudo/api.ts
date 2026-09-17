@@ -43,6 +43,31 @@ export async function buscarEstatisticaSemanal(alunoId: string): Promise<Estatis
   return calcularEstatisticaSemanal(data);
 }
 
+// Teto generoso (~13 meses) só pra não deixar a query crescer sem fim
+// pra quem usa o app há muito tempo -- sequência de estudos de verdade
+// nunca chega nem perto disso na prática, e o cálculo (`calcularSequenciaEstudos`)
+// já para sozinho no primeiro buraco de qualquer forma.
+const JANELA_SEQUENCIA_DIAS = 400;
+
+/** Datas (`criado_em`) das perguntas do aluno -- a contagem de dias
+ * seguidos de verdade fica em `calcularSequenciaEstudos` (testável sem
+ * banco). Recurso Premium (pedido do usuário), mas o gate de "só
+ * assinante vê" fica na UI -- aqui é só a consulta. */
+export async function buscarDiasComAtividade(alunoId: string): Promise<string[]> {
+  const desde = new Date();
+  desde.setDate(desde.getDate() - JANELA_SEQUENCIA_DIAS);
+
+  const { data, error } = await supabase
+    .from('chat_ia_mensagens')
+    .select('criado_em')
+    .eq('aluno_id', alunoId)
+    .eq('papel', 'usuario')
+    .gte('criado_em', desde.toISOString());
+  if (error) throw error;
+
+  return (data ?? []).map((m) => m.criado_em);
+}
+
 // A Cloudflare Workers AI (provedor de IA atual, ver `chat-estudo/
 // index.ts`) responde em poucos segundos na maioria das vezes, mas o
 // primeiro uso de um modelo "frio" pode demorar bem mais — 30s é

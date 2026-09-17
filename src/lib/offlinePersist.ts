@@ -25,6 +25,7 @@ const CHAVES_PERSISTIVEIS = [
   'materias',
   'chat-ia',
   'estatistica-semanal-estudo',
+  'sequencia-estudos',
   'flashcards-devidos',
   'flashcards-materia',
   'avaliacoes',

@@ -22,6 +22,7 @@ import { useAssinante } from '@/features/assinatura/useAssinante';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { mensagemDeErro } from '@/features/auth/errors';
 import {
+  buscarDiasComAtividade,
   buscarEstatisticaSemanal,
   enviarMensagemChat,
   escolherFotoAnotacao,
@@ -30,7 +31,7 @@ import {
   obterUrlAssinadaFotoEstudo,
   type FotoEscolhida,
 } from '@/features/estudo/api';
-import { formatarTempo, separarGabarito } from '@/features/estudo/regras';
+import { calcularSequenciaEstudos, formatarTempo, separarGabarito } from '@/features/estudo/regras';
 import {
   ICONE_MODO,
   ROTULO_MODO,
@@ -126,6 +127,51 @@ function CartaoEstatisticaSemanal({ alunoId }: { alunoId: string }) {
           <Text className="font-semibold text-slate-700">{diaMaisAtivo}</Text>.
         </Text>
       ) : null}
+    </View>
+  );
+}
+
+/** Sequência de estudos / "foguinho" (recurso Premium, pedido do
+ * usuário) — dias seguidos com pelo menos uma pergunta pro tutor. Some
+ * sozinho quando a sequência é zero, mesma filosofia do
+ * `CartaoEstatisticaSemanal` acima (não mostrar "0" pra quem nunca
+ * usou). Pra quem não assina, mostra um convite fechado em vez do
+ * número de verdade — dá pra saber que o recurso existe sem revelar o
+ * dado (que só faz sentido calcular pra quem realmente vai usar). */
+function CartaoSequenciaEstudos({ alunoId }: { alunoId: string }) {
+  const assinante = useAssinante();
+  const query = useQuery({
+    queryKey: ['sequencia-estudos', alunoId],
+    queryFn: () => buscarDiasComAtividade(alunoId),
+    enabled: assinante,
+  });
+
+  if (!assinante) {
+    return (
+      <Pressable
+        onPress={() => router.push('/assinatura')}
+        accessibilityRole="button"
+        className="mx-4 mt-3 flex-row items-center gap-2 rounded-lg border border-dashed border-slate-200 bg-surface px-4 py-3 dark:bg-surface-dark"
+      >
+        <Ionicons name="flame-outline" size={18} color="#969696" />
+        <Text className="flex-1 text-sm text-slate-500">
+          Sequência de estudos é um recurso Premium.
+        </Text>
+        <Ionicons name="lock-closed-outline" size={14} color="#969696" />
+      </Pressable>
+    );
+  }
+
+  if (!query.data) return null;
+  const sequencia = calcularSequenciaEstudos(query.data);
+  if (sequencia === 0) return null;
+
+  return (
+    <View className="mx-4 mt-3 flex-row items-center gap-2 rounded-lg border border-slate-200 bg-surface px-4 py-3 dark:bg-surface-dark">
+      <Ionicons name="flame" size={20} color="#F97316" />
+      <Text className="text-sm font-semibold text-slate-900">
+        {sequencia} {sequencia === 1 ? 'dia seguido estudando' : 'dias seguidos estudando'}
+      </Text>
     </View>
   );
 }
@@ -537,6 +583,7 @@ export default function Estudo() {
       {!materiaId ? (
         <View className="flex-1">
           {profile ? <CartaoEstatisticaSemanal alunoId={profile.id} /> : null}
+          {profile ? <CartaoSequenciaEstudos alunoId={profile.id} /> : null}
           <EmptyState
             icon="hand-left-outline"
             titulo="Escolha uma matéria"

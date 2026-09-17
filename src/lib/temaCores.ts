@@ -51,11 +51,17 @@ export const CORES_ESCURO = {
  * cores que o app já usa hoje como ícone hardcoded (ver
  * `grep -rohE 'color="#[0-9A-Fa-f]+"'`). Componente novo: prefira usar
  * `useTema().cores` a acrescentar mais uma cor solta aqui.
+ *
+ * `corPrimaria` (opcional, padrão `#0095F6`) existe pra refletir a cor
+ * de destaque Premium escolhida (ver `CATALOGO_CORES_DESTAQUE` abaixo)
+ * também nos ícones — sem isso, ícone que lê `cores.primary` ficaria
+ * sempre azul mesmo com outro destaque escolhido (que já muda `primary`/
+ * `accent` via variável CSS, mas ícone não lê variável CSS).
  */
-export function paletaIcones(escuro: boolean) {
+export function paletaIcones(escuro: boolean, corPrimaria: string = '#0095F6') {
   return {
-    primary: '#0095F6',
-    accent: '#0095F6',
+    primary: corPrimaria,
+    accent: corPrimaria,
     success: escuro ? '#4ADE80' : '#22C55E',
     danger: escuro ? '#FCA5A5' : '#F87171',
     // slate-400 (não tem token de tema — só usado solto em ícone)
@@ -66,4 +72,41 @@ export function paletaIcones(escuro: boolean) {
     neutro: escuro ? '#B5B5B5' : '#424242',
     branco: '#FFFFFF',
   };
+}
+
+/**
+ * Temas exclusivos (recurso Premium, pedido do usuário) — só troca a
+ * cor de destaque (`primary`/`accent`); fundo, superfície e as demais
+ * cores continuam as mesmas do claro/escuro normal. `azul` é o próprio
+ * padrão gratuito (mantido aqui só pra "voltar ao padrão" aparecer na
+ * lista de opções).
+ */
+export type CorDestaqueId = 'azul' | 'roxo' | 'verde' | 'laranja' | 'rosa';
+
+export const CATALOGO_CORES_DESTAQUE: Record<
+  CorDestaqueId,
+  { nome: string; claro: string; escuro: string }
+> = {
+  azul: { nome: 'Azul (padrão)', claro: '#0095F6', escuro: '#0095F6' },
+  roxo: { nome: 'Roxo', claro: '#7C3AED', escuro: '#A78BFA' },
+  verde: { nome: 'Verde', claro: '#16A34A', escuro: '#4ADE80' },
+  laranja: { nome: 'Laranja', claro: '#EA580C', escuro: '#FB923C' },
+  rosa: { nome: 'Rosa', claro: '#DB2777', escuro: '#F472B6' },
+};
+
+/** Cor final (já resolvida claro/escuro) da cor de destaque escolhida. */
+export function corDestaqueResolvida(id: CorDestaqueId, escuro: boolean): string {
+  return CATALOGO_CORES_DESTAQUE[id][escuro ? 'escuro' : 'claro'];
+}
+
+/**
+ * Sobrescrita das duas variáveis CSS de destaque por cima da paleta
+ * claro/escuro normal (ver `TemaProvider.tsx`) — `null` pro próprio
+ * `azul` (padrão), pra não sobrescrever nada à toa quando ninguém
+ * escolheu um destaque diferente.
+ */
+export function overrideCorDestaque(id: CorDestaqueId, escuro: boolean) {
+  if (id === 'azul') return null;
+  const cor = corDestaqueResolvida(id, escuro);
+  return { '--color-primary': cor, '--color-accent': cor } as const;
 }

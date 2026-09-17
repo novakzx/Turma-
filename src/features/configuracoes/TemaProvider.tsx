@@ -2,8 +2,16 @@ import { vars } from 'nativewind';
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useColorScheme as useColorSchemeSistema, View } from 'react-native';
 
-import { CORES_CLARO, CORES_ESCURO, paletaIcones } from '@/lib/temaCores';
+import {
+  CORES_CLARO,
+  CORES_ESCURO,
+  corDestaqueResolvida,
+  overrideCorDestaque,
+  paletaIcones,
+  type CorDestaqueId,
+} from '@/lib/temaCores';
 
+import { carregarCorDestaque, salvarCorDestaque } from './corDestaque';
 import {
   aplicarTemaNoDocumento,
   carregarTemaPreferido,
@@ -20,6 +28,11 @@ type TemaContextValor = {
   /** Cores prontas pra usar direto num `color=` de ícone (Ionicons não
    * entende `className` nem variável CSS) — ver `paletaIcones`. */
   cores: ReturnType<typeof paletaIcones>;
+  /** Cor de destaque Premium escolhida (`'azul'` é o padrão gratuito) —
+   * ver `CATALOGO_CORES_DESTAQUE` em `src/lib/temaCores.ts`. O gate de
+   * "só assinante troca" fica em `configuracoes.tsx`, não aqui. */
+  corDestaqueId: CorDestaqueId;
+  setCorDestaque: (cor: CorDestaqueId) => void;
 };
 
 const TemaContext = createContext<TemaContextValor | null>(null);
@@ -38,6 +51,7 @@ const TemaContext = createContext<TemaContextValor | null>(null);
 export function TemaProvider({ children }: { children: ReactNode }) {
   const [temaPreferido, setTemaPreferidoState] = useState<TemaPreferido>('system');
   const [carregado, setCarregado] = useState(false);
+  const [corDestaqueId, setCorDestaqueIdState] = useState<CorDestaqueId>('azul');
   const sistemaEscuro = useColorSchemeSistema() === 'dark';
 
   useEffect(() => {
@@ -46,6 +60,10 @@ export function TemaProvider({ children }: { children: ReactNode }) {
       setCarregado(true);
       aplicarTemaNoDocumento(tema);
     });
+    // Independente do tema claro/escuro -- carrega em paralelo, não
+    // bloqueia o `carregado` acima (evita atrasar o flash-guard de tema
+    // por causa de uma preferência Premium que a maioria nem tem).
+    carregarCorDestaque().then(setCorDestaqueIdState);
   }, []);
 
   function setTemaPreferido(tema: TemaPreferido) {
@@ -54,11 +72,23 @@ export function TemaProvider({ children }: { children: ReactNode }) {
     void salvarTemaPreferido(tema);
   }
 
+  function setCorDestaque(cor: CorDestaqueId) {
+    setCorDestaqueIdState(cor);
+    void salvarCorDestaque(cor);
+  }
+
   const escuro = temaPreferido === 'system' ? sistemaEscuro : temaPreferido === 'dark';
 
   const valor = useMemo<TemaContextValor>(
-    () => ({ temaPreferido, setTemaPreferido, escuro, cores: paletaIcones(escuro) }),
-    [temaPreferido, escuro],
+    () => ({
+      temaPreferido,
+      setTemaPreferido,
+      escuro,
+      cores: paletaIcones(escuro, corDestaqueResolvida(corDestaqueId, escuro)),
+      corDestaqueId,
+      setCorDestaque,
+    }),
+    [temaPreferido, escuro, corDestaqueId],
   );
 
   // `vars()` é a forma multiplataforma do NativeWind de prover variável
@@ -72,7 +102,11 @@ export function TemaProvider({ children }: { children: ReactNode }) {
   // que o sistema já reporta (sem esperar o AsyncStorage) — evita um
   // flash de "sempre claro" por um instante em quem tem o sistema em
   // escuro e salvou "escuro" antes.
-  const corAtual = (carregado ? escuro : sistemaEscuro) ? CORES_ESCURO : CORES_CLARO;
+  const escuroResolvido = carregado ? escuro : sistemaEscuro;
+  const corAtual = {
+    ...(escuroResolvido ? CORES_ESCURO : CORES_CLARO),
+    ...overrideCorDestaque(corDestaqueId, escuroResolvido),
+  };
 
   return (
     <View style={[{ flex: 1 }, vars(corAtual)]}>

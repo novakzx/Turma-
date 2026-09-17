@@ -81,6 +81,38 @@ export function separarGabarito(texto: string): { enunciado: string; gabarito: s
   };
 }
 
+/**
+ * Sequência de estudos / "foguinho" (recurso Premium, pedido do
+ * usuário) — dias seguidos com pelo menos uma pergunta pro tutor de
+ * IA. Recebe `criado_em` de mensagens do aluno (qualquer intervalo —
+ * o filtro de janela fica em `buscarDiasComAtividade`, em `api.ts`) e
+ * conta pra trás a partir de hoje.
+ *
+ * Se hoje ainda não tem atividade, a sequência continua "viva" a
+ * partir de ontem (mesma lógica do Duolingo: não zera só porque o dia
+ * ainda não acabou) — só zera de vez quando nem ontem teve atividade.
+ * `agora` é parâmetro (não `new Date()` direto) pra dar pra testar sem
+ * depender do relógio de verdade.
+ */
+export function calcularSequenciaEstudos(
+  datasAtividadeIso: string[],
+  agora: Date = new Date(),
+): number {
+  const diasComAtividade = new Set(datasAtividadeIso.map((iso) => new Date(iso).toDateString()));
+
+  const cursor = new Date(agora);
+  if (!diasComAtividade.has(cursor.toDateString())) {
+    cursor.setDate(cursor.getDate() - 1);
+  }
+
+  let sequencia = 0;
+  while (diasComAtividade.has(cursor.toDateString())) {
+    sequencia += 1;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  return sequencia;
+}
+
 /** `125` -> `"02:05"` — timer da prova simulada, só formatação (a
  * contagem em si é `setInterval` no componente, não precisa de teste). */
 export function formatarTempo(totalSegundos: number): string {

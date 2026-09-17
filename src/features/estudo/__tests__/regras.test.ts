@@ -1,4 +1,9 @@
-import { calcularEstatisticaSemanal, formatarTempo, separarGabarito } from '../regras';
+import {
+  calcularEstatisticaSemanal,
+  calcularSequenciaEstudos,
+  formatarTempo,
+  separarGabarito,
+} from '../regras';
 import { MARCADOR_GABARITO } from '../types';
 
 describe('calcularEstatisticaSemanal', () => {
@@ -60,6 +65,45 @@ describe('separarGabarito', () => {
     const resultado = separarGabarito('Resposta sem marcador nenhum.');
     expect(resultado.enunciado).toBe('Resposta sem marcador nenhum.');
     expect(resultado.gabarito).toBeNull();
+  });
+});
+
+describe('calcularSequenciaEstudos (foguinho)', () => {
+  const AGORA = new Date(2026, 8, 17, 15, 0, 0); // 17/set/2026, meio da tarde
+
+  /** Meio-dia local de `diasAtras` dias antes de `AGORA` -- meio-dia
+   * evita cair perto da virada de dia por causa de fuso/DST. */
+  function diasAtras(n: number): string {
+    return new Date(2026, 8, 17 - n, 12, 0, 0).toISOString();
+  }
+
+  it('devolve 0 sem nenhuma atividade', () => {
+    expect(calcularSequenciaEstudos([], AGORA)).toBe(0);
+  });
+
+  it('conta os dias seguidos até hoje', () => {
+    const datas = [diasAtras(0), diasAtras(1), diasAtras(2)];
+    expect(calcularSequenciaEstudos(datas, AGORA)).toBe(3);
+  });
+
+  it('várias mensagens no mesmo dia contam como um dia só', () => {
+    const datas = [diasAtras(0), diasAtras(0), diasAtras(0), diasAtras(1)];
+    expect(calcularSequenciaEstudos(datas, AGORA)).toBe(2);
+  });
+
+  it('continua "viva" se hoje ainda não teve atividade mas ontem teve', () => {
+    const datas = [diasAtras(1), diasAtras(2)];
+    expect(calcularSequenciaEstudos(datas, AGORA)).toBe(2);
+  });
+
+  it('zera quando nem hoje nem ontem tiveram atividade', () => {
+    const datas = [diasAtras(2), diasAtras(3)];
+    expect(calcularSequenciaEstudos(datas, AGORA)).toBe(0);
+  });
+
+  it('para na primeira quebra (buraco no meio corta a sequência)', () => {
+    const datas = [diasAtras(0), diasAtras(1), diasAtras(3)]; // falta o dia 2
+    expect(calcularSequenciaEstudos(datas, AGORA)).toBe(2);
   });
 });
 

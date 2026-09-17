@@ -15,6 +15,7 @@ import { desbloquearUsuario, listarBloqueios } from '@/features/mensagens/api';
 import { FotoPerfil } from '@/features/perfil/FotoPerfil';
 import { atualizarPrivacidade } from '@/features/perfil/api';
 import { excluirMinhaConta, exportarMeusDados } from '@/features/perfil/dadosPessoais';
+import { CATALOGO_CORES_DESTAQUE, type CorDestaqueId } from '@/lib/temaCores';
 
 const OPCOES_TEMA: {
   valor: TemaPreferido;
@@ -138,8 +139,10 @@ function CartaoContaBloqueada({
 
 export default function Configuracoes() {
   const { profile } = useAuth();
+  const assinante = profile?.assinatura_ativa ?? false;
   const queryClient = useQueryClient();
-  const { temaPreferido, setTemaPreferido, cores } = useTema();
+  const { temaPreferido, setTemaPreferido, cores, corDestaqueId, setCorDestaque, escuro } =
+    useTema();
 
   const bloqueiosQuery = useQuery({
     queryKey: ['bloqueios', profile?.id],
@@ -236,6 +239,55 @@ export default function Configuracoes() {
                 >
                   {opcao.rotulo}
                 </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </Secao>
+
+      <Secao titulo="Temas exclusivos">
+        {!assinante ? (
+          <Pressable
+            onPress={() => router.push('/assinatura')}
+            accessibilityRole="button"
+            className="flex-row items-center gap-2 rounded-md bg-accent/10 px-3 py-2 dark:bg-accent-dark/10"
+          >
+            <Ionicons name="sparkles" size={14} color={cores.primary} />
+            <Text className="flex-1 text-xs text-accent dark:text-accent-dark">
+              Cores de destaque exclusivas são um recurso do Turma+ Premium.
+            </Text>
+          </Pressable>
+        ) : null}
+        <View className="flex-row flex-wrap gap-3">
+          {(Object.keys(CATALOGO_CORES_DESTAQUE) as CorDestaqueId[]).map((id) => {
+            const cor = CATALOGO_CORES_DESTAQUE[id];
+            const corResolvida = escuro ? cor.escuro : cor.claro;
+            const selecionada = corDestaqueId === id;
+            // "azul" (padrão) sempre liberado, mesmo sem assinatura — só
+            // as cores de verdade exclusivas exigem Premium.
+            const trancada = id !== 'azul' && !assinante;
+            return (
+              <Pressable
+                key={id}
+                onPress={() =>
+                  trancada ? router.push('/assinatura') : setCorDestaque(id)
+                }
+                accessibilityRole="button"
+                accessibilityLabel={trancada ? `${cor.nome} (recurso Premium)` : cor.nome}
+                accessibilityState={{ selected: selecionada }}
+                className="items-center gap-1"
+              >
+                <View
+                  className="h-11 w-11 items-center justify-center rounded-full"
+                  style={{ backgroundColor: corResolvida }}
+                >
+                  {trancada ? (
+                    <Ionicons name="lock-closed" size={14} color="#FFFFFF" />
+                  ) : selecionada ? (
+                    <Ionicons name="checkmark" size={18} color="#FFFFFF" />
+                  ) : null}
+                </View>
+                <Text className="text-xs text-slate-700">{cor.nome.replace(' (padrão)', '')}</Text>
               </Pressable>
             );
           })}
