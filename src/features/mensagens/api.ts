@@ -268,6 +268,35 @@ export function assinarMensagensDiretas(conversaId: string, aoMudar: () => void)
     .subscribe();
 }
 
+/**
+ * Bug real relatado pelo usuário ("as mensagens só aparecem depois de
+ * sair e entrar de novo do app"): a lista de conversas (`chat.tsx`, aba
+ * "Mensagens") só buscava uma vez com `useQuery` normal — sem
+ * assinatura nenhuma, uma mensagem nova de alguém não reordenava a
+ * lista nem atualizava o "última mensagem" até a tela remontar do
+ * zero (o que só acontecia reabrindo o app — `staleTime` de 30s do
+ * `queryClient` e o fato da aba de chat ficar montada o tempo todo
+ * dentro da barra de abas faziam a lista nunca recarregar sozinha).
+ *
+ * Sem filtro de `conversa_id` (ao contrário de `assinarMensagensDiretas`
+ * acima) de propósito — aqui é "qualquer mensagem em QUALQUER conversa
+ * minha", que não dá pra expressar como um filtro `eq` só. RLS de
+ * `mensagens_diretas` já restringe o que chega a quem tem acesso de
+ * verdade (`mensagens_diretas_select`, ver migration
+ * `mensagens_diretas_bloqueio` — Realtime respeita RLS pra quem está
+ * autenticado), então isso não vaza mensagem de ninguém.
+ */
+export function assinarMinhasConversas(aoMudar: () => void): RealtimeChannel {
+  return supabase
+    .channel('minhas-conversas')
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'mensagens_diretas' },
+      aoMudar,
+    )
+    .subscribe();
+}
+
 export async function bloquearUsuario(bloqueadorId: string, bloqueadoId: string) {
   const { error } = await supabase
     .from('bloqueios')

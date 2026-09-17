@@ -18,7 +18,11 @@ import {
   type Sala,
   type TipoSalaChat,
 } from '@/features/chat/types';
-import { listarMinhasConversas, listarPedidosDeMensagem } from '@/features/mensagens/api';
+import {
+  assinarMinhasConversas,
+  listarMinhasConversas,
+  listarPedidosDeMensagem,
+} from '@/features/mensagens/api';
 import type { ConversaComResumo } from '@/features/mensagens/api';
 import { FotoPerfil } from '@/features/perfil/FotoPerfil';
 import { supabase } from '@/lib/supabase';
@@ -153,6 +157,7 @@ function LinhaConversa({ conversa, index }: { conversa: ConversaComResumo; index
 
 function AbaMensagens() {
   const { profile } = useAuth();
+  const queryClient = useQueryClient();
   const [subaba, setSubaba] = useState<'conversas' | 'pedidos'>('conversas');
 
   const conversasQuery = useQuery({
@@ -166,6 +171,22 @@ function AbaMensagens() {
     queryFn: () => listarPedidosDeMensagem(profile!.id),
     enabled: !!profile,
   });
+
+  // Bug real relatado pelo usuário ("as mensagens só aparecem depois de
+  // sair e entrar de novo do app"): sem isto, a lista de conversas só
+  // buscava uma vez — a aba de Chat fica montada o tempo todo dentro da
+  // barra de abas, então nunca remontava sozinha pra pegar mensagem
+  // nova. Mesmo padrão já usado pra Salas logo abaixo (`assinarSalas`).
+  useEffect(() => {
+    if (!profile) return;
+    const canal = assinarMinhasConversas(() => {
+      queryClient.invalidateQueries({ queryKey: ['minhas-conversas', profile.id] });
+      queryClient.invalidateQueries({ queryKey: ['pedidos-mensagem', profile.id] });
+    });
+    return () => {
+      supabase.removeChannel(canal);
+    };
+  }, [profile, queryClient]);
 
   const lista = subaba === 'conversas' ? conversasQuery.data : pedidosQuery.data;
   const carregando = subaba === 'conversas' ? conversasQuery.isLoading : pedidosQuery.isLoading;

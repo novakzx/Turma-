@@ -2,7 +2,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { FlatList, KeyboardAvoidingView, Platform, Pressable, Text, View } from 'react-native';
+import {
+  FlatList,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  Text,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BolhaAudio } from '@/components/ui/BolhaAudio';
@@ -194,6 +202,88 @@ function LinhaMensagem({
   );
 }
 
+/**
+ * Popup do foguinho (pedido do usuário — "o foguinho tem que ser
+ * interativo igual o do tiktok... a pessoa pode colocar nome e etc"):
+ * antes o foguinho era só um número mudo ao lado do nome; agora é
+ * tocável e abre um cartão com foto grande, nome e a contagem —
+ * "Ver perfil" continua levando pro perfil completo de sempre, pra não
+ * perder a navegação que já existia.
+ *
+ * Idade NÃO entra aqui de propósito, mesmo o pedido citando "nome,
+ * idade e etc": nenhum outro lugar do app expõe a idade de um colega
+ * pra outros alunos hoje (só o próprio dono vê a própria, em
+ * Configurações) — like este é um app de alunos majoritariamente
+ * menores de idade, decidi não abrir essa exposição nova sem
+ * confirmar com o usuário primeiro (perguntei na mensagem de resposta).
+ */
+function PopupFoguinho({
+  aberto,
+  onFechar,
+  nome,
+  foto,
+  sequencia,
+  onVerPerfil,
+}: {
+  aberto: boolean;
+  onFechar: () => void;
+  nome: string;
+  foto?: string | null;
+  sequencia: number;
+  onVerPerfil: () => void;
+}) {
+  return (
+    <Modal visible={aberto} transparent animationType="fade" onRequestClose={onFechar}>
+      {/* Backdrop (fecha ao tocar fora) e cartão são IRMÃOS dentro deste
+          `View` só de layout — nunca um `Pressable` dentro de outro
+          `Pressable`. O backdrop cobre a tela inteira via `absolute
+          inset-0` (fora do fluxo normal); o cartão, em fluxo normal
+          logo depois no JSX, pinta por cima dele — tocar no cartão
+          nunca "vaza" pro backdrop atrás, sem precisar aninhar nada
+          (mesmo achado do bug da página de notificações: `Pressable`
+          vira `<button>` no web, e `<button>` dentro de `<button>`
+          quebra a hidratação). */}
+      <View className="flex-1 items-center justify-center bg-black/60 p-8">
+        <Pressable
+          onPress={onFechar}
+          accessibilityRole="button"
+          accessibilityLabel="Fechar"
+          className="absolute inset-0"
+        />
+        <View className="w-full max-w-xs items-center gap-3 rounded-lg border border-slate-200 bg-surface p-6 dark:bg-surface-dark">
+          <FotoPerfil caminho={foto ?? null} nome={nome} tamanho={72} />
+          <Text className="text-lg font-bold text-slate-900">{nome}</Text>
+          <View className="flex-row items-center gap-1.5 rounded-lg bg-danger/10 px-3 py-1.5 dark:bg-danger-dark/10">
+            <Ionicons name="flame" size={18} color="#F97316" />
+            <Text className="text-sm font-semibold text-slate-900">
+              {sequencia} {sequencia === 1 ? 'dia seguido' : 'dias seguidos'} conversando
+            </Text>
+          </View>
+          <Text className="text-center text-xs text-slate-500">
+            Mandem mensagem hoje pra não perder o foguinho.
+          </Text>
+          <View className="w-full flex-row gap-2 pt-1">
+            <Pressable
+              onPress={onFechar}
+              accessibilityRole="button"
+              className="min-h-11 flex-1 items-center justify-center rounded-full bg-slate-100"
+            >
+              <Text className="text-sm font-semibold text-slate-700">Fechar</Text>
+            </Pressable>
+            <Pressable
+              onPress={onVerPerfil}
+              accessibilityRole="button"
+              className="min-h-11 flex-1 items-center justify-center rounded-full bg-primary dark:bg-primary-dark"
+            >
+              <Text className="text-sm font-semibold text-white">Ver perfil</Text>
+            </Pressable>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
 function CabecalhoConversa({
   nome,
   foto,
@@ -210,6 +300,7 @@ function CabecalhoConversa({
   sequencia?: number;
   onPress?: () => void;
 }) {
+  const [popupAberto, setPopupAberto] = useState(false);
   // Cor do texto vem em JS, não de classe `dark:` do Tailwind — conteúdo
   // dentro do header do React Navigation segue esse padrão em todo o app
   // (ver headerTintColor/ícones do headerRight em `(tabs)/_layout.tsx`),
@@ -226,38 +317,63 @@ function CabecalhoConversa({
   const corTexto = escuro ? '#F5F5F5' : '#000000';
 
   return (
-    <Pressable
-      onPress={onPress}
-      disabled={!onPress}
-      accessibilityRole={onPress ? 'button' : undefined}
-      accessibilityLabel={
-        onPress ? `Ver ${ehGrupo ? 'participantes' : 'perfil'} de ${nome}` : undefined
-      }
-      className="min-h-11 flex-row items-center gap-2 py-1"
-    >
-      {ehGrupo ? (
-        <View className="h-8 w-8 items-center justify-center rounded-full bg-accent/10 dark:bg-accent-dark/10">
-          <Ionicons name="people" size={16} color="#0095F6" />
-        </View>
-      ) : (
-        <FotoPerfil caminho={foto ?? null} nome={nome} tamanho={32} />
-      )}
-      <Text
-        numberOfLines={1}
-        style={{ color: corTexto }}
-        className="max-w-[160px] text-base font-semibold"
+    // O botão do foguinho é IRMÃO do resto do cabeçalho, nunca aninhado
+    // dentro do mesmo `Pressable` — achado ao vivo no bug da página de
+    // notificações (ver `LinhaPerfil`): no web, `Pressable` vira
+    // `<button>`, e um `<button>` dentro de outro `<button>` quebra a
+    // hidratação.
+    <View className="min-h-11 flex-row items-center gap-2 py-1">
+      <Pressable
+        onPress={onPress}
+        disabled={!onPress}
+        accessibilityRole={onPress ? 'button' : undefined}
+        accessibilityLabel={
+          onPress ? `Ver ${ehGrupo ? 'participantes' : 'perfil'} de ${nome}` : undefined
+        }
+        className="min-h-11 flex-row items-center gap-2"
       >
-        {nome}
-      </Text>
+        {ehGrupo ? (
+          <View className="h-8 w-8 items-center justify-center rounded-full bg-accent/10 dark:bg-accent-dark/10">
+            <Ionicons name="people" size={16} color="#0095F6" />
+          </View>
+        ) : (
+          <FotoPerfil caminho={foto ?? null} nome={nome} tamanho={32} />
+        )}
+        <Text
+          numberOfLines={1}
+          style={{ color: corTexto }}
+          className="max-w-[160px] text-base font-semibold"
+        >
+          {nome}
+        </Text>
+      </Pressable>
       {sequencia ? (
-        <View className="flex-row items-center gap-0.5">
-          <Ionicons name="flame" size={14} color="#F97316" />
-          <Text style={{ color: corTexto }} className="text-xs font-semibold">
-            {sequencia}
-          </Text>
-        </View>
+        <>
+          <Pressable
+            onPress={() => setPopupAberto(true)}
+            accessibilityRole="button"
+            accessibilityLabel={`${sequencia} ${sequencia === 1 ? 'dia seguido' : 'dias seguidos'} conversando com ${nome} — toque pra ver detalhes`}
+            className="min-h-11 flex-row items-center gap-0.5 px-1"
+          >
+            <Ionicons name="flame" size={14} color="#F97316" />
+            <Text style={{ color: corTexto }} className="text-xs font-semibold">
+              {sequencia}
+            </Text>
+          </Pressable>
+          <PopupFoguinho
+            aberto={popupAberto}
+            onFechar={() => setPopupAberto(false)}
+            nome={nome}
+            foto={foto}
+            sequencia={sequencia}
+            onVerPerfil={() => {
+              setPopupAberto(false);
+              onPress?.();
+            }}
+          />
+        </>
       ) : null}
-    </Pressable>
+    </View>
   );
 }
 

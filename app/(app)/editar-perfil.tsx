@@ -32,7 +32,24 @@ export default function EditarPerfil() {
   }>({});
 
   const mutation = useMutation({
-    mutationFn: async ({ linkNormalizado }: { linkNormalizado: string }) => {
+    // Bug real (pedido do usuário — "muda o nome de usuário, não
+    // muda"): `nomeUsuario` (o @usuário) vinha direto do estado por
+    // closure, não do valor normalizado (`usuarioLimpo` — minúsculo,
+    // sem "@" na frente) calculado em `handleSalvar`. `setNomeUsuario`
+    // e `mutation.mutate` são chamados em sequência no mesmo handler —
+    // React ainda não tinha re-renderizado com o valor novo quando o
+    // `mutationFn` (fechado sobre o `nomeUsuario` da renderização
+    // ANTERIOR) rodava, então gravava a versão crua digitada, não a
+    // normalizada. Corrigido recebendo o valor já limpo como parâmetro
+    // da mutation em vez de ler do estado por closure — mesmo padrão
+    // já usado aqui pra `linkNormalizado`.
+    mutationFn: async ({
+      linkNormalizado,
+      nomeUsuarioNormalizado,
+    }: {
+      linkNormalizado: string;
+      nomeUsuarioNormalizado: string;
+    }) => {
       if (!profile) throw new Error('Sem perfil carregado.');
 
       const fotoUrl = fotoUriLocal
@@ -42,7 +59,7 @@ export default function EditarPerfil() {
       await atualizarPerfil({
         id: profile.id,
         nome: nome.trim(),
-        nomeUsuario: nomeUsuario.trim() || null,
+        nomeUsuario: nomeUsuarioNormalizado || null,
         bio: bio.trim() || null,
         link: linkNormalizado || null,
         fotoUrl,
@@ -50,7 +67,17 @@ export default function EditarPerfil() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile', profile?.id] });
-      router.back();
+      // Achado testando ao vivo: `router.back()` sem uma tela de
+      // verdade no histórico pra voltar (ex.: abrir `/editar-perfil`
+      // direto por URL/recarregar a página nessa rota, comum no PWA)
+      // lançava "The action 'GO_BACK' was not handled" — o salvamento
+      // funcionava, só a navegação de volta quebrava. `canGoBack()`
+      // evita isso, caindo pro Perfil direto quando não há histórico.
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        router.replace('/perfil');
+      }
     },
     onError: (error) => setErros({ geral: mensagemDeErro(error) }),
   });
@@ -82,7 +109,7 @@ export default function EditarPerfil() {
 
     setNomeUsuario(usuarioLimpo);
     setLink(resultadoLink.link);
-    mutation.mutate({ linkNormalizado: resultadoLink.link });
+    mutation.mutate({ linkNormalizado: resultadoLink.link, nomeUsuarioNormalizado: usuarioLimpo });
   }
 
   return (

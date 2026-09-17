@@ -6,13 +6,22 @@ import type { PersistQueryClientOptions } from '@tanstack/react-query-persist-cl
 /**
  * Modo offline básico (pedido do usuário): guarda no `AsyncStorage` o
  * cache já carregado das telas de leitura mais úteis sem internet
- * (matérias, notas, chat de estudo, flashcards) — quando o app abre sem
- * rede, essas telas mostram o último dado salvo em vez de tela em
- * branco/erro. Não cobre feed/chat comunitário/mensagens de propósito:
+ * (perfil, matérias, notas, chat de estudo, flashcards) — quando o app
+ * abre sem rede, essas telas mostram o último dado salvo em vez de tela
+ * em branco/erro. Não cobre feed/chat comunitário/mensagens de propósito:
  * são conteúdo em tempo real de outras pessoas, e mostrar uma versão
  * desatualizada como se fosse atual (sem indicação nenhuma de "isso é
  * antigo") é pior do que só dizer "sem conexão" — ao contrário de
  * notas/flashcards, que são só do próprio aluno e não mudam disparado.
+ *
+ * `profile` (pedido do usuário — "demora muito pra carregar", achado ao
+ * vivo): `RootNavigator` (`app/_layout.tsx`) mostra só um spinner em
+ * branco até a query `['profile', userId]` resolver — sem ela no cache
+ * persistido, TODO boot do app esperava uma ida de rede nova antes de
+ * mostrar qualquer tela, mesmo com o bundle JS já carregado e a sessão
+ * já salva localmente. Com `profile` aqui, o app abre já com o último
+ * perfil conhecido (a mesma pessoa, os mesmos dados — não é "conteúdo de
+ * outra pessoa" como feed/mensagens) enquanto revalida em segundo plano.
  *
  * `buster` muda toda vez que o formato salvo no cache pode ter ficado
  * incompatível com uma versão nova do app (ex.: mudou o shape de um tipo)
@@ -22,6 +31,7 @@ import type { PersistQueryClientOptions } from '@tanstack/react-query-persist-cl
 const BUSTER = 'v1';
 
 const CHAVES_PERSISTIVEIS = [
+  'profile',
   'materias',
   'chat-ia',
   'estatistica-semanal-estudo',
