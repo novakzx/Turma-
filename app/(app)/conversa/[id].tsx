@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
@@ -19,6 +20,7 @@ import { CaixaMensagem } from '@/components/ui/CaixaMensagem';
 import { EmptyState, LoadingState } from '@/components/ui/EmptyState';
 import { ImagemChat } from '@/components/ui/ImagemChat';
 import { TextoComMencoes } from '@/components/ui/TextoComMencoes';
+import { useAssinante } from '@/features/assinatura/useAssinante';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { mensagemDeErro } from '@/features/auth/errors';
 import { useTema } from '@/features/configuracoes/TemaProvider';
@@ -27,6 +29,7 @@ import {
   aceitarPedido,
   apagarMensagemDireta,
   assinarMensagensDiretas,
+  atualizarTemaConversa,
   buscarConversa,
   enviarMensagemDireta,
   fazerUploadMidiaConversa,
@@ -37,6 +40,7 @@ import {
   type MensagemComAutor,
 } from '@/features/mensagens/api';
 import { calcularSequenciaConversa } from '@/features/mensagens/regras';
+import { buscarTemaConversa, TEMAS_CONVERSA, type TemaConversa } from '@/features/mensagens/temas';
 import { FotoPerfil } from '@/features/perfil/FotoPerfil';
 import { supabase } from '@/lib/supabase';
 
@@ -108,10 +112,16 @@ function construirItensLista(mensagens: MensagemComAutor[]): ItemLista[] {
   return itens;
 }
 
-function DivisorTempo({ label }: { label: string }) {
+function DivisorTempo({ label, tema }: { label: string; tema: TemaConversa | null }) {
   return (
     <View className="my-3 items-center">
-      <Text className="text-xs font-medium text-slate-500">{label}</Text>
+      <Text
+        className={`text-xs font-medium ${
+          tema ? 'rounded-full bg-black/20 px-2 py-0.5 text-white' : 'text-slate-500'
+        }`}
+      >
+        {label}
+      </Text>
     </View>
   );
 }
@@ -123,6 +133,7 @@ function LinhaMensagem({
   ultimoDoGrupo,
   podeApagar,
   onApagar,
+  tema,
 }: {
   mensagem: MensagemComAutor;
   souEu: boolean;
@@ -130,11 +141,20 @@ function LinhaMensagem({
   ultimoDoGrupo: boolean;
   podeApagar: boolean;
   onApagar: () => void;
+  /** Tema de conversa ativo (pedido do usuário, ver `temas.ts`) — `null`
+   * mantém as classes `bg-primary`/`bg-surface` de sempre. Quando tem
+   * tema, a cor vem inline (`style`) porque é dinâmica por conversa,
+   * não uma das cores fixas do Tailwind. */
+  tema: TemaConversa | null;
 }) {
   if (mensagem.apagada) {
     return (
       <View className={`mt-3 max-w-[75%] ${souEu ? 'self-end' : 'self-start'}`}>
-        <Text className="text-xs italic text-slate-500">Mensagem apagada</Text>
+        <Text
+          className={`text-xs italic ${tema ? 'text-white/70' : 'text-slate-500'}`}
+        >
+          Mensagem apagada
+        </Text>
       </View>
     );
   }
@@ -147,16 +167,21 @@ function LinhaMensagem({
     ? `${primeiroDoGrupo ? '' : 'rounded-tr-md '}${ultimoDoGrupo ? '' : 'rounded-br-md '}`
     : `${primeiroDoGrupo ? '' : 'rounded-tl-md '}${ultimoDoGrupo ? '' : 'rounded-bl-md '}`;
 
+  const corTextoConteudo = tema ? (souEu ? '#FFFFFF' : tema.corTextoOutra) : undefined;
+
   return (
     <View
       className={`${primeiroDoGrupo ? 'mt-3' : 'mt-0.5'} max-w-[75%] gap-1 ${souEu ? 'items-end self-end' : 'items-start self-start'}`}
     >
       <View
         className={`overflow-hidden rounded-lg ${mensagem.midia_tipo === 'imagem' ? 'p-1' : 'px-4 py-2.5'} ${cantoExterno}${
-          souEu
-            ? 'bg-primary dark:bg-primary-dark'
-            : 'border border-slate-200 bg-surface dark:bg-surface-dark'
+          tema
+            ? ''
+            : souEu
+              ? 'bg-primary dark:bg-primary-dark'
+              : 'border border-slate-200 bg-surface dark:bg-surface-dark'
         }`}
+        style={tema ? { backgroundColor: souEu ? tema.corMinha : tema.corOutra } : undefined}
       >
         {mensagem.midia_tipo === 'imagem' && mensagem.midia_url ? (
           <ImagemChat
@@ -169,14 +194,15 @@ function LinhaMensagem({
             caminho={mensagem.midia_url}
             obterUrl={obterUrlAssinadaConversa}
             urlPreAssinada={mensagem.urlMidiaAssinada}
-            corIcone={souEu ? '#FFFFFF' : '#0095F6'}
-            corTexto={souEu ? 'text-white' : 'text-slate-900'}
+            corIcone={souEu || tema ? '#FFFFFF' : '#0095F6'}
+            corTexto={souEu || tema ? 'text-white' : 'text-slate-900'}
           />
         ) : null}
         {mensagem.conteudo ? (
           <TextoComMencoes
             texto={mensagem.conteudo}
-            className={souEu ? 'text-white' : 'text-slate-900'}
+            className={tema ? undefined : souEu ? 'text-white' : 'text-slate-900'}
+            style={corTextoConteudo ? { color: corTextoConteudo } : undefined}
             mencaoClassName={souEu ? 'font-semibold text-white underline' : undefined}
           />
         ) : null}
@@ -204,24 +230,19 @@ function LinhaMensagem({
 
 /**
  * Popup do foguinho (pedido do usuário — "o foguinho tem que ser
- * interativo igual o do tiktok... a pessoa pode colocar nome e etc"):
- * antes o foguinho era só um número mudo ao lado do nome; agora é
- * tocável e abre um cartão com foto grande, nome e a contagem —
- * "Ver perfil" continua levando pro perfil completo de sempre, pra não
- * perder a navegação que já existia.
- *
- * Idade NÃO entra aqui de propósito, mesmo o pedido citando "nome,
- * idade e etc": nenhum outro lugar do app expõe a idade de um colega
- * pra outros alunos hoje (só o próprio dono vê a própria, em
- * Configurações) — like este é um app de alunos majoritariamente
- * menores de idade, decidi não abrir essa exposição nova sem
- * confirmar com o usuário primeiro (perguntei na mensagem de resposta).
+ * interativo igual o do tiktok... a pessoa pode colocar nome e etc" +
+ * confirmação explícita depois de eu perguntar: "sim pode fazer isso
+ * do foguinho"): antes o foguinho era só um número mudo ao lado do
+ * nome; agora é tocável e abre um cartão com foto grande, nome, idade
+ * (quando cadastrada) e a contagem — "Ver perfil" continua levando pro
+ * perfil completo de sempre, pra não perder a navegação que já existia.
  */
 function PopupFoguinho({
   aberto,
   onFechar,
   nome,
   foto,
+  idade,
   sequencia,
   onVerPerfil,
 }: {
@@ -229,6 +250,7 @@ function PopupFoguinho({
   onFechar: () => void;
   nome: string;
   foto?: string | null;
+  idade?: number | null;
   sequencia: number;
   onVerPerfil: () => void;
 }) {
@@ -252,7 +274,10 @@ function PopupFoguinho({
         />
         <View className="w-full max-w-xs items-center gap-3 rounded-lg border border-slate-200 bg-surface p-6 dark:bg-surface-dark">
           <FotoPerfil caminho={foto ?? null} nome={nome} tamanho={72} />
-          <Text className="text-lg font-bold text-slate-900">{nome}</Text>
+          <View className="items-center gap-0.5">
+            <Text className="text-lg font-bold text-slate-900">{nome}</Text>
+            {idade ? <Text className="text-xs text-slate-500">{idade} anos</Text> : null}
+          </View>
           <View className="flex-row items-center gap-1.5 rounded-lg bg-danger/10 px-3 py-1.5 dark:bg-danger-dark/10">
             <Ionicons name="flame" size={18} color="#F97316" />
             <Text className="text-sm font-semibold text-slate-900">
@@ -287,12 +312,14 @@ function PopupFoguinho({
 function CabecalhoConversa({
   nome,
   foto,
+  idade,
   ehGrupo,
   sequencia,
   onPress,
 }: {
   nome: string;
   foto?: string | null;
+  idade?: number | null;
   ehGrupo: boolean;
   /** Foguinho da conversa (pedido do usuário — "tipo o do tiktok"): dias
    * seguidos em que os dois mandaram mensagem. `undefined`/`0` não
@@ -365,6 +392,7 @@ function CabecalhoConversa({
             onFechar={() => setPopupAberto(false)}
             nome={nome}
             foto={foto}
+            idade={idade}
             sequencia={sequencia}
             onVerPerfil={() => {
               setPopupAberto(false);
@@ -374,6 +402,165 @@ function CabecalhoConversa({
         </>
       ) : null}
     </View>
+  );
+}
+
+function AmostraTema({
+  tema,
+  selecionado,
+  bloqueado,
+  onPress,
+}: {
+  tema: TemaConversa | null;
+  selecionado: boolean;
+  bloqueado: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={tema ? `Tema ${tema.nome}` : 'Tema padrão'}
+      className="w-[22%] items-center gap-1.5"
+    >
+      <View
+        className={`h-16 w-16 items-center justify-center rounded-full ${
+          selecionado
+            ? 'border-2 border-primary dark:border-primary-dark'
+            : 'border border-slate-200 dark:border-slate-700'
+        }`}
+      >
+        {tema ? (
+          <LinearGradient
+            colors={tema.gradiente}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{ height: '100%', width: '100%', borderRadius: 9999 }}
+            className="items-center justify-center"
+          >
+            <Text className="text-xl">{tema.emoji}</Text>
+          </LinearGradient>
+        ) : (
+          <View className="h-full w-full items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
+            <Ionicons name="ban-outline" size={20} color="#94A3B8" />
+          </View>
+        )}
+        {bloqueado && !selecionado ? (
+          <View className="absolute -bottom-1 -right-1 h-5 w-5 items-center justify-center rounded-full bg-slate-900">
+            <Ionicons name="lock-closed" size={10} color="#FFFFFF" />
+          </View>
+        ) : null}
+        {selecionado ? (
+          <View className="absolute -bottom-1 -right-1 h-5 w-5 items-center justify-center rounded-full bg-primary dark:bg-primary-dark">
+            <Ionicons name="checkmark" size={12} color="#FFFFFF" />
+          </View>
+        ) : null}
+      </View>
+      <Text
+        numberOfLines={1}
+        className="text-xs font-medium text-slate-700 dark:text-slate-300"
+      >
+        {tema ? tema.nome : 'Padrão'}
+      </Text>
+    </Pressable>
+  );
+}
+
+/**
+ * Seletor de tema visual da conversa (pedido do usuário, anexando print
+ * de um app de mensagens com fundo em gradiente colorido por conversa —
+ * "deixe tipo assim os temas"). Recurso Premium (já citado assim na
+ * descrição padrão de `BannerPremium`), então quem não assina vê os
+ * temas (pra saber que existem e dar vontade de assinar) mas toque num
+ * tema bloqueado só abre a tela de assinatura — nunca falha silencioso.
+ * "Padrão" (sem tema) nunca é bloqueado, mesmo pra quem não assina —
+ * é só a volta ao visual de sempre, não é o recurso premium em si.
+ */
+function SeletorTema({
+  aberto,
+  onFechar,
+  temaAtualId,
+  ehAssinante,
+  onEscolher,
+}: {
+  aberto: boolean;
+  onFechar: () => void;
+  temaAtualId: string | null;
+  ehAssinante: boolean;
+  onEscolher: (id: string | null) => void;
+}) {
+  const insets = useSafeAreaInsets();
+
+  function selecionar(id: string | null) {
+    if (id && !ehAssinante) {
+      onFechar();
+      router.push('/assinatura');
+      return;
+    }
+    onEscolher(id);
+  }
+
+  return (
+    <Modal visible={aberto} transparent animationType="slide" onRequestClose={onFechar}>
+      <View className="flex-1 justify-end bg-black/60">
+        <Pressable
+          onPress={onFechar}
+          accessibilityRole="button"
+          accessibilityLabel="Fechar"
+          className="absolute inset-0"
+        />
+        <View
+          className="gap-4 rounded-t-2xl bg-surface p-6 dark:bg-surface-dark"
+          style={{ paddingBottom: insets.bottom + 24 }}
+        >
+          <View className="flex-row items-center justify-between">
+            <Text className="text-lg font-bold text-slate-900 dark:text-white">
+              Tema da conversa
+            </Text>
+            <Pressable
+              onPress={onFechar}
+              accessibilityRole="button"
+              accessibilityLabel="Fechar"
+              className="min-h-11 min-w-11 items-center justify-center"
+            >
+              <Ionicons name="close" size={22} color="#94A3B8" />
+            </Pressable>
+          </View>
+          {!ehAssinante ? (
+            <Pressable
+              onPress={() => {
+                onFechar();
+                router.push('/assinatura');
+              }}
+              accessibilityRole="button"
+              className="flex-row items-center gap-2 rounded-lg bg-primary/10 px-3 py-2 dark:bg-primary-dark/10"
+            >
+              <Ionicons name="star" size={16} color="#F59E0B" />
+              <Text className="flex-1 text-xs font-medium text-slate-700 dark:text-slate-300">
+                Temas são um recurso Premium — toque pra assinar.
+              </Text>
+            </Pressable>
+          ) : null}
+          <View className="flex-row flex-wrap justify-between gap-y-4">
+            <AmostraTema
+              tema={null}
+              selecionado={!temaAtualId}
+              bloqueado={false}
+              onPress={() => selecionar(null)}
+            />
+            {TEMAS_CONVERSA.map((tema) => (
+              <AmostraTema
+                key={tema.id}
+                tema={tema}
+                selecionado={temaAtualId === tema.id}
+                bloqueado={!ehAssinante}
+                onPress={() => selecionar(tema.id)}
+              />
+            ))}
+          </View>
+        </View>
+      </View>
+    </Modal>
   );
 }
 
@@ -389,6 +576,8 @@ export default function DetalheConversa() {
   // manual — `(tabs)/_layout.tsx` deixa a altura por conta do
   // `@react-navigation/bottom-tabs`, que já soma esse inset sozinho.
   const insets = useSafeAreaInsets();
+  const ehAssinante = useAssinante();
+  const [pickerTemaAberto, setPickerTemaAberto] = useState(false);
 
   const conversaQuery = useQuery({
     queryKey: ['conversa', id],
@@ -486,6 +675,15 @@ export default function DetalheConversa() {
     },
   });
 
+  const temaMutation = useMutation({
+    mutationFn: (novoTema: string | null) => atualizarTemaConversa(id, novoTema),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['conversa', id] });
+      setPickerTemaAberto(false);
+    },
+    onError: (error) => setErro(mensagemDeErro(error)),
+  });
+
   if (conversaQuery.isLoading || participantesQuery.isLoading) return <LoadingState />;
   if (conversaQuery.isError || !conversaQuery.data) {
     return (
@@ -518,6 +716,43 @@ export default function DetalheConversa() {
       ? calcularSequenciaConversa(mensagensQuery.data ?? [], profile.id, outroParticipante.profile_id)
       : 0;
 
+  // Tema visual da conversa (pedido do usuário, ver `temas.ts`) — mesmo
+  // sem ser assinante o `tema` gravado continua sendo respeitado aqui
+  // (só a TROCA de tema é bloqueada no seletor); assim ninguém perde o
+  // visual escolhido se a assinatura expirar sem querer no meio disso.
+  const tema = buscarTemaConversa(conversa.tema);
+
+  const listaMensagens = (
+    <FlatList
+      data={itensLista}
+      keyExtractor={(item) => item.chave}
+      inverted={false}
+      contentContainerClassName="gap-0 px-4 py-4"
+      renderItem={({ item }) =>
+        item.tipo === 'divisor' ? (
+          <DivisorTempo label={item.label} tema={tema} />
+        ) : (
+          <LinhaMensagem
+            mensagem={item.mensagem}
+            souEu={item.mensagem.autor_id === profile?.id}
+            primeiroDoGrupo={item.primeiroDoGrupo}
+            ultimoDoGrupo={item.ultimoDoGrupo}
+            podeApagar={item.mensagem.autor_id === profile?.id && !item.mensagem.apagada}
+            onApagar={() => apagarMutation.mutate(item.mensagem.id)}
+            tema={tema}
+          />
+        )
+      }
+      ListEmptyComponent={
+        <EmptyState
+          icon="chatbubble-outline"
+          titulo="Nenhuma mensagem ainda"
+          descricao="Manda a primeira!"
+        />
+      }
+    />
+  );
+
   return (
     <KeyboardAvoidingView
       className="flex-1 bg-background dark:bg-background-dark"
@@ -529,6 +764,7 @@ export default function DetalheConversa() {
             <CabecalhoConversa
               nome={titulo}
               foto={outroParticipante?.profiles?.foto_url}
+              idade={outroParticipante?.profiles?.idade}
               ehGrupo={ehGrupo}
               sequencia={sequenciaConversa}
               onPress={() =>
@@ -540,8 +776,17 @@ export default function DetalheConversa() {
               }
             />
           ),
-          headerRight: ehGrupo
-            ? () => (
+          headerRight: () => (
+            <View className="flex-row items-center">
+              <Pressable
+                onPress={() => setPickerTemaAberto(true)}
+                accessibilityRole="button"
+                accessibilityLabel="Tema da conversa"
+                className="min-h-11 min-w-11 items-center justify-center"
+              >
+                <Ionicons name="color-palette-outline" size={22} color="#0095F6" />
+              </Pressable>
+              {ehGrupo ? (
                 <Pressable
                   onPress={() => router.push(`/grupo-participantes/${id}`)}
                   accessibilityRole="button"
@@ -550,38 +795,27 @@ export default function DetalheConversa() {
                 >
                   <Ionicons name="people-outline" size={22} color="#0095F6" />
                 </Pressable>
-              )
-            : undefined,
+              ) : null}
+            </View>
+          ),
         }}
       />
 
-      <FlatList
-        data={itensLista}
-        keyExtractor={(item) => item.chave}
-        inverted={false}
-        contentContainerClassName="gap-0 px-4 py-4"
-        renderItem={({ item }) =>
-          item.tipo === 'divisor' ? (
-            <DivisorTempo label={item.label} />
-          ) : (
-            <LinhaMensagem
-              mensagem={item.mensagem}
-              souEu={item.mensagem.autor_id === profile?.id}
-              primeiroDoGrupo={item.primeiroDoGrupo}
-              ultimoDoGrupo={item.ultimoDoGrupo}
-              podeApagar={item.mensagem.autor_id === profile?.id && !item.mensagem.apagada}
-              onApagar={() => apagarMutation.mutate(item.mensagem.id)}
-            />
-          )
-        }
-        ListEmptyComponent={
-          <EmptyState
-            icon="chatbubble-outline"
-            titulo="Nenhuma mensagem ainda"
-            descricao="Manda a primeira!"
-          />
-        }
+      <SeletorTema
+        aberto={pickerTemaAberto}
+        onFechar={() => setPickerTemaAberto(false)}
+        temaAtualId={conversa.tema}
+        ehAssinante={ehAssinante}
+        onEscolher={(novoTema) => temaMutation.mutate(novoTema)}
       />
+
+      {tema ? (
+        <LinearGradient colors={tema.gradiente} style={{ flex: 1 }}>
+          {listaMensagens}
+        </LinearGradient>
+      ) : (
+        listaMensagens
+      )}
 
       {ehPedidoPendente ? (
         <View

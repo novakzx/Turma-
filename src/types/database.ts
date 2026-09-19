@@ -278,6 +278,7 @@ export type Database = {
           criado_por: string | null;
           id: string;
           nome: string | null;
+          tema: string | null;
           tipo: Database['public']['Enums']['tipo_conversa'];
         };
         Insert: {
@@ -285,6 +286,7 @@ export type Database = {
           criado_por?: string | null;
           id?: string;
           nome?: string | null;
+          tema?: string | null;
           tipo: Database['public']['Enums']['tipo_conversa'];
         };
         Update: {
@@ -292,6 +294,7 @@ export type Database = {
           criado_por?: string | null;
           id?: string;
           nome?: string | null;
+          tema?: string | null;
           tipo?: Database['public']['Enums']['tipo_conversa'];
         };
         Relationships: [

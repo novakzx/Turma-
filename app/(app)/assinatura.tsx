@@ -21,6 +21,11 @@ const BENEFICIOS = [
     titulo: 'Selo de verificado',
     descricao: 'Um selo no seu nome, visível no perfil e nos seus posts.',
   },
+  {
+    icone: 'color-palette-outline' as const,
+    titulo: 'Temas exclusivos no chat',
+    descricao: 'Fundo em gradiente e balões coloridos pra deixar suas conversas com a sua cara.',
+  },
 ];
 
 /** Abre uma URL de checkout/portal da Stripe. No web, redireciona a

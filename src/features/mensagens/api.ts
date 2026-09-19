@@ -7,7 +7,11 @@ import type { PerfilResumo } from '@/features/social/types';
 
 import type { Conversa, MensagemDireta, PapelParticipante, TipoMidiaMensagem } from './types';
 
-const SELECT_PERFIL_RESUMO = 'id, nome, nome_usuario, foto_url';
+// `idade` entra aqui pro popup do foguinho (pedido do usuário — "nome,
+// idade e etc"); único lugar do app que hoje expõe a idade de alguém pra
+// OUTRO aluno (fora o próprio dono, em Configurações) — confirmado com o
+// usuário antes de adicionar.
+const SELECT_PERFIL_RESUMO = 'id, nome, nome_usuario, foto_url, idade';
 const BUCKET_MIDIA = 'conversas-midia';
 
 export type ConversaComResumo = Conversa & {
@@ -136,6 +140,17 @@ export async function buscarConversa(id: string): Promise<Conversa> {
   const { data, error } = await supabase.from('conversas').select('*').eq('id', id).single();
   if (error) throw error;
   return data;
+}
+
+/** Tema visual da conversa (recurso Premium, pedido do usuário — ver
+ * `features/mensagens/temas.ts`). `null` volta pro visual padrão.
+ * Compartilhado pros dois participantes (é a MESMA linha de
+ * `conversas`, não uma preferência por pessoa) — `grant update (tema)`
+ * na migration `tema_conversa` garante que só essa coluna é gravável
+ * por quem não é dono da linha via service role. */
+export async function atualizarTemaConversa(conversaId: string, tema: string | null) {
+  const { error } = await supabase.from('conversas').update({ tema }).eq('id', conversaId);
+  if (error) throw error;
 }
 
 export type ParticipanteComPerfil = {

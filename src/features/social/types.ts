@@ -8,6 +8,10 @@ export type PerfilResumo = {
   nome: string;
   nome_usuario: string | null;
   foto_url: string | null;
+  /** Opcional porque nem toda query que usa `PerfilResumo` pediu essa
+   * coluna (ver `SELECT_PERFIL_RESUMO` em cada `api.ts` que monta este
+   * tipo) — `undefined` não é "sem idade cadastrada", é "não perguntei". */
+  idade?: number | null;
   /** URL já assinada do avatar — só preenchida por quem busca em lote
    * (ver `comUrlsDeAutorAssinadas` em `social/api.ts`); os demais
    * chamadores deixam `undefined` e `<FotoPerfil>` busca sozinha. */
